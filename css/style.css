@@ -1,30 +1,29 @@
 /* ============================================================
-   GAME 16 — 消失的麻姐 | Terminal UI Stylesheet (Redesign)
-   Color scheme: #744962 (beet purple) on deep #1a0f1a
+   GAME 16 — 消失的麻姐 | Apple Minimalist Paper Aesthetic
+   Light theme: #fbfbfd / #f5f5f7 cold gray paper
+   Single accent: #744962 (beet plum) for critical moments only
    ============================================================ */
 
 /* ------------ CSS Variables / Design Tokens ------------ */
 :root {
-  --color-primary: #744962;
-  --color-secondary: #a885a6;
-  --color-bg: #1a0f1a;
-  --color-border: #3d1f3d;
-  --color-text-muted: #c9a5c6;
-  --color-error: #d9534f;
-  --color-warning: #f0ad4e;
-  --color-important: #f4d4c9;
-  --color-ascii: #a885a6;
-  --color-subtitle: #c9a5c6;
-  --color-input-bg: #0d070d;
-  --color-scrollbar-track: #0d070d;
-  --color-scrollbar-thumb: #3d1f3d;
-  --color-scrollbar-hover: #744962;
-  --font-mono: 'Courier New', 'Consolas', 'Monaco', monospace;
+  --bg: #fbfbfd;
+  --bg-alt: #f5f5f7;
+  --border: #e5e5e7;
+  --text: #1d1d1f;
+  --text-secondary: #86868b;
+  --text-tertiary: #a1a1a6;
+  --accent: #744962;
+  --accent-soft: #f3ecf0;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  --font-mono: 'SF Mono', Monaco, Menlo, Consolas, monospace;
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 12px;
   --spacing-lg: 16px;
   --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
 }
 
 /* ------------ Reset & Base ------------ */
@@ -41,10 +40,10 @@ html, body {
 }
 
 body {
-  background: var(--color-bg);
-  color: var(--color-primary);
-  font-family: var(--font-mono);
-  font-size: 16px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
   line-height: 1.5;
   display: flex;
   justify-content: center;
@@ -57,42 +56,23 @@ body {
 /* ------------ Terminal Container ------------ */
 #terminal {
   width: 100%;
-  max-width: 900px;
+  max-width: 720px;
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-xl) 0;
+  padding: var(--spacing-2xl) var(--spacing-2xl);
   position: relative;
 }
 
-/* Shake animation for dramatic moments */
+/* Shake animation for dramatic moments (diminished) */
 #terminal.shake {
   animation: screenShake 0.4s ease-in-out;
 }
 
 @keyframes screenShake {
-  25% { transform: translate(-4px, 2px); background: var(--color-border); }
-  50% { transform: translate(4px, -2px); }
-  75% { transform: translate(-2px, -2px); background: var(--color-border); }
-}
-
-/* ------------ Top Header Area ------------ */
-#header {
-  text-align: center;
-  padding-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-  margin-bottom: var(--spacing-sm);
-  flex-shrink: 0;
-  position: relative;
-}
-
-.ascii-title {
-  color: var(--color-ascii);
-  font-size: 14px;
-  line-height: 1.2;
-  font-family: var(--font-mono);
-  animation: fadeIn 2s ease-in;
-  white-space: pre;
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(-1px); }
 }
 
 @keyframes fadeIn {
@@ -100,38 +80,64 @@ body {
   to   { opacity: 1; }
 }
 
-.subtitle {
-  color: var(--color-subtitle);
-  font-size: 16px;
-  margin-top: var(--spacing-xs);
-  letter-spacing: 2px;
+/* ------------ Top Header Area ------------ */
+#header {
+  text-align: center;
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--spacing-sm);
+  flex-shrink: 0;
+  position: relative;
 }
 
-/* ------------ Digital Avatar Badge (top-right) ------------ */
+#header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: var(--spacing-xs);
+  letter-spacing: 1px;
+}
+
+.ascii-title {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  line-height: 1.2;
+  font-family: var(--font-mono);
+  animation: fadeIn 2s ease-in;
+  white-space: pre;
+}
+
+/* ------------ Digital Avatar Badge (top-right) — Simplified ------------ */
 .digital-avatar-badge {
   position: absolute;
-  top: var(--spacing-xl);
+  top: var(--spacing-2xl);
   right: 0;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-input-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
+  border-top: 1px solid var(--border);
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--color-secondary);
+  color: var(--text-secondary);
   z-index: 10;
+  border-radius: 0;
+  background: transparent;
 }
 
 .pulse-dot {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #4caf50;
-  animation: pulse 1.5s ease-in-out infinite;
+  background: var(--text-secondary);
+  /* No animation — static dot */
 }
 
 @keyframes pulse {
@@ -146,13 +152,15 @@ body {
 /* ------------ Real-Time Clock (top-left) ------------ */
 .header-clock {
   position: absolute;
-  top: var(--spacing-xl);
+  top: var(--spacing-2xl);
   left: 0;
   font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--color-primary);
-  letter-spacing: 2px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
   z-index: 10;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--spacing-xs);
 }
 
 /* ------------ Output Area ------------ */
@@ -162,64 +170,73 @@ body {
   min-height: 0;
   padding-right: var(--spacing-sm);
   scrollbar-width: thin;
-  scrollbar-color: var(--color-border) var(--color-scrollbar-track);
+  scrollbar-color: var(--border) transparent;
 }
 
 #output::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 #output::-webkit-scrollbar-track {
-  background: var(--color-scrollbar-track);
+  background: transparent;
 }
 
 #output::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
+  background: var(--border);
+  border-radius: 2px;
 }
 
 #output::-webkit-scrollbar-thumb:hover {
-  background: var(--color-scrollbar-hover);
+  background: var(--text-tertiary);
 }
 
-/* ------------ Dialogue Box (for digital-human speech) ------------ */
+/* ------------ Dialogue Box ------------ */
 .dialogue-box {
-  border-left: 3px solid var(--color-primary);
-  padding-left: var(--spacing-md);
-  margin: var(--spacing-sm) 0;
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-sm) 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.dialogue-box.digital-human {
+  border-left: none;
+  padding-left: 0;
 }
 
 .speaker-name {
-  font-size: 12px;
-  font-weight: bold;
-  color: var(--color-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 1px;
   margin-bottom: var(--spacing-xs);
+  font-family: var(--font-mono);
 }
 
 .dialogue-content {
-  color: var(--color-secondary);
+  font-size: 15px;
   line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
+  font-family: var(--font-mono);
 }
 
 /* ------------ Input Line ------------ */
 #input-line {
   display: flex;
   align-items: center;
-  flex-shrink: 0;
-  margin-top: var(--spacing-sm);
+  gap: var(--spacing-sm);
   padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--color-border);
-  background: var(--color-input-bg);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: 4px;
+  margin-top: var(--spacing-sm);
+  border-top: 1px solid var(--border);
+  background: transparent;
+  flex-shrink: 0;
 }
 
 .prompt {
-  color: var(--color-secondary);
-  font-size: 18px;
-  margin-right: var(--spacing-xs);
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  font-size: 14px;
   user-select: none;
 }
 
@@ -228,15 +245,20 @@ body {
   background: transparent;
   border: none;
   outline: none;
-  color: var(--color-primary);
-  font-family: inherit;
-  font-size: 16px;
-  caret-color: var(--color-secondary);
+  color: var(--text);
+  font-family: var(--font-mono);
+  caret-color: var(--accent);
+  font-size: 15px;
+}
+
+#command-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .cursor {
-  color: var(--color-secondary);
-  font-size: 18px;
+  font-family: var(--font-mono);
+  color: var(--accent);
   animation: blink 1s infinite;
   user-select: none;
 }
@@ -246,93 +268,136 @@ body {
   51%, 100% { opacity: 0; }
 }
 
-/* ------------ Text Line Types ------------ */
+/* ------------ Text Line Types — Monochrome Hierarchy ------------ */
 .line {
   padding: 2px 0;
   word-wrap: break-word;
 }
 
 .line.digital-human {
-  color: var(--color-primary);
+  color: var(--text);
 }
 
 .line.zheng-qiao {
-  color: var(--color-error);
+  color: var(--text);
+  font-weight: 500;
 }
 
 .line.error {
-  color: var(--color-error);
+  color: var(--text-secondary);
 }
 
 .line.hint {
-  color: var(--color-text-muted);
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
 .line.important {
-  color: var(--color-important);
-  font-weight: bold;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .line.warning {
-  color: var(--color-warning);
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 
 .line.system {
-  color: var(--color-subtitle);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
 }
 
 .line.evidence {
-  color: var(--color-important);
-  font-weight: bold;
+  color: var(--accent);
+  font-weight: 600;
 }
 
-/* Evidence flash animation on key discoveries */
+/* Evidence flash animation */
 .line.evidence-flash {
   animation: evidenceFlash 1.5s ease-in-out 1;
 }
 
 @keyframes evidenceFlash {
   0%, 100% { background: transparent; }
-  50%      { background: var(--color-border); }
+  50% { background: var(--accent-soft); }
 }
 
-/* ------------ Choice Buttons ------------ */
+/* ------------ Choice Buttons (Keyboard Navigation) ------------ */
+.choice-group {
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-sm) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
 .choice-button {
-  display: inline-block;
-  padding: var(--spacing-sm) var(--spacing-lg);
-  margin: var(--spacing-xs);
-  background: var(--color-border);
-  color: var(--color-secondary);
-  border: 1px solid var(--color-primary);
-  border-radius: 3px;
-  font-family: var(--font-mono);
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) 36px;
+  font-family: inherit;
   font-size: 14px;
+  text-align: left;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+  position: relative;
+  line-height: 1.5;
+  width: 100%;
+}
+
+.choice-button::before {
+  content: attr(data-index);
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  width: 16px;
 }
 
 .choice-button:hover {
-  background: var(--color-primary);
-  color: var(--color-important);
+  background: var(--bg-alt);
+  border-color: var(--text-tertiary);
 }
 
-.choice-button:active {
-  transform: scale(0.95);
-  transition-duration: 0.1s;
+.choice-button.focused {
+  background: var(--bg-alt);
+  border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.choice-button.selected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .choice-button:disabled {
   opacity: 0.4;
-  pointer-events: none;
+  cursor: not-allowed;
 }
 
 /* ------------ Loading Indicator ------------ */
 .loading-indicator {
-  color: var(--color-primary);
-  font-style: italic;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: var(--spacing-sm) 0;
 }
 
 .loading-indicator .dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  margin: 0 var(--spacing-xs);
   opacity: 0.3;
   animation: loadingDot 1.4s infinite;
 }
@@ -341,55 +406,59 @@ body {
 .loading-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes loadingDot {
-  0%, 20%   { opacity: 0.3; }
-  50%       { opacity: 1; }
-  80%, 100% { opacity: 0.3; }
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
 }
 
 /* ------------ Typewriter Cursor (reusable) ------------ */
 .typewriter-cursor {
-  color: var(--color-secondary);
+  color: var(--text-secondary);
   animation: blink 0.8s infinite;
 }
 
 /* ------------ Responsive ------------ */
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   body {
     font-size: 14px;
     padding: var(--spacing-sm);
   }
 
   .ascii-title {
-    font-size: 10px;
+    font-size: 8px;
   }
 
   .subtitle {
     font-size: 14px;
   }
 
-  .digital-avatar-badge {
-    top: 10px;
-    font-size: 10px;
-  }
-
-  .header-clock {
-    top: 10px;
-    font-size: 12px;
-  }
-
   #terminal {
-    padding: var(--spacing-sm) 0;
+    padding: var(--spacing-md) var(--spacing-lg);
   }
 
   #output {
     padding-right: var(--spacing-xs);
   }
 
+  .digital-avatar-badge {
+    top: var(--spacing-md);
+    font-size: 10px;
+  }
+
+  .header-clock {
+    top: var(--spacing-md);
+    font-size: 10px;
+  }
+
   .prompt {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   #command-input {
     font-size: 14px;
+  }
+
+  .choice-button::before {
+    left: 10px;
+    font-size: 11px;
   }
 }

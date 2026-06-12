@@ -247,45 +247,95 @@ const ui = (() => {
   }
 
   /**
-   * Display a group of choice buttons (returns Promise with selected value).
+   * Display a group of choice buttons with keyboard navigation.
+   * Supports: ArrowUp/ArrowDown, Enter, number keys 1-9.
+   * Disables command-input during choice selection, restores after.
    * @param {{label: string, value: any}[]} options - Choice options.
    * @param {string} [promptText='请做出选择：'] - Prompt text above buttons.
-   * @returns {Promise<any>} Resolves with opt.value of clicked button.
+   * @returns {Promise<any>} Resolves with opt.value of selected button.
    */
   function displayChoice(options, promptText = '请做出选择：') {
-    const el = ensureOutput();
-    if (!el) return;
+    return new Promise((resolve) => {
+      const output = ensureOutput();
+      const commandInput = getInput();
+      if (!output) { resolve(-1); return; }
 
-    if (promptText) {
-      const promptEl = document.createElement('div');
-      promptEl.className = 'line hint';
-      promptEl.textContent = promptText;
-      el.appendChild(promptEl);
-    }
+      if (promptText) {
+        const prompt = document.createElement('div');
+        prompt.className = 'line hint';
+        prompt.textContent = promptText;
+        output.appendChild(prompt);
+      }
 
-    const container = document.createElement('div');
-    container.className = 'choice-group';
-    container.style.margin = '8px 0';
+      const container = document.createElement('div');
+      container.className = 'choice-group';
+      const buttons = [];
 
-    return new Promise(resolve => {
-      options.forEach(opt => {
+      options.forEach((opt, i) => {
         const btn = document.createElement('button');
         btn.className = 'choice-button';
         btn.textContent = opt.label;
+        btn.setAttribute('data-index', String(i + 1));
+        btn.setAttribute('tabindex', '0');
 
         btn.addEventListener('click', () => {
-          container.querySelectorAll('.choice-button').forEach(b => {
-            b.disabled = true;
-          });
-          btn.classList.add('selected');
-          resolve(opt.value);
+          if (btn.disabled) return;
+          activate(i);
         });
 
         container.appendChild(btn);
+        buttons.push(btn);
       });
 
-      el.appendChild(container);
+      output.appendChild(container);
       scrollOutputToBottom();
+
+      let focusedIndex = 0;
+      buttons[0].classList.add('focused');
+
+      if (commandInput) commandInput.disabled = true;
+
+      function activate(idx) {
+        if (idx < 0 || idx >= options.length) return;
+        buttons.forEach((b, i) => {
+          b.disabled = true;
+          if (i === idx) b.classList.add('selected');
+        });
+        if (commandInput) {
+          commandInput.disabled = false;
+          commandInput.focus();
+        }
+        window.removeEventListener('keydown', keyHandler);
+        resolve(options[idx].value);
+      }
+
+      function keyHandler(e) {
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          moveFocus((focusedIndex - 1 + options.length) % options.length);
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          moveFocus((focusedIndex + 1) % options.length);
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          activate(focusedIndex);
+        } else if (/^[1-9]$/.test(e.key)) {
+          const idx = parseInt(e.key, 10) - 1;
+          if (idx < options.length) {
+            e.preventDefault();
+            activate(idx);
+          }
+        }
+      }
+
+      function moveFocus(idx) {
+        buttons[focusedIndex].classList.remove('focused');
+        focusedIndex = idx;
+        buttons[idx].classList.add('focused');
+        buttons[idx].focus();
+      }
+
+      window.addEventListener('keydown', keyHandler);
     });
   }
 
