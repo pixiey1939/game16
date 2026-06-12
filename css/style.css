@@ -247,7 +247,7 @@ body {
   outline: none;
   color: var(--text);
   font-family: var(--font-mono);
-  caret-color: var(--accent);
+  caret-color: transparent;
   font-size: 15px;
 }
 
