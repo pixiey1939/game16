@@ -11,7 +11,8 @@ const command = (() => {
     'l': 'list', 'ls': 'list',
     'a': 'access', 'enter': 'access',
     'c': 'combine',
-    'cls': 'clear',
+    // cls is registered as its own command now
+    'saveclear': 'clear',
     'conclusion': 'conclusions', 'summary': 'conclusions',
   };
 
@@ -74,10 +75,14 @@ command.register('help', {
   desc: '显示可用命令',
   fn: () => {
     ui.print('当前可用命令：', 'hint');
-    ui.print('  help    — 显示帮助', '');
-    ui.print('  list    — 查看已解锁证据', '');
-    ui.print('  access  — 查看可访问系统', '');
-    ui.print('  clear   — 清屏', '');
+    ui.print('  help     — 显示帮助', '');
+    ui.print('  list     — 查看已解锁证据', '');
+    ui.print('  access   — 查看可访问系统', '');
+    ui.print('  combine  — 组合分析证据（如 combine E-05+E-18）', '');
+    ui.print('  cls      — 清屏（不影响存档）', '');
+    ui.print('  clear    — 清除存档（需 clear confirm）', '');
+    ui.print('  save     — 保存游戏进度', '');
+    ui.print('  load     — 加载游戏进度', '');
   },
 });
 
@@ -113,36 +118,10 @@ command.register('access', {
   },
 });
 
-command.register('clear', {
+command.register('cls', {
   desc: '清屏',
   fn: () => {
     if (typeof ui.clear === 'function') ui.clear();
-  },
-});
-
-command.register('y', {
-  desc: '确认（Y）',
-  fn: async () => {
-    const state = game.getState();
-    if (state._waitingFor === 'stage1-yesno') {
-      await handleStage1Response('y');
-      state._waitingFor = null;
-    } else {
-      ui.print('输入 help 查看可用命令。', 'hint');
-    }
-  },
-});
-
-command.register('n', {
-  desc: '否定（N）',
-  fn: async () => {
-    const state = game.getState();
-    if (state._waitingFor === 'stage1-yesno') {
-      await handleStage1Response('n');
-      state._waitingFor = null;
-    } else {
-      ui.print('输入 help 查看可用命令。', 'hint');
-    }
   },
 });
 
@@ -175,14 +154,33 @@ command.register('load', {
 });
 
 command.register('clear', {
-  desc: '清除所有存档',
-  requiresArgs: false,
+  desc: '清除存档（需 clear confirm）',
+  requiresArgs: true,
+  usage: 'clear confirm',
   fn: (args) => {
     if (args.length > 0 && args[0] === 'confirm') {
       clearSave();
     } else {
-      ui.print('⚠️ 你确定要清除所有存档吗？', 'warning');
-      ui.print('输入 clear confirm 以确认', 'hint');
+      ui.print('用法：clear confirm', 'error');
+      ui.print('输入 cls 可以清屏（不影响存档）', 'hint');
+    }
+  },
+});
+
+// OA 子菜单路由命令
+command.register('oa', {
+  desc: '访问 OA 子系统（1=通讯录 2=聊天 3=邮箱 4=流程）',
+  requiresArgs: true,
+  usage: 'oa 1 / oa 2 / oa 3 / oa 4 / oa back',
+  unlockedWhen: (s) => s.unlockedSystems.includes('OA') && s.currentStage >= 2,
+  fn: async (args) => {
+    const action = args[0];
+    if (action === '1' || action === '2' || action === '3' || action === '4') {
+      await handleOASubcommand(action);
+    } else if (action === 'back') {
+      ui.print('已返回 OA 主菜单。输入 access 查看系统列表。', 'hint');
+    } else {
+      ui.print('未知 OA 子命令。用法：oa 1 / oa 2 / oa 3 / oa 4 / oa back', 'error');
     }
   },
 });

@@ -211,7 +211,7 @@ function runOASystem() {
   ui.print('  [3] 企业邮箱', '');
   ui.print('  [4] 我的流程', '');
   ui.print('', '');
-  ui.print('输入编号 1-4，或 back 返回主菜单。', 'hint');
+  ui.print('用法示例：oa 1（通讯录）、oa 2（聊天）、oa 3（邮箱）、oa 4（流程）、oa back', 'hint');
   game.getState()._currentSystem = 'OA';
   game.getState()._currentSystemStage = 'menu';
 }
@@ -425,4 +425,112 @@ function clearSave() {
  */
 function hasSaveCheck() {
   return localStorage.getItem(SAVE_KEY) !== null;
+}
+
+async function handleOASubcommand(action) {
+  const state = game.getState();
+  const submenu = {
+    '1': '通讯录',
+    '2': '聊天记录',
+    '3': '企业邮箱',
+    '4': '我的流程',
+  };
+  const name = submenu[action];
+  if (!name) {
+    ui.print('无效的 OA 子命令。', 'error');
+    return;
+  }
+
+  ui.print('━━━ ' + name + ' ━━━', 'system');
+
+  if (action === '1') {
+    ui.print('[麻姐·基本信息]', 'important');
+    ui.print('  姓名：梁洛邑    工号：CM-2021-0047', '');
+    ui.print('  部门：产品研发部  职位：高级产品经理', '');
+    ui.print('  手机：138xxxx8812', '');
+    ui.print('  企业微信：liangly', '');
+    ui.print('', '');
+    ui.print('[常用联系人]', 'important');
+    ui.print('  郑桥（高级研发工程师）134xxxx7821 — 工作对接', '');
+    ui.print('  邹大雄（健身教练/大怪兽）138xxxx7753', '');
+    ui.print('  钱敏（行政部）', '');
+    ui.print('  陈立（产品总监）', '');
+    ui.print('', '');
+    ui.print('输入 oa 查看其他 OA 子菜单（oa 2 / oa 3 / oa 4）', 'hint');
+  } else if (action === '2') {
+    if (state.unlockedEvidence.includes('E-02')) {
+      ui.print('[已解锁] OA 聊天记录 — 与郑桥', 'important');
+      ui.print('共 24 条私聊（2026-06-05 ~ 2026-06-17）', '');
+      ui.print('最新几条（06-17 案发当天）：', '');
+      ui.print('  09:40 郑桥: 对了，你今天中午有安排吗？', '');
+      ui.print('  09:42 郑桥: 这周五端午假期开始了，你有什么安排？', '');
+      ui.print('  09:43 麻姐: 中午有事，端午假期暂时没安排。', '');
+      ui.print('', '');
+      ui.print('输入 list 查看完整证据，或 combine 组合证据。', 'hint');
+    } else {
+      const choice = await ui.displayChoice([
+        { label: '查看与郑桥的聊天记录', value: 'zhengqiao' },
+        { label: '查看与其他人的聊天记录', value: 'others' },
+      ], '你想查看谁的聊天记录？');
+      if (choice === 'zhengqiao') {
+        game.unlockEvidence('E-02');
+        ui.printDialogue('数字麻姐', [
+          '郑桥的聊天记录...我看看...',
+          '这个人，最近和麻姐的私聊明显变多了。',
+        ], 'digital-human');
+        ui.print('[新证据已解锁：E-02｜' + (typeof EVIDENCE !== 'undefined' ? EVIDENCE['E-02'].name : 'OA聊天记录') + ']', 'evidence');
+      } else {
+        ui.print('其他联系人的聊天记录都是正常工作沟通，没有异常。', 'hint');
+      }
+    }
+  } else if (action === '3') {
+    if (state.unlockedEvidence.includes('E-03')) {
+      ui.print('[已解锁] 麻姐·企业邮箱', 'important');
+      ui.print('共 4 封关键邮件（最近一周）', '');
+      ui.print('  M-2026-2098: 门禁权限激活（已通过）', '');
+      ui.print('  M-2026-2085: 端午节假期安排（6/19-6/21）', '');
+      ui.print('  M-2026-2072: 项目评审（6/17 周三 15:00）', '');
+      ui.print('  M-2026-2055: 门禁权限变更提醒', '');
+      ui.print('', '');
+      ui.print('输入 list 查看完整证据，或 combine 组合证据。', 'hint');
+    } else {
+      const choice = await ui.displayChoice([
+        { label: '查看最近邮件列表', value: 'list' },
+        { label: '查看已完成的门禁激活申请', value: 'doorcard' },
+      ], '你想查看什么？');
+      if (choice === 'list') {
+        game.unlockEvidence('E-03');
+        ui.printDialogue('数字麻姐', [
+          '麻姐的邮箱里...有一封"门禁权限激活"的邮件。',
+          '这是案发当天早上的。让我点进去看看...',
+        ], 'digital-human');
+        ui.print('[新证据已解锁：E-03｜' + (typeof EVIDENCE !== 'undefined' ? EVIDENCE['E-03'].name : 'OA邮箱') + ']', 'evidence');
+        game.unlockSystem('门禁');
+        game.unlockSystem('停车场');
+        ui.print('[系统解锁：门禁系统]', 'evidence');
+        ui.print('[系统解锁：停车场系统]', 'evidence');
+        game.save();
+      } else {
+        ui.printDialogue('数字麻姐', [
+          '申请说明：刷卡时提示"权限验证失败"，无法进入工位区域。',
+          '这是...麻姐的门禁卡失效了？',
+        ], 'digital-human');
+        ui.print('[新证据已解锁：E-03]', 'evidence');
+        game.unlockEvidence('E-03');
+        game.unlockSystem('门禁');
+        game.unlockSystem('停车场');
+        ui.print('[系统解锁：门禁 / 停车场]', 'evidence');
+        game.save();
+      }
+    }
+  } else if (action === '4') {
+    ui.print('[麻姐·我的流程]', 'important');
+    ui.print('  AP-2026-2045 门禁权限激活 — 已通过', '');
+    ui.print('  AP-2026-2015 会议室预约 B302 — 已通过', '');
+    ui.print('  AP-2026-1988 端午假期值班排班 — 已通过', '');
+    ui.print('  AP-2026-2019 办公电脑申请 — 已通过', '');
+    ui.print('  AP-2026-1820 出差申请-十堰 — 已通过', '');
+    ui.print('', '');
+    ui.print('提示：门禁激活申请是关键，进入 oa 3 查看邮件详情。', 'hint');
+  }
 }
