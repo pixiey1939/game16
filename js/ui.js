@@ -310,6 +310,10 @@ const ui = (() => {
       }
 
       function keyHandler(e) {
+        // Ignore events originating from the command input to prevent double-handling
+        // with main.js's input.keydown listener (race condition when async showXxx
+        // calls displayChoice immediately after dispatch).
+        if (commandInput && e.target === commandInput) return;
         if (e.key === 'ArrowUp') {
           e.preventDefault();
           moveFocus((focusedIndex - 1 + options.length) % options.length);

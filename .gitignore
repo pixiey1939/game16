@@ -19,3 +19,13 @@
 
 # OS
 Thumbs.db
+
+# Node
+node_modules/
+package-lock.json
+
+# Test artifacts
+test-results/
+
+# Planning docs (local)
+.omo/

@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 启动游戏
   setTimeout(async () => {
-    const state = game.getState();
+    let state = game.getState();
 
     if (hasSaveCheck()) {
       ui.print('检测到存档', 'hint');
@@ -36,10 +36,27 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (e) {
         ui.print(`[加载失败] ${e.message}`, 'error');
       }
+      // loadGame() 内部重新赋值了 IIFE 闭包的 state 变量
+      // 必须重新获取 state 引用才能看到加载后的数据
+      state = game.getState();
       state.loadingFromSave = false;
       ui.print(`当前阶段：${state.currentStage}`, 'hint');
       ui.print(`已解锁证据：${state.unlockedEvidence.length}/21`, 'hint');
       ui.print('输入 help 查看所有命令', 'hint');
+      // 重新触发当前阶段介绍（如果该阶段的 intro 还没显示过）
+      try {
+        var currentStage = state.currentStage;
+        if (currentStage === 2 && !state.stageIntroShown[2]) {
+          runStage2();
+        } else if (currentStage === 3 && !state.stageIntroShown[3]) {
+          runStage3();
+        } else if (currentStage === 5 && !state.stageIntroShown[5]) {
+          runStage5();
+        }
+      } catch (e) {
+        ui.print(`[阶段恢复错误] ${e.message}`, 'error');
+        console.error(e);
+      }
     } else {
       try {
         await runStage1();
