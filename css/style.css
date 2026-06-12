@@ -1,0 +1,224 @@
+/* ============================================================
+   GAME 16 — 消失的麻姐 | Terminal UI Stylesheet (MVP)
+   Black background, green text, yellow title, blinking cursor
+   ============================================================ */
+
+/* ------------ Reset & Base ------------ */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: #000;
+  color: #00ff00;
+  font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
+  font-size: 16px;
+  line-height: 1.5;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  padding: 20px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ------------ Terminal Container ------------ */
+#terminal {
+  width: 100%;
+  max-width: 900px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  position: relative;
+}
+
+/* Shake animation for dramatic moments */
+#terminal.shake {
+  animation: screenShake 0.4s ease-in-out;
+}
+
+@keyframes screenShake {
+  25% { transform: translate(-4px, 2px); background: #220000; }
+  50% { transform: translate(4px, -2px); }
+  75% { transform: translate(-2px, -2px); background: #220000; }
+}
+
+/* ------------ Header ------------ */
+#header {
+  text-align: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #003300;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+#header h1 {
+  color: #ffff00;
+  font-size: 36px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  animation: fadeIn 2s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.subtitle {
+  color: #bb86fc;
+  font-size: 16px;
+  margin-top: 4px;
+}
+
+/* ------------ Output Area ------------ */
+#output {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #003300 #000;
+}
+
+#output::-webkit-scrollbar {
+  width: 6px;
+}
+
+#output::-webkit-scrollbar-track {
+  background: #000;
+}
+
+#output::-webkit-scrollbar-thumb {
+  background: #003300;
+}
+
+/* ------------ Input Line ------------ */
+#input-line {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #003300;
+}
+
+.prompt {
+  color: #00ff00;
+  font-size: 18px;
+  margin-right: 6px;
+  user-select: none;
+}
+
+#command-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #00ff00;
+  font-family: inherit;
+  font-size: 16px;
+  caret-color: transparent;
+}
+
+.cursor {
+  color: #00ff00;
+  font-size: 18px;
+  animation: blink 1s infinite;
+  user-select: none;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* ------------ Text Line Types ------------ */
+.line {
+  padding: 2px 0;
+  word-wrap: break-word;
+}
+
+.line.digital-human {
+  color: #00ff00;
+}
+
+.line.zheng-qiao {
+  color: #ff5555;
+}
+
+.line.error {
+  color: #ff5555;
+}
+
+.line.hint {
+  color: #00aaff;
+}
+
+.line.important {
+  color: #ffff00;
+}
+
+.line.warning {
+  color: #ff8800;
+}
+
+.line.system {
+  color: #bb86fc;
+}
+
+.line.evidence {
+  color: #ffff00;
+  font-weight: bold;
+}
+
+/* Evidence flash animation on key discoveries */
+.line.evidence-flash {
+  animation: evidenceFlash 1.5s ease-in-out 1;
+}
+
+@keyframes evidenceFlash {
+  0%, 100% { background: transparent; }
+  50%      { background: #444400; }
+}
+
+/* ------------ Responsive ------------ */
+@media (max-width: 600px) {
+  body {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  #header h1 {
+    font-size: 20px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  #terminal {
+    padding: 10px 0;
+  }
+
+  #output {
+    padding-right: 4px;
+  }
+
+  .prompt {
+    font-size: 16px;
+  }
+
+  #command-input {
+    font-size: 14px;
+  }
+}
