@@ -146,3 +146,13 @@ command.register('n', {
     }
   },
 });
+
+command.register('combine', {
+  desc: '组合分析证据',
+  unlockedWhen: (s) => s.unlockedEvidence.length >= 2,
+  requiresArgs: true,
+  usage: 'combine E-XX+E-YY',
+  fn: (args) => {
+    handleCombine(args);
+  },
+});
