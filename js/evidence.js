@@ -334,6 +334,154 @@ const EVIDENCE = {
       analysis: '郑桥在卫生间待了 30 分钟，有点反常。',
     },
   },
+
+  'E-15': {
+    id: 'E-15',
+    name: '微信聊天记录（老公）',
+    type: 'text',
+    source: '麻姐手机微信',
+    unlockSystem: '微信',
+    autoUnlock: false,
+    content: {
+      dateRange: '2026.05.25',
+      messages: [
+        { from: '麻姐', text: '老公，我跟你说个事...' },
+        { from: '麻姐', text: '我们公司那个郑桥，今天又来找我说话了' },
+        { from: '麻姐', text: '他还问我说"你老公对你好不好"' },
+        { from: '麻姐', text: '我真的觉得很不舒服' },
+        { from: '丈夫', text: '他是不是对你有意思？' },
+        { from: '麻姐', text: '不是有意思，是那种...让我害怕的感觉' },
+        { from: '麻姐', text: '他好像知道我很多事情' },
+        { from: '麻姐', text: '连我几点下班，周末去哪里他都知道' },
+        { from: '丈夫', text: '要不要和公司反映一下？' },
+        { from: '麻姐', text: '我不知道...他也没做什么出格的事' },
+        { from: '麻姐', text: '就是那种暗戳戳的，让人发毛' },
+      ],
+      analysis: '麻姐对郑桥早有防备。',
+    },
+  },
+
+  'E-16': {
+    id: 'E-16',
+    name: '微信聊天记录（大怪兽教练）',
+    type: 'text',
+    source: '麻姐手机微信',
+    unlockSystem: '微信',
+    autoUnlock: false,
+    content: {
+      messages: [
+        { date: '06-10 09:25', from: '大怪兽', text: '麻姐，我换手机号码了，新号码：138xxxx7753' },
+        { date: '06-10 09:30', from: '大怪兽', text: '麻姐，周三直播照常 12:15 开始对吧？' },
+        { date: '06-10 09:35', from: '麻姐', text: '对的，12:15 开始，我准备好啦～' },
+        { date: '06-17 11:45', from: '大怪兽', text: '麻姐到了吗？等你来哦！' },
+        { date: '06-17 12:00', from: '大怪兽', text: '收到，12:05 见！' },
+      ],
+      analysis: '平时都是 12:15 开始，教练怎么说 12:05 见呢？麻姐并没有说 12:05 见。',
+    },
+  },
+
+  'E-17': {
+    id: 'E-17',
+    name: '健身房教练信息',
+    type: 'data',
+    source: '炼健身教练介绍',
+    unlockSystem: '健身房',
+    autoUnlock: false,
+    content: {
+      coaches: [
+        { id: 'C-001', name: '叶斌', skills: '力量训练 / 体能提升 / 增肌减脂' },
+        { id: 'C-003', name: '邹大雄(大怪兽)', skills: '体能训练 / 力量训练 / 直播陪练', phone: '138xxxx7753' },
+        { id: 'C-005', name: '沈子汛', skills: '功能性训练 / 核心力量 / 康复训练' },
+        { id: 'C-007', name: '崔佛 Trevor', skills: '拳击 / HIIT / 爆发力训练' },
+        { id: 'C-009', name: '吴教练', skills: '瑜伽 / 普拉提 / 拉伸放松' },
+        { id: 'C-012', name: '羿天', skills: 'CrossFit / 综合体能 / 团队训练' },
+        { id: 'C-015', name: '袁琬琰', skills: '女性塑形 / 产后恢复 / 小团课' },
+      ],
+      analysis: '原来大怪兽教练的真实姓名叫邹大雄。',
+    },
+  },
+
+  'E-18': {
+    id: 'E-18',
+    name: '健身房门禁记录',
+    type: 'data',
+    source: '炼健身小程序后台 API',
+    unlockSystem: '健身房',
+    autoUnlock: false,
+    content: {
+      records: [
+        { time: '11:50:37', memberId: 'GF-10421', name: '梁洛邑', method: '人脸识别' },
+        { time: '11:54:22', memberId: 'GF-10655', name: '郑桥', method: '人脸识别' },
+        { time: '12:18:09', memberId: 'GF-10655', name: '郑桥', method: '人脸识别' },
+        // 梁洛邑无出场记录
+      ],
+      analysis: '麻姐的出场记录不存在，是不是没有离开健身房。',
+    },
+  },
+
+  'E-19': {
+    id: 'E-19',
+    name: '健身房监控截图',
+    type: 'image',
+    source: '炼健身后台监控系统',
+    unlockSystem: '健身房',
+    autoUnlock: false,
+    content: {
+      title: '教练在女更衣室通道监控中出现记录',
+      appearances: [
+        { time: '12:08:31', description: '邹大雄出现在女更衣室门口' },
+        { time: '12:22:17', description: '邹大雄再次出现在女更衣室门口' },
+        { time: '12:35:49', description: '邹大雄在女更衣室门口观望后离开' },
+        { time: '13:28:45', description: '邹大雄第三次出现在女更衣室门口' },
+        { time: '13:29:51', description: '一名女性会员被邹大雄带往普拉提房方向' },
+      ],
+      analysis: '教练一直在女更衣室门口徘徊和观望，很可疑。',
+    },
+  },
+
+  'E-20': {
+    id: 'E-20',
+    name: '健身房 Wi-Fi 日志',
+    type: 'data',
+    source: '炼健身 WiFi 日志后台',
+    unlockSystem: '健身房',
+    autoUnlock: false,
+    content: {
+      wifi: 'ljs_5G',
+      keyConnections: [
+        { time: '11:49:02', mac: '7E:3B:91:AA:6F:2D', phone: '138xxxx8812', note: '麻姐手机' },
+        { time: '11:54:44', mac: '6C:4F:A8:3D:8B:59', phone: '189xxxx6629', note: '郑桥手机' },
+        { time: '12:18:09', mac: '6C:4F:A8:3D:8B:59', phone: '189xxxx6629', note: '郑桥断开' },
+        { time: '13:08:25', mac: '6C:4F:A8:3D:8B:59', phone: '189xxxx6629', note: '郑桥再次连接' },
+        { time: '13:25:19', mac: '6C:4F:A8:3D:8B:59', phone: '189xxxx6629', note: '郑桥断开' },
+        { time: '13:40:08', mac: '6C:4F:A8:3D:8B:59', phone: '189xxxx6629', note: '郑桥第三次连接' },
+      ],
+      dns: [
+        { time: '06:04:15', mac: '9A:5D:C3:72:E4:18', domain: 'b2b-sedative.xyz', note: '搜索镇静剂' },
+      ],
+      analysis: '大部分 DNS 是百度、天气等正常网站，但有人搜索过"sedative"（镇静剂）相关网站。',
+    },
+  },
+
+  'E-21': {
+    id: 'E-21',
+    name: '微信支付记录',
+    type: 'data',
+    source: '麻姐手机微信',
+    unlockSystem: '微信',
+    autoUnlock: false,
+    content: {
+      payments: [
+        {
+          time: '2026-06-17 11:43',
+          merchant: '广埠屯惠选超市',
+          amount: '¥6.00',
+          items: '农夫山泉 550ml × 3',
+        },
+      ],
+      analysis: '确认麻姐在广埠屯惠选超市买了三瓶水，一瓶自己喝，一瓶送给网友，还有一瓶去哪里了？',
+    },
+  },
 };
 
 // 系统名到系统全名的映射
