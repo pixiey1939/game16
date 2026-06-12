@@ -8,17 +8,40 @@
 </head>
 <body>
   <div id="terminal">
+    <!-- 数字人徽章：右上角常驻显示 -->
+    <div id="digital-avatar" class="digital-avatar-badge">
+      <span class="pulse-dot"></span>
+      <span class="avatar-label">数字麻姐 · 在线</span>
+    </div>
+
+    <!-- 实时时钟：顶部显示（JS 每秒更新） -->
+    <div id="header-clock" class="header-clock">00:00:00</div>
+
+    <!-- 终端顶部：ASCII art + 副标题 -->
     <div id="header">
-      <h1>GAME 16</h1>
+      <pre class="ascii-title">
+   ____    _    __  __ _____   ____   __
+  / ___|  / \  |  \/  | ____| |___ \ | _|
+ | |  _  / _ \ | |\/| |  _|     __) ||_ |
+ | |_| |/ ___ \| |  | | |___   / __/  | |
+  \____/_/   \_\_|  |_|_____| |_____| |_|
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</pre>
       <p class="subtitle">消失的麻姐</p>
     </div>
+
+    <!-- 输出区域（终端主体） -->
     <div id="output" role="log" aria-live="polite"></div>
+
+    <!-- 输入行 -->
     <div id="input-line">
       <span class="prompt">&gt;</span>
       <input type="text" id="command-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" autofocus>
       <span class="cursor">▌</span>
     </div>
   </div>
+
+  <!-- 脚本加载顺序不变 -->
   <script src="js/evidence.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/game.js"></script>
