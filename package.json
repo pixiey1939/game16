@@ -1,0 +1,20 @@
+{
+  "name": "game16",
+  "version": "1.0.0",
+  "description": "一款基于终端风格的 Meta 解谜游戏。玩家扮演麻姐的同事，通过命令行界面调查麻姐的失踪事件。",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.60.0"
+  }
+}
