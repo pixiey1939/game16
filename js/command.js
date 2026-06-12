@@ -13,7 +13,6 @@ const command = (() => {
     'c': 'combine',
     'cls': 'clear',
     'conclusion': 'conclusions', 'summary': 'conclusions',
-    'save': 'backup', 'b': 'backup',
   };
 
   /**
@@ -154,5 +153,36 @@ command.register('combine', {
   usage: 'combine E-XX+E-YY',
   fn: (args) => {
     handleCombine(args);
+  },
+});
+
+command.register('save', {
+  desc: '保存游戏进度',
+  fn: () => {
+    saveGame();
+  },
+});
+
+command.register('load', {
+  desc: '加载游戏进度',
+  fn: () => {
+    if (!hasSaveCheck()) {
+      ui.print('没有可用的存档', 'warning');
+      return;
+    }
+    loadGame();
+  },
+});
+
+command.register('clear', {
+  desc: '清除所有存档',
+  requiresArgs: false,
+  fn: (args) => {
+    if (args.length > 0 && args[0] === 'confirm') {
+      clearSave();
+    } else {
+      ui.print('⚠️ 你确定要清除所有存档吗？', 'warning');
+      ui.print('输入 clear confirm 以确认', 'hint');
+    }
   },
 });

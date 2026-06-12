@@ -155,6 +155,7 @@ function handleStage1Response(input) {
     // 数字人引导
     ui.print('你可以随时输入 help 查看当前可以使用的操作。', 'digital-human');
     game.setStage(2);
+    saveGame();
     game.markStageIntro(2);
     setTimeout(() => runStage2(), 1500);
     return true;
@@ -343,4 +344,68 @@ function handleCombine(args) {
     }
   }
   ui.print('这两个证据无法生成有效结论。', 'error');
+}
+
+// ============================================================
+// localStorage 持久化存档系统（Task 8）
+// ============================================================
+
+/**
+ * 保存游戏状态到 localStorage
+ */
+function saveGame() {
+  try {
+    const state = game.getState();
+    const saveData = {
+      version: VERSION,
+      timestamp: Date.now(),
+      state: state,
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+    ui.print('✅ 游戏已保存', 'hint');
+    return true;
+  } catch (e) {
+    ui.print('❌ 保存失败: ' + e.message, 'error');
+    return false;
+  }
+}
+
+/**
+ * 从 localStorage 加载游戏状态
+ */
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) {
+      return false;
+    }
+    const saveData = JSON.parse(raw);
+    if (saveData.version !== VERSION) {
+      ui.print('⚠️ 存档版本不匹配，已忽略', 'warning');
+      localStorage.removeItem(SAVE_KEY);
+      return false;
+    }
+    game.load();
+    const date = new Date(saveData.timestamp);
+    ui.print(`✅ 存档已加载 (${date.toLocaleString()})`, 'hint');
+    return true;
+  } catch (e) {
+    ui.print('❌ 加载失败: ' + e.message, 'error');
+    return false;
+  }
+}
+
+/**
+ * 清除存档
+ */
+function clearSave() {
+  localStorage.removeItem(SAVE_KEY);
+  ui.print('🗑️ 存档已清除', 'hint');
+}
+
+/**
+ * 检查是否有存档
+ */
+function hasSaveCheck() {
+  return localStorage.getItem(SAVE_KEY) !== null;
 }
