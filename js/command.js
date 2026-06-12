@@ -122,10 +122,10 @@ command.register('clear', {
 
 command.register('y', {
   desc: '确认（Y）',
-  fn: () => {
+  fn: async () => {
     const state = game.getState();
     if (state._waitingFor === 'stage1-yesno') {
-      handleStage1Response('y');
+      await handleStage1Response('y');
       state._waitingFor = null;
     } else {
       ui.print('输入 help 查看可用命令。', 'hint');
@@ -135,10 +135,10 @@ command.register('y', {
 
 command.register('n', {
   desc: '否定（N）',
-  fn: () => {
+  fn: async () => {
     const state = game.getState();
     if (state._waitingFor === 'stage1-yesno') {
-      handleStage1Response('n');
+      await handleStage1Response('n');
       state._waitingFor = null;
     } else {
       ui.print('输入 help 查看可用命令。', 'hint');
