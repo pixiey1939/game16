@@ -130,10 +130,212 @@ const ui = (() => {
    */
   function getInputValue() { const el = getInput(); return el ? el.value : ''; }
 
+  // --- New UI functions (Batch 2) -------------------------------------------
+
+  /**
+   * Print a dialogue box with speaker name and multiple content lines.
+   * @param {string} speaker - Name of the speaker.
+   * @param {string[]} lines - Array of dialogue content lines.
+   * @param {string} [type='digital-human'] - CSS type suffix for styling.
+   * @returns {HTMLDivElement[]} Array of created content elements.
+   */
+  function printDialogue(speaker, lines, type = 'digital-human') {
+    const el = ensureOutput();
+    if (!el) return [];
+
+    const box = document.createElement('div');
+    box.className = `dialogue-box ${type}`;
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'speaker-name';
+    nameEl.textContent = speaker;
+    box.appendChild(nameEl);
+
+    const results = [];
+    lines.forEach(line => {
+      const contentEl = document.createElement('div');
+      contentEl.className = `dialogue-content line ${type}`;
+      contentEl.textContent = line;
+      box.appendChild(contentEl);
+      results.push(contentEl);
+    });
+
+    el.appendChild(box);
+    scrollOutputToBottom();
+    return results;
+  }
+
+  /**
+   * Async typewriter effect — displays text character by character.
+   * @param {HTMLElement} element - Target element to type into.
+   * @param {string} text - Full text content.
+   * @param {number} [speed=30] - Milliseconds per character.
+   * @returns {Promise<void>}
+   */
+  async function typewriter(element, text, speed = 30) {
+    await new Promise(resolve => {
+      let i = 0;
+      const timer = setInterval(() => {
+        if (i >= text.length) {
+          clearInterval(timer);
+          resolve();
+          return;
+        }
+        element.textContent += text[i];
+        i++;
+      }, speed);
+    });
+  }
+
+  /**
+   * Initialize real-time clock display in #header-clock (HH:MM:SS).
+   */
+  function initClock() {
+    const clockEl = document.getElementById('header-clock');
+    if (!clockEl) return;
+
+    const update = () => {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      clockEl.textContent = `${hh}:${mm}:${ss}`;
+    };
+    update();
+    setInterval(update, 1000);
+  }
+
+  /**
+   * Show "connecting to xxx..." animation with auto-hide after durationMs.
+   * @param {string} systemName - Name of the system being connected.
+   * @param {number} [durationMs=2000] - Duration before auto-hide.
+   * @returns {Promise<void>}
+   */
+  function showConnectionAnimation(systemName, durationMs = 2000) {
+    const el = ensureOutput();
+    if (!el) return;
+
+    const container = document.createElement('div');
+    container.className = 'loading-indicator';
+
+    const textEl = document.createElement('span');
+    textEl.textContent = `[正在连接 ${systemName}]`;
+    container.appendChild(textEl);
+
+    const dots = ['.', '.', '.'];
+    dots.forEach(() => {
+      const dotEl = document.createElement('span');
+      dotEl.className = 'dot';
+      dotEl.style.animation = 'dotPulse 1.2s infinite';
+      container.appendChild(dotEl);
+    });
+
+    el.appendChild(container);
+    scrollOutputToBottom();
+
+    return new Promise(resolve => {
+      setTimeout(() => {
+        container.remove();
+        const success = document.createElement('div');
+        success.className = 'line system';
+        success.textContent = `[${systemName} 已连接]`;
+        el.appendChild(success);
+        scrollOutputToBottom();
+        resolve();
+      }, durationMs);
+    });
+  }
+
+  /**
+   * Display a group of choice buttons (returns Promise with selected value).
+   * @param {{label: string, value: any}[]} options - Choice options.
+   * @param {string} [promptText='请做出选择：'] - Prompt text above buttons.
+   * @returns {Promise<any>} Resolves with opt.value of clicked button.
+   */
+  function displayChoice(options, promptText = '请做出选择：') {
+    const el = ensureOutput();
+    if (!el) return;
+
+    if (promptText) {
+      const promptEl = document.createElement('div');
+      promptEl.className = 'line hint';
+      promptEl.textContent = promptText;
+      el.appendChild(promptEl);
+    }
+
+    const container = document.createElement('div');
+    container.className = 'choice-group';
+    container.style.margin = '8px 0';
+
+    return new Promise(resolve => {
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-button';
+        btn.textContent = opt.label;
+
+        btn.addEventListener('click', () => {
+          container.querySelectorAll('.choice-button').forEach(b => {
+            b.disabled = true;
+          });
+          btn.classList.add('selected');
+          resolve(opt.value);
+        });
+
+        container.appendChild(btn);
+      });
+
+      el.appendChild(container);
+      scrollOutputToBottom();
+    });
+  }
+
+  /**
+   * Smooth-scroll the output area to the bottom.
+   */
+  function scrollOutputToBottom() {
+    const el = ensureOutput();
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  /**
+   * Show a loading indicator above the input line.
+   * @param {string} [text='处理中'] - Loading text.
+   */
+  function showLoadingIndicator(text = '处理中') {
+    hideLoadingIndicator();
+    const input = document.getElementById('command-input');
+    if (!input) return;
+
+    const indicator = document.createElement('div');
+    indicator.id = 'loading-indicator';
+    indicator.className = 'loading-indicator';
+    indicator.textContent = text + '...';
+
+    input.parentElement.insertBefore(indicator, input);
+  }
+
+  /**
+   * Hide the loading indicator if present.
+   */
+  function hideLoadingIndicator() {
+    const existing = document.getElementById('loading-indicator');
+    if (existing) existing.remove();
+  }
+
   // -----------------------------------------------------------------------------
   // Public API
   return {
+    // Existing functions
     print, printLines, clear, shakeScreen, stageTransition,
     startScreen, getInput, focusInput, clearInput, getInputValue,
+    // New functions (Batch 2)
+    printDialogue,
+    typewriter,
+    initClock,
+    showConnectionAnimation,
+    displayChoice,
+    scrollOutputToBottom,
+    showLoadingIndicator,
+    hideLoadingIndicator,
   };
 })();

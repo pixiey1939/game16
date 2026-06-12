@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+  ui.initClock();
+
   const output = document.getElementById('output');
   output.innerHTML = '<div class="line digital-human">[终端初始化...]</div>';
   setTimeout(() => {
