@@ -134,14 +134,16 @@ const ui = (() => {
 
   /**
    * Print a dialogue box with speaker name and multiple content lines.
+   * Each line is typed character-by-character. Resolves when all lines
+   * finish typing. Callers may `await` to sequence follow-up actions.
    * @param {string} speaker - Name of the speaker.
    * @param {string[]} lines - Array of dialogue content lines.
    * @param {string} [type='digital-human'] - CSS type suffix for styling.
-   * @returns {HTMLDivElement[]} Array of created content elements.
+   * @returns {Promise<HTMLDivElement[]>} Resolves with created content elements.
    */
   function printDialogue(speaker, lines, type = 'digital-human') {
     const el = ensureOutput();
-    if (!el) return [];
+    if (!el) return Promise.resolve([]);
 
     const box = document.createElement('div');
     box.className = `dialogue-box ${type}`;
@@ -152,17 +154,22 @@ const ui = (() => {
     box.appendChild(nameEl);
 
     const results = [];
-    lines.forEach(line => {
+    const speed = 55;
+    const typingPromises = lines.map(line => {
       const contentEl = document.createElement('div');
       contentEl.className = `dialogue-content line ${type}`;
-      contentEl.textContent = line;
+      contentEl.textContent = '';
       box.appendChild(contentEl);
       results.push(contentEl);
+      return typewriter(contentEl, line, speed);
     });
 
     el.appendChild(box);
     scrollOutputToBottom();
-    return results;
+    return Promise.all(typingPromises).then(() => {
+      scrollOutputToBottom();
+      return results;
+    });
   }
 
   /**
@@ -173,6 +180,7 @@ const ui = (() => {
    * @returns {Promise<void>}
    */
   async function typewriter(element, text, speed = 30) {
+    if (!text) return;
     await new Promise(resolve => {
       let i = 0;
       const timer = setInterval(() => {

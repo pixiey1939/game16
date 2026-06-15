@@ -116,7 +116,7 @@ async function runStage1() {
   if (game.hasShownIntro(1)) return;
   game.markStageIntro(1);
 
-  ui.printDialogue('数字麻姐', [
+  await ui.printDialogue('数字麻姐', [
     '你好，网友。我是麻姐的数字人，她亲手训练我用于辅助她的工作和生活。',
     '',
     '从今天下午 13:30 之后，我突然无法联系到麻姐了。她的手机定位被手动关闭，',
@@ -247,12 +247,6 @@ async function handleAccessSystem(systemName) {
     state._currentSystemStage = 'menu';
   } else if (systemName === '公共监控系统') {
     ui.print('━━━ 公共监控系统 ━━━', 'system');
-    ui.print('  [1] 超市监控', '');
-    ui.print('  [2] 洗车店监控', '');
-    ui.print('', '');
-    ui.print('用法：monitor 1 / monitor 2', 'hint');
-    state._currentSystem = '公共监控';
-    state._currentSystemStage = 'menu';
   } else if (systemName === '短信') {
     handleSmsSystem();
   } else if (systemName === '微信') {
@@ -548,28 +542,28 @@ async function handleOASubcommand(action) {
           '我还发现了麻姐的邮箱里有一封门禁权限激活的邮件...',
           '另外，我们需要查看她的手机数据。她的手机是锁屏状态。',
           '她习惯用简单好记的数字密码——生日、纪念日这类。',
-          '试试输入 unlock 1222 解锁手机。',
+          '试试输入 unlock 解锁手机。',
         ], 'digital-human');
         ui.print('[新证据已解锁：E-03｜' + (typeof EVIDENCE !== 'undefined' ? EVIDENCE['E-03'].name : 'OA邮箱') + ']', 'evidence');
         game.unlockSystem('门禁');
         game.unlockSystem('停车场');
         ui.print('[系统解锁：门禁系统]', 'evidence');
         ui.print('[系统解锁：停车场系统]', 'evidence');
-        ui.print('[系统解锁：手机解锁] 输入 unlock 1222', 'evidence');
+        ui.print('[系统解锁：手机解锁] 试试简单好记的密码', 'evidence');
         game.save();} else {
         ui.printDialogue('数字麻姐', [
           '申请说明：刷卡时提示"权限验证失败"，无法进入工位区域。',
           '这是...麻姐的门禁卡失效了？',
           '另外，我们需要查看她的手机数据。她的手机是锁屏状态。',
           '她习惯用简单好记的数字密码——生日、纪念日这类。',
-          '试试输入 unlock 1222 解锁手机。',
+          '试试输入 unlock 解锁手机。',
         ], 'digital-human');
         ui.print('[新证据已解锁：E-03｜' + (typeof EVIDENCE !== 'undefined' ? EVIDENCE['E-03'].name : 'OA邮箱') + ']', 'evidence');
         game.unlockEvidence('E-03');
         game.unlockSystem('门禁');
         game.unlockSystem('停车场');
         ui.print('[系统解锁：门禁 / 停车场]', 'evidence');
-        ui.print('[系统解锁：手机解锁] 输入 unlock 1222', 'evidence');
+        ui.print('[系统解锁：手机解锁] 试试简单好记的密码', 'evidence');
         game.save();}
     }
   } else if (action === '4') {
@@ -767,8 +761,8 @@ async function handleDoorSystem(action) {
       ui.printDialogue('数字麻姐', [
         '异常刷卡记录有两条值得注意的。',
         '郑桥 12:48 离开公司后 13:55 才回来，期间出现在健身房附近。',
-        '麻姐 13:53 刷卡回公司，但健身房门禁显示她 11:50 入馆后没有出场记录。',
-        '同一人不可能同时出现在两个地方——有人复制了麻姐的工牌。',
+        '麻姐 13:53 刷卡回公司，但之后没有任何刷卡记录——她进了公司之后就没有再出现。',
+        '她上班后失踪了。',
       ], 'digital-human');
       ui.print('[新证据已解锁：E-04｜' + EVIDENCE['E-04'].name + ']', 'evidence');
       ui.print('[新证据已解锁：E-05｜' + EVIDENCE['E-05'].name + ']', 'evidence');
@@ -873,6 +867,54 @@ function handleParkingLicenseQuery(raw) {
     ui.print('请输入正确的车牌号（如 鄂A·8K329），或回停车场菜单。', 'hint');
     state._parkingLicenseQuery = true;
   }
+  return true;
+}
+
+function handleMonitorSearch(raw) {
+  var state = game.getState();
+  var input = raw.trim().toLowerCase();
+  if (input.indexOf('超市') >= 0 || input.indexOf('惠选') >= 0) {
+    if (!state.unlockedEvidence.includes('E-07')) {
+      game.unlockEvidence('E-07');
+      var e07 = EVIDENCE['E-07'].content;
+      ui.print('━━━ 广埠屯惠选超市 - 公共监控 ━━━', 'system');
+      ui.print('', '');
+      e07.data.forEach(function(line) { ui.print('  ' + line, ''); });
+      ui.print('', '');
+      ui.printDialogue('数字麻姐', [
+        '超市门口的监控拍到了麻姐和一个黑衣年轻男性在交谈。',
+        '那个男的身形瘦高，背着一个吉他包。麻姐还递给他一瓶水。',
+      ], 'digital-human');
+      ui.print('[新证据已解锁：E-07｜' + EVIDENCE['E-07'].name + ']', 'evidence');
+      game.save();
+    } else {
+      var e07 = EVIDENCE['E-07'].content;
+      ui.print('━━━ 广埠屯惠选超市 - 公共监控（已查询）━━━', 'system');
+      e07.data.forEach(function(line) { ui.print('  ' + line, ''); });
+    }
+  } else if (input.indexOf('洗车') >= 0 || input.indexOf('广捷') >= 0) {
+    if (!state.unlockedEvidence.includes('E-08')) {
+      game.unlockEvidence('E-08');
+      var e08 = EVIDENCE['E-08'].content;
+      ui.print('━━━ 广捷洗车（广埠屯店）- 公共监控 ━━━', 'system');
+      ui.print('', '');
+      e08.data.forEach(function(line) { ui.print('  ' + line, ''); });
+      ui.print('', '');
+      ui.printDialogue('数字麻姐', [
+        '郑桥在洗车店卫生间待了 30 分钟，非常反常。',
+      ], 'digital-human');
+      ui.print('[新证据已解锁：E-08｜' + EVIDENCE['E-08'].name + ']', 'evidence');
+      game.save();
+    } else {
+      var e08 = EVIDENCE['E-08'].content;
+      ui.print('━━━ 广捷洗车（广埠屯店）- 公共监控（已查询）━━━', 'system');
+      e08.data.forEach(function(line) { ui.print('  ' + line, ''); });
+    }
+  } else {
+    ui.print('未找到匹配"' + raw.trim() + '"的商户监控记录。', 'error');
+    ui.print('目前可查询的商户：含"超市"或"洗车"关键词。', 'hint');
+  }
+  state._monitorSearch = false;
   return true;
 }
 
@@ -1259,7 +1301,7 @@ async function runStage3() {
   ui.printDialogue('数字麻姐', [
     '麻姐的手机还在锁屏状态。',
     '她习惯用简单好记的数字密码——生日、纪念日这类。',
-    '试试输入 unlock 1222 来解锁。',
+    '她习惯用简单好记的数字密码——生日、纪念日这类，比如 unlock + 四位数。',
   ], 'digital-human');
 }
 

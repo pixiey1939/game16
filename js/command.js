@@ -141,10 +141,7 @@ var command = (function () {
       ];
     }
     if (ctx === '公共监控系统' || ctx === 'public_monitor_list') {
-      return [
-        { num: 1, label: '广埠屯惠选超市' },
-        { num: 2, label: '广捷洗车（广埠屯店）' },
-      ];
+      return null;
     }
     if (ctx === '短信') {
       return [
@@ -268,9 +265,9 @@ var command = (function () {
   function showNavMenu() {
     var state = game.getState();
     var ctx = state._navContext || null;
-    var items = getNavItems(ctx);
-    if (!items) return;
     if (!ctx) {
+      var items = getNavItems(ctx);
+      if (!items) return;
       ui.print('当前可访问系统：', 'hint');
       for (var i = 0; i < items.length; i++) {
         var it = items[i];
@@ -284,6 +281,16 @@ var command = (function () {
     var labels = {'OA':'OA 系统','门禁':'门禁系统','停车场':'停车场系统','微信':'微信','健身房':'健身房','信用查询':'信用查询','短信':'短信','相册':'相册','公共监控系统':'公共监控系统','小红书':'小红书','手机定位':'手机定位','OA.chat':'OA - 聊天记录','OA.email':'OA - 企业邮箱','OA.contacts':'OA - 通讯录','OA.workflow':'OA - 我的流程','wechat.chat':'微信 - 聊天记录','wechat.mini':'微信小程序'};
     var label = labels[ctx] || ctx;
     ui.print('━━━ ' + label + ' ━━━', 'system');
+
+    if (ctx === '公共监控系统' || ctx === 'public_monitor_list') {
+      ui.print('', '');
+      ui.print('请输入商户名称搜索监控记录：', 'hint');
+      game.getState()._monitorSearch = true;
+      return;
+    }
+
+    var items = getNavItems(ctx);
+    if (!items) return;
     for (var i = 0; i < items.length; i++) {
       ui.print('  [' + items[i].num + '] ' + items[i].label, '');
     }
@@ -422,34 +429,6 @@ var command = (function () {
       return true;
     }
     if (ctx === '公共监控系统' || ctx === 'public_monitor_list') {
-      var num = target.num;
-      if (num === 1) {
-        var state = game.getState();
-        if (!state.unlockedEvidence.includes('E-07')) {
-          game.unlockEvidence('E-07');
-          var e07 = EVIDENCE["E-07"].content;
-          ui.print("监控显示：麻姐在超市门口与一名黑衣年轻男性交谈约10分钟，递了一瓶水。", "hint");
-          ui.print("[新证据已解锁：E-07|"+EVIDENCE["E-07"].name+"]", "evidence");
-          game.save();
-        } else {
-          var e07 = EVIDENCE["E-07"].content;
-          e07.data.forEach(function(line) { ui.print("  "+line, ""); });
-        }
-        return true;
-      }
-      if (num === 2) {
-        var state = game.getState();
-        if (!state.unlockedEvidence.includes('E-08')) {
-          game.unlockEvidence('E-08');
-          ui.print("监控显示：郑桥在洗车店卫生间待了30分钟，非常反常。", "hint");
-          ui.print("[新证据已解锁：E-08|"+EVIDENCE["E-08"].name+"]", "evidence");
-          game.save();
-        } else {
-          var e08 = EVIDENCE["E-08"].content;
-          e08.data.forEach(function(line) { ui.print("  "+line, ""); });
-        }
-        return true;
-      }
       return false;
     }
     if (next === 'sms.1') {
@@ -610,7 +589,13 @@ var command = (function () {
       return false;
     }
     state._navContext = key;
-    showNavMenu();
+    if (typeof ui !== 'undefined' && ui.showConnectionAnimation) {
+      var labels = {'OA':'OA 系统','门禁':'门禁系统','停车场':'停车场系统','微信':'微信','健身房':'健身房','信用查询':'信用查询','短信':'短信','相册':'相册','公共监控系统':'公共监控系统','小红书':'小红书','手机定位':'手机定位'};
+      var name = labels[key] || key;
+      ui.showConnectionAnimation(name, 1500).then(function() { showNavMenu(); });
+    } else {
+      showNavMenu();
+    }
     return true;
   }
 
@@ -622,6 +607,10 @@ var command = (function () {
     }
     if (state._parkingLicenseQuery) {
       handleParkingLicenseQuery(input);
+      return;
+    }
+    if (state._monitorSearch) {
+      handleMonitorSearch(input);
       return;
     }
     var parsed = parseInput(input);
@@ -731,7 +720,7 @@ async function showOAWorkflow1() {
       game.unlockSystem('停车场');
       ui.printDialogue('数字麻姐', [
         '门禁和停车场系统已解锁。',
-        '另外，手机是锁屏状态，试试 unlock 1222 解锁手机。',
+        '另外，手机是锁屏状态，试试 unlock 解锁手机。',
       ], 'digital-human');
       ui.print('[新证据已解锁：E-03｜' + EVIDENCE['E-03'].name + ']', 'evidence');
       ui.print('[系统解锁：门禁 / 停车场]', 'evidence');
@@ -803,7 +792,7 @@ command.register('help', {
     ui.print('  save       保存游戏', '');
     ui.print('  load       加载游戏', '');
     if (state.currentStage >= 2 && !state.phoneUnlocked) {
-      ui.print('  unlock     解锁手机（输入 unlock 1222）', '');
+      ui.print('  unlock     解锁手机（输入 unlock + 密码）', '');
     }
     if (state.currentStage >= 4 && state.combineUnlocked.length >= 1) {
       ui.print('  backup     创建数据备份', '');

@@ -245,7 +245,7 @@ body {
   outline: none;
   color: var(--text);
   font-family: var(--font-mono);
-  caret-color: transparent;
+  caret-color: var(--accent);
   font-size: 15px;
   padding: 4px 8px;
 }
