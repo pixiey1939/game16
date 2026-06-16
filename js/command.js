@@ -195,11 +195,7 @@ var command = (function () {
       ];
     }
     if (ctx === '信用查询') {
-      return [
-        { num: 1, label: '教练信用（邹大雄）', next: 'credit.1' },
-        { num: 2, label: '郑桥信用', next: 'credit.2' },
-        { num: 3, label: '网友信用（张英河）', next: 'credit.3' },
-      ];
+      return null;
     }
     return null;
   }
@@ -299,6 +295,14 @@ var command = (function () {
       return;
     }
 
+    if (ctx === '信用查询') {
+      ui.print('', '');
+      ui.print('请输入"姓名+手机号"查询个人信用：', 'hint');
+      ui.print('  示例：邹大雄 138xxxx7753', 'hint');
+      game.getState()._creditQuery = true;
+      return;
+    }
+
     var items = getNavItems(ctx);
     if (!items) return;
     for (var i = 0; i < items.length; i++) {
@@ -319,7 +323,9 @@ var command = (function () {
       return true;
     }
     if (ctx === 'gym_login_pwd') {
-      if (state._gymAccount === 'zoudaxiong' && raw === '7753') {
+      var trainerPhone = (EVIDENCE['E-17'].content.coaches.find(function(c){ return c.id === 'C-003'; }) || {}).phone || '';
+      var trainerPhoneTail = trainerPhone.replace(/[^0-9]/g, '').slice(-4);
+      if (state._gymAccount === 'zoudaxiong' && raw === trainerPhoneTail) {
         ui.print('[正在连接炼·健身管理后台...]', 'hint');
         ui.print('[账号验证中...]','[密码验证中...]', 'hint');
         ui.print('[登录成功]', 'hint');
@@ -606,15 +612,32 @@ var command = (function () {
     return true;
   }
 
-  function handleWechatMiniSearch(raw) {
+  async function handleWechatMiniSearch(raw) {
     var state = game.getState();
     if (raw.indexOf('炼健身') >= 0) {
       ui.print('[正在打开微信小程序...]', 'hint');
       ui.print('[检测到微信授权请求：炼·健身]', 'hint');
-      ui.print('[正在以"梁洛邑（麻姐）"的微信身份登录...]', 'important');
-      ui.print('[授权成功，已进入小程序]', 'hint');
-      state._navContext = 'wechat.mini';
-      showNavMenu();
+      ui.print('[小程序请求获取以下权限：]', 'hint');
+      ui.print('  · 微信昵称：芝麻', '');
+      ui.print('  · 微信头像', '');
+      ui.print('  · 会员卡信息', '');
+      ui.print('', '');
+
+      var choice = await ui.displayChoice([
+        { label: '确认授权', value: 'authorize' },
+        { label: '取消', value: 'cancel' },
+      ], '是否允许"炼·健身"使用以上信息？');
+
+      if (choice === 'authorize') {
+        ui.print('[正在以微信昵称"芝麻"的微信身份登录...]', 'important');
+        ui.print('[授权成功，已进入小程序]', 'hint');
+        state._navContext = 'wechat.mini';
+        showNavMenu();
+      } else {
+        ui.print('你取消了授权。', 'hint');
+        state._navContext = 'wechat';
+        showNavMenu();
+      }
       return true;
     }
     ui.print("未找到该小程序。", "error");
@@ -637,6 +660,11 @@ var command = (function () {
     }
     if (state._navContext === 'wechat_mini_program') {
       handleWechatMiniSearch(input);
+      return;
+    }
+    if (state._creditQuery) {
+      handleCreditQuery(input);
+      state._creditQuery = false;
       return;
     }
     var parsed = parseInput(input);
@@ -780,30 +808,41 @@ function showOAEmailByIndex(index) {
   ui.print('输入 list 查看完整证据。', 'hint');
 }
 
-function handleCreditQuery(raw) {
+async function handleCreditQuery(raw) {
   var state = game.getState();
   if (raw.indexOf('邹大雄') >= 0 || raw.indexOf('138') >= 0) {
     if (!state.unlockedEvidence.includes('E-09')) {
       game.unlockEvidence('E-09');
-      ui.printDialogue('数字麻姐', ['教练信用记录非常糟糕。','负债约 47 万元，有赌博和催收。'], 'digital-human');
+      await ui.printDialogue('数字麻姐', ['教练信用记录非常糟糕。','负债约 47 万元，有赌博和催收。'], 'digital-human');
       ui.print("[新证据已解锁：E-09|"+EVIDENCE["E-09"].name+"]", "evidence");
     }
     ui.print('[已解锁] 教练信用：邹大雄，负债约47万', 'hint');
-    state._navContext = 'credit.result';
+    state._navContext = null;
+    game.save();
+    return true;
+  }
+  if (raw.indexOf('郑桥') >= 0 || raw.indexOf('189') >= 0) {
+    if (!state.unlockedEvidence.includes('E-10')) {
+      game.unlockEvidence('E-10');
+      ui.print('郑桥信用记录：信用良好，无逾期。', 'hint');
+      ui.print("[新证据已解锁：E-10|"+EVIDENCE["E-10"].name+"]", "evidence");
+    }
+    state._navContext = null;
     game.save();
     return true;
   }
   if (raw.indexOf('张英河') >= 0 || (raw.indexOf('15') >= 0 && raw.indexOf('+') >= 0)) {
     if (!state.unlockedEvidence.includes('E-11')) {
       game.unlockEvidence('E-11');
-      ui.print('网友张英河无不良信用记录。', 'hint');
+      await ui.printDialogue('数字麻姐', ['网友张英河无不良信用记录。'], 'digital-human');
       ui.print("[新证据已解锁：E-11|"+EVIDENCE["E-11"].name+"]", "evidence");
     }
-    state._navContext = 'credit.result';
+    state._navContext = null;
     game.save();
     return true;
   }
-  ui.print("请输入格式：姓名+手机号", "error");
+  ui.print("未找到该人员。请输入\"姓名+手机号\"格式。", "error");
+  ui.print("  示例：邹大雄 138xxxx7753", "hint");
   return true;
 }
 // === 命令注册 ===

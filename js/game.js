@@ -143,7 +143,7 @@ async function runStage1() {
 
 async function handleStage1Response(input) {
   if (input === 'y' || input === 'yes' || input === '是') {
-    ui.printDialogue('数字麻姐', [
+    await ui.printDialogue('数字麻姐', [
       '谢谢你。',
     ], 'digital-human');
     ui.print('', '');
@@ -151,7 +151,7 @@ async function handleStage1Response(input) {
     // 显示定位记录 + 自动解锁 E-01
     game.unlockEvidence('E-01');
     const e01 = EVIDENCE['E-01'].content;
-    ui.printDialogue('数字麻姐', [
+    await ui.printDialogue('数字麻姐', [
       '我先告诉你今天麻姐的动向。她的手机定位显示以下记录：',
     ], 'digital-human');
     ui.print('', '');
@@ -163,7 +163,7 @@ async function handleStage1Response(input) {
     ui.print('', '');
 
     // 数字人引导
-    ui.printDialogue('数字麻姐', [
+    await ui.printDialogue('数字麻姐', [
       '你可以随时输入 help 查看当前可以使用的操作。',
     ], 'digital-human');
     game.setStage(2);
@@ -172,7 +172,7 @@ async function handleStage1Response(input) {
     setTimeout(() => runStage2(), 1500);
     return true;
   } else if (input === 'n' || input === 'no' || input === '否') {
-    ui.printDialogue('数字麻姐', [
+    await ui.printDialogue('数字麻姐', [
       '好的。如果你改变主意，随时可以回来找我。',
     ], 'digital-human');
     ui.print('', '');
@@ -284,7 +284,7 @@ async function handleAccessSystem(systemName) {
 // 阶段 3：手机解锁 + 健身房系统 + Combine
 // ============================================================
 
-function handlePhonePassword(input) {
+async function handlePhonePassword(input) {
   var state = game.getState();
   if (state.phoneUnlocked) {
     ui.print('手机已经解锁。直接访问各子系统查看数据。', 'hint');
@@ -301,7 +301,7 @@ function handlePhonePassword(input) {
     game.save();
     ui.print('[系统解锁：短信 / 微信 / 相册]', 'evidence');
     ui.print('', '');
-    ui.printDialogue('数字麻姐', [
+    await ui.printDialogue('数字麻姐', [
       '手机解锁了。短信、微信、相册里的数据都可以查看了。',
       '每个子系统都可能藏着新线索。输入 help 查看可用命令。',
     ], 'digital-human');

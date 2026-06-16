@@ -42,8 +42,8 @@ async function getState(page) {
   }));
 }
 
-async function clickChoice(page, label) {
-  await page.waitForSelector('.choice-button', { timeout: 10000 });
+async function clickChoice(page, label, timeout = 20000) {
+  await page.waitForSelector('.choice-button', { timeout });
   const btns = await page.$$('.choice-button');
   for (const btn of btns) {
     const t = await btn.textContent();
@@ -231,7 +231,9 @@ function fail(msg) { return '❌ ' + msg; }
   await cmd(page, '2');
   await page.waitForTimeout(1000);
   await cmd(page, '炼健身');
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1000);
+  await clickChoice(page, '确认授权');
+  await page.waitForTimeout(2000);
   await cmd(page, '2');
   await page.waitForTimeout(2500);
   o = await getOut(page);
@@ -283,25 +285,29 @@ function fail(msg) { return '❌ ' + msg; }
   console.log('18. E-20 WiFi/DNS: ' + (o.includes('E-20') ? pass('E-20') : fail('E-20 missing')));
   await back(page);
 
-  // === 信用查询 → 教练信用 → E-09 ===
+  // === 信用查询 → 输入姓名+手机号 → E-09 ===
   await enterSubmenu(page, '信用查询');
-  await cmd(page, '1');
   await page.waitForTimeout(2000);
+  await cmd(page, '邹大雄 138xxxx7753');
+  await page.waitForTimeout(2500);
   o = await getOut(page);
   console.log('19. E-09 教练信用: ' + (o.includes('E-09') ? pass('E-09') : fail('E-09 missing')));
 
   // === 信用查询 → 郑桥信用 → E-10 ===
-  await cmd(page, '2');
+  await enterSubmenu(page, '信用查询');
   await page.waitForTimeout(2000);
+  await cmd(page, '郑桥 189xxxx6629');
+  await page.waitForTimeout(2500);
   o = await getOut(page);
   console.log('20. E-10 郑桥信用: ' + (o.includes('E-10') ? pass('E-10') : fail('E-10 missing')));
 
   // === 信用查询 → 网友信用 → E-11 ===
-  await cmd(page, '3');
+  await enterSubmenu(page, '信用查询');
   await page.waitForTimeout(2000);
+  await cmd(page, '张英河 15xxxxxxxxx');
+  await page.waitForTimeout(2500);
   o = await getOut(page);
   console.log('21. E-11 网友信用: ' + (o.includes('E-11') ? pass('E-11') : fail('E-11 missing')));
-  await back(page);
 
   // === Combines ===
   await cmd(page, 'combine E-05+E-18');

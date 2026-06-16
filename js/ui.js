@@ -157,7 +157,7 @@ const ui = (() => {
     scrollOutputToBottom();
 
     const results = [];
-    const speed = 30;
+    const speed = 55;
     for (const line of lines) {
       const contentEl = document.createElement('div');
       contentEl.className = `dialogue-content line ${type}`;
