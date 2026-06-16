@@ -1207,6 +1207,21 @@ async function handleGymSystem(action) {
       ui.print('[新证据已解锁：E-20｜' + EVIDENCE['E-20'].name + ']', 'evidence');
       game.save();
     }
+  } else if (action === '5') {
+    if (state.unlockedEvidence.includes('E-20')) {
+      var e20 = EVIDENCE['E-20'].content;
+      ui.print('━━━ DNS 日志 ━━━', 'system');
+      ui.print('', '');
+      if (e20.dns) {
+        e20.dns.forEach(function(d) {
+          ui.print('  ' + d.time + '  ' + d.domain + '  (' + d.note + ')', '');
+        });
+      }
+      ui.print('', '');
+      ui.print('注意：06:04 有对镇静剂网站(b2b-sedative.xyz)的查询，来自 MAC 9A:5D:C3:72:E4:18（郑桥手机）。', 'important');
+    } else {
+      ui.print('请先查看 Wi-Fi 日志解锁相关证据。', 'hint');
+    }
   }
 }
 

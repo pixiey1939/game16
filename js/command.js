@@ -155,8 +155,14 @@ var command = (function () {
     if (ctx === '微信') {
       return [
         { num: 1, label: '聊天记录', desc: '对话列表', next: 'wechat.chat' },
-        { num: 2, label: '微信小程序', next: 'wechat.mini' },
+        { num: 2, label: '小程序', next: 'wechat.apps' },
         { num: 3, label: '朋友圈' },
+      ];
+    }
+    if (ctx === 'wechat.apps') {
+      return [
+        { num: 1, label: '炼健身小程序', next: 'wechat.mprog.enter' },
+        { num: 2, label: '炼健身管理后台', next: 'wechat.gymadmin.enter' },
       ];
     }
     if (ctx === 'wechat.chat') {
@@ -173,11 +179,19 @@ var command = (function () {
         { num: 10, label: '57', desc: '06-13 22:15' },
       ];
     }
-    if (ctx === 'wechat.mini') {
+    if (ctx === 'wechat.mprog') {
       return [
-        { num: 1, label: '基本信息', next: 'wechat.mini.1' },
-        { num: 2, label: '教练团队', next: 'wechat.mini.2' },
-        { num: 3, label: '我的课程', next: 'wechat.mini.3' },
+        { num: 1, label: '基本信息', next: 'wechat.mprog.1' },
+        { num: 2, label: '教练团队', next: 'wechat.mprog.2' },
+        { num: 3, label: '我的课程', next: 'wechat.mprog.3' },
+      ];
+    }
+    if (ctx === 'wechat.gymadmin') {
+      return [
+        { num: 1, label: '门禁记录', next: 'gymadmin.1' },
+        { num: 2, label: '监控记录', next: 'gymadmin.2' },
+        { num: 3, label: 'Wi-Fi 日志', next: 'gymadmin.3' },
+        { num: 4, label: 'DNS 日志', next: 'gymadmin.4' },
       ];
     }
     if (ctx === '相册') {
@@ -187,6 +201,14 @@ var command = (function () {
       ];
     }
     if (ctx === '健身房') {
+      if (state.gymAdminUnlocked) {
+        return [
+          { num: 1, label: '门禁记录', next: 'gym.2' },
+          { num: 2, label: '监控记录', next: 'gym.3' },
+          { num: 3, label: 'Wi-Fi 日志', next: 'gym.4' },
+          { num: 4, label: 'DNS 日志', next: 'gym.5' },
+        ];
+      }
       return [
         { num: 1, label: '教练信息', next: 'gym.1' },
         { num: 2, label: '门禁记录', next: 'gym.2' },
@@ -278,7 +300,7 @@ var command = (function () {
       ui.print('请输入编号或名称进入对应系统：', 'hint');
       return;
     }
-    var labels = {'OA':'OA 系统','门禁':'门禁系统','停车场':'停车场系统','微信':'微信','健身房':'健身房','信用查询':'信用查询','短信':'短信','相册':'相册','公共监控系统':'公共监控系统','小红书':'小红书','手机定位':'手机定位','OA.chat':'OA - 聊天记录','OA.email':'OA - 企业邮箱','OA.contacts':'OA - 通讯录','OA.workflow':'OA - 我的流程','wechat.chat':'微信 - 聊天记录','wechat.mini':'微信小程序'};
+    var labels = {'OA':'OA 系统','门禁':'门禁系统','停车场':'停车场系统','微信':'微信','健身房':'健身房','信用查询':'信用查询','短信':'短信','相册':'相册','公共监控系统':'公共监控系统','小红书':'小红书','手机定位':'手机定位','OA.chat':'OA - 聊天记录','OA.email':'OA - 企业邮箱','OA.contacts':'OA - 通讯录','OA.workflow':'OA - 我的流程','wechat.chat':'微信 - 聊天记录','wechat.apps':'微信 - 小程序','wechat.mprog':'微信 - 炼·健身小程序','wechat.gymadmin':'微信 - 炼·健身管理后台'};
     var label = labels[ctx] || ctx;
     ui.print('━━━ ' + label + ' ━━━', 'system');
 
@@ -316,31 +338,6 @@ var command = (function () {
     var state = game.getState();
     var ctx = state._navContext || null;
     if (ctx === 'phone_unlock') return handlePhonePassword(raw);
-    if (ctx === 'gym_login') {
-      state._gymAccount = raw;
-      ui.print('管理后台密码：', 'hint');
-      state._navContext = 'gym_login_pwd';
-      return true;
-    }
-    if (ctx === 'gym_login_pwd') {
-      var trainerPhone = (EVIDENCE['E-17'].content.coaches.find(function(c){ return c.id === 'C-003'; }) || {}).phone || '';
-      var trainerPhoneTail = trainerPhone.replace(/[^0-9]/g, '').slice(-4);
-      if (state._gymAccount === 'zoudaxiong' && raw === trainerPhoneTail) {
-        ui.print('[正在连接炼·健身管理后台...]', 'hint');
-        ui.print('[账号验证中...]','[密码验证中...]', 'hint');
-        ui.print('[登录成功]', 'hint');
-        state._navContext = null;
-        state.gymAdminUnlocked = true;
-        game.unlockSystem("信用查询");
-        ui.print('[管理后台已解锁]', 'evidence');
-        game.save();
-      } else {
-        ui.print("账号或密码错误。", "error");
-        state._navContext = 'gym_login';
-        ui.print('管理后台账号：', 'hint');
-      }
-      return true;
-    }
     if (ctx === 'wechat_mini_program') {
       return handleWechatMiniSearch(raw);
     }
@@ -469,12 +466,24 @@ var command = (function () {
       showNavMenu();
       return true;
     }
-    if (next === 'wechat.mini') {
-      state._navContext = 'wechat_mini_program';
+    if (next === 'wechat.mprog.enter') {
+      var ws = game.getState();
+      if (!ws.miniProgramAuthed) {
+        ui.print('[正在打开微信小程序...]', 'hint');
+        ui.print('[检测到微信授权请求：炼·健身]', 'hint');
+        ui.print('[小程序请求获取以下权限：]', 'hint');
+        ui.print('  · 微信昵称：芝麻', '');
+        ui.print('  · 微信头像', '');
+        ui.print('  · 会员卡信息', '');
+        // Async auth handled in dispatch via wechat.mprog.auth context
+        state._navContext = 'wechat.mprog.auth';
+        return true;
+      }
+      state._navContext = 'wechat.mprog';
       showNavMenu();
       return true;
     }
-    if (next === 'wechat.mini.1') {
+    if (next === 'wechat.mprog.1') {
       ui.print('━━━ 炼·健身（广埠屯店） ━━━', 'system');
       ui.print('  店名：炼·健身（广埠屯店）', '');
       ui.print('  地址：洪山区珞喻路312号', '');
@@ -485,11 +494,11 @@ var command = (function () {
       ui.print('  会员卡号：LF20210428001', '');
       ui.print('  入会时间：2024-08-15', '');
       ui.print('  状态：活跃', '');
-      state._navContext = 'wechat.mini';
+      state._navContext = 'wechat.mprog';
       return true;
     }
-    if (next === 'wechat.mini.2') {
-      var state2 = game.getState();
+    if (next === 'wechat.mprog.2') {
+      var ws2 = game.getState();
       ui.print('━━━ 教练团队 ━━━', 'system');
       ui.print('  C-001  叶斌          力量训练 / 体能提升 / 增肌减脂', '');
       ui.print('  C-003  邹大雄(大怪兽) 体能训练 / 力量训练 / 直播陪练', '');
@@ -499,7 +508,7 @@ var command = (function () {
       ui.print('  C-012  羿天          CrossFit / 综合体能 / 团队训练', '');
       ui.print('  C-015  袁琬琰        女性塑形 / 产后恢复 / 小团课', '');
       ui.print('', '');
-      if (!state2.unlockedEvidence.includes('E-17')) {
+      if (!ws2.unlockedEvidence.includes('E-17')) {
         game.unlockEvidence('E-17');
         ui.printDialogue('数字麻姐', ['原来大怪兽教练的真实姓名叫邹大雄。', '有了姓名和手机号，我们可以查他的信用信息了。'], 'digital-human');
         ui.print("[新证据已解锁：E-17｜" + EVIDENCE['E-17'].name + "]", 'evidence');
@@ -509,19 +518,12 @@ var command = (function () {
       }
       ui.printDialogue('数字麻姐', [
         '健身房内部管理数据需要管理后台才能查。',
-        '让我试试——通过小程序 API 接口搜索管理后台入口...',
+        '在微信菜单里选择"炼健身管理后台"可以登录查看。',
       ], 'digital-human');
-      ui.print('[正在通过小程序 API 接口搜索管理后台入口...]', 'system');
-      ui.print('[找到后台入口链接]', 'system');
-      ui.printDialogue('数字麻姐', [
-        '找到了！但需要账号密码才能登录。',
-        '刚才看到的教练工号或联系方式，也许能试试？',
-      ], 'digital-human');
-      ui.print('管理后台账号：', 'hint');
-      state._navContext = 'gym_login';
+      state._navContext = 'wechat.mprog';
       return true;
     }
-    if (next === 'wechat.mini.3') {
+    if (next === 'wechat.mprog.3') {
       ui.print('━━━ 我的课程 ━━━', 'system');
       ui.print('  课程名称：力量训练', '');
       ui.print('  课程编号：LS-2026-0617-1215', '');
@@ -530,7 +532,19 @@ var command = (function () {
       ui.print('  地点：广埠屯店', '');
       ui.print('', '');
       ui.printDialogue('数字麻姐', ['今天中午麻姐约了大怪兽教练的直播课，12:15 开始。'], 'digital-human');
-      state._navContext = 'wechat.mini';
+      state._navContext = 'wechat.mprog';
+      return true;
+    }
+    if (next === 'wechat.gymadmin.enter') {
+      var gs = game.getState();
+      if (!gs.gymAdminUnlocked) {
+        ui.print('━━━ 炼·健身管理后台 ━━━', 'system');
+        ui.print('管理后台账号：', 'hint');
+        state._navContext = 'gym_login';
+        return true;
+      }
+      state._navContext = 'wechat.gymadmin';
+      showNavMenu();
       return true;
     }
     if (next === 'album.1') {
@@ -548,6 +562,26 @@ var command = (function () {
       handleGymSystem("1");
       return true;
     }
+    if (next === 'gymadmin.1') {
+      state._navContext = 'gymadmin.1';
+      handleGymSystem("2");
+      return true;
+    }
+    if (next === 'gymadmin.2') {
+      state._navContext = 'gymadmin.2';
+      handleGymSystem("3");
+      return true;
+    }
+    if (next === 'gymadmin.3') {
+      state._navContext = 'gymadmin.3';
+      handleGymSystem("4");
+      return true;
+    }
+    if (next === 'gymadmin.4') {
+      state._navContext = 'gymadmin.4';
+      handleGymSystem("5");
+      return true;
+    }
     if (next === 'gym.2') {
       state._navContext = '健身房';
       handleGymSystem("2");
@@ -561,6 +595,11 @@ var command = (function () {
     if (next === 'gym.4') {
       state._navContext = '健身房';
       handleGymSystem("4");
+      return true;
+    }
+    if (next === 'gym.5') {
+      state._navContext = '健身房';
+      handleGymSystem("5");
       return true;
     }
     if (next === 'credit.1') {
@@ -644,6 +683,26 @@ var command = (function () {
     return true;
   }
 
+  async function handleWechatMiniProgAuth(raw) {
+    var state = game.getState();
+    ui.print('[正在以"芝麻"身份连接炼·健身小程序...]', 'important');
+    var choice = await ui.displayChoice([
+      { label: '确认授权', value: 'authorize' },
+      { label: '取消', value: 'cancel' },
+    ], '是否允许"炼·健身"使用以上信息？');
+    if (choice === 'authorize') {
+      ui.print('[授权成功]', 'hint');
+      state.miniProgramAuthed = true;
+      state._navContext = 'wechat.mprog';
+      showNavMenu();
+    } else {
+      ui.print('你取消了授权。', 'hint');
+      state._navContext = '微信';
+      showNavMenu();
+    }
+    game.save();
+  }
+
   function dispatch(input) {
     var state = game.getState();
     if (state._waitingForZhengqiao) {
@@ -658,6 +717,10 @@ var command = (function () {
       handleMonitorSearch(input);
       return;
     }
+    if (state._navContext === 'wechat.mprog.auth') {
+      handleWechatMiniProgAuth(input);
+      return;
+    }
     if (state._navContext === 'wechat_mini_program') {
       handleWechatMiniSearch(input);
       return;
@@ -665,6 +728,30 @@ var command = (function () {
     if (state._creditQuery) {
       handleCreditQuery(input);
       state._creditQuery = false;
+      return;
+    }
+    if (state._navContext === 'gym_login') {
+      state._gymAccount = input;
+      ui.print('管理后台密码：', 'hint');
+      state._navContext = 'gym_login_pwd';
+      return;
+    }
+    if (state._navContext === 'gym_login_pwd') {
+      if (state._gymAccount === 'zoudaxiong' && input === '7753') {
+        ui.print('[正在连接炼·健身管理后台...]', 'hint');
+        ui.print('[账号验证中...]','[密码验证中...]', 'hint');
+        ui.print('[登录成功]', 'hint');
+        state.gymAdminUnlocked = true;
+        game.unlockSystem("信用查询");
+        ui.print('[管理后台已解锁]', 'evidence');
+        game.save();
+        state._navContext = 'wechat.gymadmin';
+        showNavMenu();
+      } else {
+        ui.print("账号或密码错误。", "error");
+        state._navContext = 'gym_login';
+        ui.print('管理后台账号：', 'hint');
+      }
       return;
     }
     var parsed = parseInput(input);
@@ -1021,9 +1108,12 @@ command.register('back', {
     else if (ctx==='door.1'||ctx==='door.2') parent = '门禁';
     else if (ctx.startsWith('parking.')) parent = '停车场';
     else if (ctx.startsWith('sms.')) parent = '短信';
-    else if (ctx==='wechat.chat'||ctx==='wechat.mini'||ctx==='wechat.pay') parent = '微信';
+    else if (ctx==='wechat.chat'||ctx==='wechat.pay') parent = '微信';
+    else if (ctx==='wechat.apps') parent = '微信';
+    else if (ctx==='wechat.mprog'||ctx==='wechat.gymadmin') parent = 'wechat.apps';
     else if (ctx==='wechat.chat.dashou'||ctx==='wechat.chat.laogong') parent = 'wechat.chat';
-    else if (ctx==='wechat.mini.1'||ctx==='wechat.mini.2'||ctx==='wechat.mini.3') parent = 'wechat.mini';
+    else if (ctx.startsWith('wechat.mprog.')) parent = 'wechat.mprog';
+    else if (ctx.startsWith('wechat.gymadmin.')||ctx.startsWith('gymadmin.')) parent = 'wechat.gymadmin';
     else if (ctx==='gym_login'||ctx==='gym_login_pwd') parent = '微信';
     else if (ctx==='相册'||ctx==='健身房'||ctx==='信用查询'||ctx==='门禁'||ctx==='停车场'||ctx==='短信'||ctx==='微信'||ctx.startsWith('album.')||ctx.startsWith('gym.')||ctx.startsWith('credit.')||ctx.startsWith('door.')||ctx.startsWith('parking.')||ctx.startsWith('sms.')||ctx.startsWith('wechat.')) parent = null;
     else {
