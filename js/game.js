@@ -1048,8 +1048,15 @@ async function handleWechatSystem(action) {
       ui.printDialogue('数字麻姐', [
         '麻姐在广埠屯惠选超市买了三瓶水。',
         '一瓶自己喝，一瓶给网友，还有一瓶去哪了？',
+        '公共监控系统应该能查到这家超市的门口监控。',
+        '我们去公共监控系统搜索"广埠屯惠选超市"试试看。',
       ], 'digital-human');
       ui.print('[新证据已解锁：E-21｜' + EVIDENCE['E-21'].name + ']', 'evidence');
+      if (game.unlockSystem('公共监控系统')) {
+        ui.print('[系统解锁：公共监控系统]', 'evidence');
+      } else {
+        ui.print('[系统提示：公共监控系统已解锁]', 'hint');
+      }
       game.save();
     }
   }

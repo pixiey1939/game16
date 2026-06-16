@@ -141,9 +141,9 @@ const ui = (() => {
    * @param {string} [type='digital-human'] - CSS type suffix for styling.
    * @returns {Promise<HTMLDivElement[]>} Resolves with created content elements.
    */
-  function printDialogue(speaker, lines, type = 'digital-human') {
+  async function printDialogue(speaker, lines, type = 'digital-human') {
     const el = ensureOutput();
-    if (!el) return Promise.resolve([]);
+    if (!el) return [];
 
     const box = document.createElement('div');
     box.className = `dialogue-box ${type}`;
@@ -153,23 +153,23 @@ const ui = (() => {
     nameEl.textContent = speaker;
     box.appendChild(nameEl);
 
+    el.appendChild(box);
+    scrollOutputToBottom();
+
     const results = [];
-    const speed = 55;
-    const typingPromises = lines.map(line => {
+    const speed = 30;
+    for (const line of lines) {
       const contentEl = document.createElement('div');
       contentEl.className = `dialogue-content line ${type}`;
       contentEl.textContent = '';
       box.appendChild(contentEl);
       results.push(contentEl);
-      return typewriter(contentEl, line, speed);
-    });
-
-    el.appendChild(box);
-    scrollOutputToBottom();
-    return Promise.all(typingPromises).then(() => {
+      await typewriter(contentEl, line, speed);
       scrollOutputToBottom();
-      return results;
-    });
+    }
+
+    scrollOutputToBottom();
+    return results;
   }
 
   /**

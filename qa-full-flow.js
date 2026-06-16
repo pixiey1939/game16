@@ -4,13 +4,42 @@ const INPUT = '#command-input';
 const OUTPUT = '#output';
 
 async function cmd(page, text) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const isDisabled = await page.evaluate(s => document.querySelector(s)?.disabled, INPUT);
+    if (!isDisabled) break;
+    const dismissed = await page.evaluate(() => {
+      const btns = document.querySelectorAll('.choice-button');
+      if (btns.length === 0) return false;
+      btns[0].click();
+      return true;
+    });
+    if (!dismissed) throw new Error('cmd: input disabled and no choice button to dismiss');
+    await page.waitForTimeout(800);
+  }
   await page.waitForFunction(s => !document.querySelector(s).disabled, INPUT, { timeout: 15000 });
   await page.fill(INPUT, text);
   await page.press(INPUT, 'Enter');
 }
 
+// Slices last 1500 chars to avoid false positives from earlier game state text
 async function getOut(page) {
-  return await page.evaluate(s => document.querySelector(s)?.textContent || '', OUTPUT);
+  return await page.evaluate(s => {
+    const el = document.querySelector(s);
+    if (!el) return '';
+    const txt = el.textContent || '';
+    return txt.length > 1500 ? txt.slice(-1500) : txt;
+  }, OUTPUT);
+}
+
+async function getState(page) {
+  return await page.evaluate(() => ({
+    navContext: typeof game !== 'undefined' ? game.getState()._navContext : null,
+    monitorSearch: typeof game !== 'undefined' ? game.getState()._monitorSearch : null,
+    parkingQuery: typeof game !== 'undefined' ? game.getState()._parkingLicenseQuery : null,
+    unlocked: typeof game !== 'undefined' ? game.getState().unlockedEvidence.slice() : [],
+    systems: typeof game !== 'undefined' ? game.getState().unlockedSystems.slice() : [],
+    door: typeof game !== 'undefined' ? game.getState().doorActivated : false,
+  }));
 }
 
 async function clickChoice(page, label) {
@@ -23,9 +52,24 @@ async function clickChoice(page, label) {
   return false;
 }
 
-async function enterSubmenu(page, name) {
+async function backToRoot(page) {
+  let s = await getState(page);
+  let safety = 0;
+  while (s.navContext && safety++ < 10) {
+    await cmd(page, 'back');
+    await page.waitForTimeout(400);
+    s = await getState(page);
+  }
+  if (s.parkingQuery) {
+    await cmd(page, 'back');
+    await page.waitForTimeout(400);
+  }
   await cmd(page, 'access');
   await page.waitForTimeout(500);
+}
+
+async function enterSubmenu(page, name) {
+  await backToRoot(page);
   await cmd(page, name);
   await page.waitForTimeout(1000);
 }
@@ -126,14 +170,15 @@ function fail(msg) { return '❌ ' + msg; }
 
   // === 公共监控 → 超市 → E-07 ===
   await enterSubmenu(page, '公共监控');
-  await cmd(page, '1');
+  await cmd(page, '超市');
   await page.waitForTimeout(2000);
   o = await getOut(page);
   console.log('6. E-07 超市监控: ' + (o.includes('E-07') ? pass('E-07') : fail('E-07 missing')));
   await back(page);
 
   // === 公共监控 → 洗车店 → E-08 ===
-  await cmd(page, '2');
+  await enterSubmenu(page, '公共监控');
+  await cmd(page, '洗车');
   await page.waitForTimeout(2000);
   o = await getOut(page);
   console.log('6b. E-08 洗车店监控: ' + (o.includes('E-08') ? pass('E-08') : fail('E-08 missing')));
@@ -180,12 +225,13 @@ function fail(msg) { return '❌ ' + msg; }
   await back(page);
 
   // === 微信 → 微信小程序 → 教练团队 → E-17 + 信用查询 unlock ===
-  // back to 顶层, then 微信 → 2 (wechat.mini) → 2 (教练团队)
   await back(page);
   await back(page);
   await enterSubmenu(page, '微信');
   await cmd(page, '2');
   await page.waitForTimeout(1000);
+  await cmd(page, '炼健身');
+  await page.waitForTimeout(1500);
   await cmd(page, '2');
   await page.waitForTimeout(2500);
   o = await getOut(page);
@@ -270,13 +316,11 @@ function fail(msg) { return '❌ ' + msg; }
   let c01 = o.includes('C-01'), c02 = o.includes('C-02'), c03 = o.includes('C-03'), c04 = o.includes('C-04');
   console.log('22. Combines: C-01=' + c01 + ' C-02=' + c02 + ' C-03=' + c03 + ' C-04=' + c04);
 
-  // === Evidence list ===
-  await cmd(page, 'list');
-  await page.waitForTimeout(2000);
-  let finalOut = await getOut(page);
+  // === Evidence count ===
+  const evidenceState = await getState(page);
+  const found = evidenceState.unlocked;
   const allE = ['E-01','E-02','E-03','E-04','E-05','E-06','E-07','E-08','E-09','E-10','E-11','E-12','E-13','E-14','E-15','E-16','E-17','E-18','E-19','E-20','E-21'];
-  const found = allE.filter(e => finalOut.includes(e));
-  const missing = allE.filter(e => !finalOut.includes(e));
+  const missing = allE.filter(e => !found.includes(e));
   console.log('23. Evidence: ' + found.length + '/21, missing: ' + (missing.join(', ') || 'NONE'));
 
   console.log('\n=== QA SUMMARY ===');

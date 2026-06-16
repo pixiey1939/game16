@@ -121,10 +121,14 @@ var command = (function () {
       var items = [];
       if (state.doorActivated) {
         items.push({ num: 1, label: 'M-2098 门禁权限激活申请', desc: '系统通知', next: 'OA.email.1' });
+        items.push({ num: 2, label: 'M-2085 端午节假期安排', desc: '钱敏', next: 'OA.email.2' });
+        items.push({ num: 3, label: 'M-2072 项目评审', desc: '陈立', next: 'OA.email.3' });
+        items.push({ num: 4, label: 'M-2055 门禁权限变更提醒', desc: '系统通知', next: 'OA.email.4' });
+      } else {
+        items.push({ num: 1, label: 'M-2085 端午节假期安排', desc: '钱敏', next: 'OA.email.2' });
+        items.push({ num: 2, label: 'M-2072 项目评审', desc: '陈立', next: 'OA.email.3' });
+        items.push({ num: 3, label: 'M-2055 门禁权限变更提醒', desc: '系统通知', next: 'OA.email.4' });
       }
-      items.push({ num: 2, label: 'M-2085 端午节假期安排', desc: '钱敏', next: 'OA.email.2' });
-      items.push({ num: 3, label: 'M-2072 项目评审', desc: '陈立', next: 'OA.email.3' });
-      items.push({ num: 4, label: 'M-2055 门禁权限变更提醒', desc: '系统通知', next: 'OA.email.4' });
       return items;
     }
     if (ctx === '门禁') {
@@ -289,6 +293,12 @@ var command = (function () {
       return;
     }
 
+    if (ctx === 'wechat_mini_program') {
+      ui.print('', '');
+      ui.print('请输入小程序名称搜索：', 'hint');
+      return;
+    }
+
     var items = getNavItems(ctx);
     if (!items) return;
     for (var i = 0; i < items.length; i++) {
@@ -326,15 +336,7 @@ var command = (function () {
       return true;
     }
     if (ctx === 'wechat_mini_program') {
-      if (raw.indexOf('炼健身') >= 0) {
-        ui.print('[正在通过微信授权登录小程序...]', 'hint');
-        ui.print('[授权成功]', 'hint');
-        state._navContext = 'wechat.mini';
-        showNavMenu();
-        return true;
-      }
-      ui.print("未找到该小程序。", "error");
-      return true;
+      return handleWechatMiniSearch(raw);
     }
     if (ctx === 'credit_query') return handleCreditQuery(raw);
     var target = resolveNavByNumber(ctx, num);
@@ -380,17 +382,22 @@ var command = (function () {
     }
     if (next === 'OA.email.1') {
       state._navContext = next;
-      showOAEmail1();
+      showOAEmailByIndex(0);
       return true;
     }
-    if (next === 'OA.email.2'||next==='OA.email.3'||next==='OA.email.4') {
+    if (next === 'OA.email.2') {
       state._navContext = next;
-      ui.print('该邮件内容为日常工作通知，无异常。', 'hint');
+      showOAEmailByIndex(1);
       return true;
     }
-    if (next === 'OA.email.2'||next==='OA.email.3'||next==='OA.email.4') {
+    if (next === 'OA.email.3') {
       state._navContext = next;
-      ui.print('该邮件内容为日常工作通知，无异常。', 'hint');
+      showOAEmailByIndex(2);
+      return true;
+    }
+    if (next === 'OA.email.4') {
+      state._navContext = next;
+      showOAEmailByIndex(3);
       return true;
     }
     if (next === 'OA.workflow.1') {
@@ -457,7 +464,7 @@ var command = (function () {
       return true;
     }
     if (next === 'wechat.mini') {
-      state._navContext = next;
+      state._navContext = 'wechat_mini_program';
       showNavMenu();
       return true;
     }
@@ -599,6 +606,21 @@ var command = (function () {
     return true;
   }
 
+  function handleWechatMiniSearch(raw) {
+    var state = game.getState();
+    if (raw.indexOf('炼健身') >= 0) {
+      ui.print('[正在打开微信小程序...]', 'hint');
+      ui.print('[检测到微信授权请求：炼·健身]', 'hint');
+      ui.print('[正在以"梁洛邑（麻姐）"的微信身份登录...]', 'important');
+      ui.print('[授权成功，已进入小程序]', 'hint');
+      state._navContext = 'wechat.mini';
+      showNavMenu();
+      return true;
+    }
+    ui.print("未找到该小程序。", "error");
+    return true;
+  }
+
   function dispatch(input) {
     var state = game.getState();
     if (state._waitingForZhengqiao) {
@@ -611,6 +633,10 @@ var command = (function () {
     }
     if (state._monitorSearch) {
       handleMonitorSearch(input);
+      return;
+    }
+    if (state._navContext === 'wechat_mini_program') {
+      handleWechatMiniSearch(input);
       return;
     }
     var parsed = parseInput(input);
@@ -732,16 +758,25 @@ async function showOAWorkflow1() {
   }
 }
 
-function showOAEmail1() {
+function showOAEmailByIndex(index) {
   var state = game.getState();
-  ui.print('[已解锁] 企业邮箱 — M-2098 门禁权限激活', 'important');
   var e03 = EVIDENCE['E-03'].content;
-  e03.mails.forEach(function(m) {
-    ui.print('  ['+m.id+'] '+m.subject, '');
-    ui.print('  发件：'+m.from+'  时间：'+m.time, '');
-    ui.print('  正文：'+m.body, '');
-    ui.print('', '');
-  });
+  if (!e03 || !e03.mails || !e03.mails[index]) {
+    ui.print('该邮件不存在。', 'error');
+    return;
+  }
+  var m = e03.mails[index];
+  ui.print('━━━ 邮件详情 ━━━', 'system');
+  ui.print('  [' + m.id + '] ' + m.subject, 'important');
+  ui.print('  发件：' + m.from, '');
+  ui.print('  收件：' + (m.to || ''), '');
+  ui.print('  时间：' + m.time, '');
+  ui.print('', '');
+  ui.print(m.body, '');
+  ui.print('', '');
+  if (e03.analysis && m.id === 'M-2026-2098') {
+    ui.print('分析：' + e03.analysis, 'important');
+  }
   ui.print('输入 list 查看完整证据。', 'hint');
 }
 
