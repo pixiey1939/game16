@@ -71,7 +71,8 @@ async function backToRoot(page) {
 async function enterSubmenu(page, name) {
   await backToRoot(page);
   await cmd(page, name);
-  await page.waitForTimeout(1000);
+  // Wait for connection animation (1500ms) + showNavMenu to complete
+  await page.waitForTimeout(2500);
 }
 
 async function back(page) {
@@ -224,28 +225,40 @@ function fail(msg) { return '❌ ' + msg; }
   console.log('11. E-21 微信支付: ' + (o.includes('E-21') ? pass('E-21') : fail('E-21 missing')));
   await back(page);
 
-  // === 微信 → 微信小程序 → 教练团队 → E-17 + 信用查询 unlock ===
+  // === 微信 → 小程序 → 炼健身小程序 → 授权 → 教练团队 → E-17 ===
   await back(page);
   await back(page);
   await enterSubmenu(page, '微信');
-  await cmd(page, '2');
-  await page.waitForTimeout(1000);
-  await cmd(page, '炼健身');
-  await page.waitForTimeout(1000);
+  await cmd(page, '2');  // 小程序
+  await cmd(page, '1');  // 炼健身小程序
+  // dispatch above sets navContext = 'wechat.mprog.auth'.
+  // Trigger dispatch again to call handleWechatMiniProgAuth, which shows choice buttons.
+  await page.evaluate(() => {
+    var inp = document.querySelector('#command-input');
+    if (inp) { inp.value = 'auth'; var e = new KeyboardEvent('keydown', {key:'Enter'}); inp.dispatchEvent(e); }
+  });
+  await page.waitForTimeout(800);
   await clickChoice(page, '确认授权');
   await page.waitForTimeout(2000);
-  await cmd(page, '2');
+  await cmd(page, '2');  // 教练团队
   await page.waitForTimeout(2500);
   o = await getOut(page);
   console.log('12. E-17 教练团队: ' + (o.includes('E-17') ? pass('E-17') : fail('E-17 missing')));
+  await back(page);
 
-  // Login gym admin
+  // === 微信 → 小程序 → 炼健身管理后台 → login ===
+  await back(page);
+  await back(page);
+  await enterSubmenu(page, '微信');
+  await cmd(page, '2');  // 小程序
+  await cmd(page, '2');  // 炼健身管理后台 → triggers gym_login context
+  await page.waitForTimeout(500);
   await cmd(page, 'zoudaxiong');
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(500);
   await cmd(page, '7753');
   await page.waitForTimeout(2000);
   o = await getOut(page);
-  console.log('13. Gym admin login: ' + (o.includes('登录') ? pass('管理后台已登录') : fail('管理后台未登录')));
+  console.log('13. Gym admin login: ' + (o.includes('登录成功') ? pass('管理后台已登录') : fail('管理后台未登录')));
   await back(page);
   await back(page);
   await back(page);
@@ -264,25 +277,32 @@ function fail(msg) { return '❌ ' + msg; }
   o = await getOut(page);
   console.log('15. E-14 WiFi 视频: ' + (o.includes('E-14') ? pass('E-14') : fail('E-14 missing')));
 
-  // === 健身房 → 门禁记录 → E-18 ===
-  await enterSubmenu(page, '健身房');
-  await cmd(page, '2');
+  await back(page);
+
+  // === 微信 → 小程序 → 炼健身管理后台 → 门禁记录 → E-18 ===
+  await enterSubmenu(page, '微信');
+  await cmd(page, '2');  // 小程序
+  await cmd(page, '2');  // 炼健身管理后台
+  await page.waitForTimeout(2000);
+  await cmd(page, '1');  // 门禁记录
   await page.waitForTimeout(2000);
   o = await getOut(page);
   console.log('16. E-18 健身房门禁: ' + (o.includes('E-18') ? pass('E-18') : fail('E-18 missing')));
 
-  // === 健身房 → 监控截图 → E-19 ===
-  await enterSubmenu(page, '健身房');
-  await cmd(page, '3');
+  // === 炼健身管理后台 → 监控记录 → E-19 ===
+  await back(page);
+  await cmd(page, '2');
   await page.waitForTimeout(2000);
   o = await getOut(page);
   console.log('17. E-19 健身房监控: ' + (o.includes('E-19') ? pass('E-19') : fail('E-19 missing')));
 
-  // === 健身房 → Wi-Fi 日志 → E-20 ===
-  await cmd(page, '4');
+  // === 炼健身管理后台 → Wi-Fi 日志 → E-20 ===
+  await back(page);
+  await cmd(page, '3');
   await page.waitForTimeout(2000);
   o = await getOut(page);
   console.log('18. E-20 WiFi/DNS: ' + (o.includes('E-20') ? pass('E-20') : fail('E-20 missing')));
+  await back(page);
   await back(page);
 
   // === 信用查询 → 输入姓名+手机号 → E-09 ===
@@ -292,6 +312,7 @@ function fail(msg) { return '❌ ' + msg; }
   await page.waitForTimeout(2500);
   o = await getOut(page);
   console.log('19. E-09 教练信用: ' + (o.includes('E-09') ? pass('E-09') : fail('E-09 missing')));
+  await back(page);
 
   // === 信用查询 → 郑桥信用 → E-10 ===
   await enterSubmenu(page, '信用查询');
@@ -300,6 +321,7 @@ function fail(msg) { return '❌ ' + msg; }
   await page.waitForTimeout(2500);
   o = await getOut(page);
   console.log('20. E-10 郑桥信用: ' + (o.includes('E-10') ? pass('E-10') : fail('E-10 missing')));
+  await back(page);
 
   // === 信用查询 → 网友信用 → E-11 ===
   await enterSubmenu(page, '信用查询');
