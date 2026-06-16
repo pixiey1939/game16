@@ -59,6 +59,15 @@ const game = (() => {
         return null;
       }
       state = data.state;
+      var initial = ['OA', '小红书', '手机定位'];
+      for (var i = 0; i < initial.length; i++) {
+        if (!state.unlockedSystems.includes(initial[i])) {
+          state.unlockedSystems.unshift(initial[i]);
+        }
+      }
+      if (state.stageIntroShown === undefined) {
+        state.stageIntroShown = { 1: true, 2: true, 3: false, 4: false, 5: false };
+      }
       return state;
     } catch (e) {
       console.error('Load failed:', e);
@@ -186,7 +195,7 @@ async function handleStage1Response(input) {
 // 阶段 2：初步调查
 // ============================================================
 
-function runStage2() {
+async function runStage2() {
   if (game.getState().stageIntroShown[2]) return;
   game.markStageIntro(2);
 
@@ -195,7 +204,7 @@ function runStage2() {
   ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
   ui.print('', '');
 
-  ui.printDialogue('数字麻姐', [
+  await ui.printDialogue('数字麻姐', [
     '现在我们要查清麻姐案发当天的行踪。',
     '她失踪前最后出现在广埠屯区域，但具体去了哪里需要你帮我在 OA 系统里查。',
     '',
@@ -247,6 +256,10 @@ async function handleAccessSystem(systemName) {
     state._currentSystemStage = 'menu';
   } else if (systemName === '公共监控系统') {
     ui.print('━━━ 公共监控系统 ━━━', 'system');
+  } else if (systemName === '小红书') {
+    showXiaohongshu();
+  } else if (systemName === '手机定位') {
+    showPhoneLocation();
   } else if (systemName === '短信') {
     handleSmsSystem();
   } else if (systemName === '微信') {
@@ -259,11 +272,20 @@ async function handleAccessSystem(systemName) {
     state._currentSystem = '微信';
     state._currentSystemStage = 'menu';
   } else if (systemName === '相册') {
-    ui.print('━━━ 相册 ━━━', 'system');
-    ui.print('  [1] 借条照片', '');
-    ui.print('  [2] WiFi 视频', '');
+    ui.print('━━━ 相册 - 照片列表 ━━━', 'system');
     ui.print('', '');
-    ui.print('用法：album 1 / album 2', 'hint');
+    ui.print('  1. 06-17 12:20  借条.jpg', '');
+    ui.print('  2. 06-17 11:52  健身房环境.mp4', '');
+    ui.print('  3. 06-16 19:25  端午礼盒.jpg', '');
+    ui.print('  4. 06-16 12:15  工作餐.jpg', '');
+    ui.print('  5. 06-15 22:10  瑜伽垫.jpg', '');
+    ui.print('  6. 06-15 18:50  猫咪.jpg', '');
+    ui.print('  7. 06-14 09:15  早餐.jpg', '');
+    ui.print('  8. 06-13 14:30  跑步鞋.jpg', '');
+    ui.print('  9. 06-12 17:00  咖啡.jpg', '');
+    ui.print(' 10. 06-11 16:45  吉他.jpg', '');
+    ui.print('', '');
+    ui.print('共约 30 张照片/视频。输入编号查看详情。', 'hint');
     state._currentSystem = '相册';
     state._currentSystemStage = 'menu';
   } else if (systemName === '健身房') {
@@ -278,6 +300,43 @@ async function handleAccessSystem(systemName) {
     state._currentSystem = '信用查询';
     state._currentSystemStage = 'menu';
   }
+}
+
+async function showXiaohongshu() {
+  ui.print('━━━ 小红书 - 芝麻 ━━━', 'system');
+  ui.print('', '');
+  ui.print('  小红书号：pdom1222', '');
+  ui.print('  IP属地：湖北', '');
+  ui.print('  年龄：31岁', '');
+  ui.print('', '');
+  ui.print('  关注 78  ｜  粉丝 2.1万  ｜  获赞与收藏 9万', '');
+  ui.print('', '');
+  ui.print('  个人简介：', 'important');
+  ui.print('  解密游戏博主啊（更新慢而已🤷‍♀️）', '');
+  ui.print('  日更：ootd穿搭分享', '');
+  ui.print('  直播：健身主要练🍑（在隔壁小芝麻）', '');
+  ui.print('  偶尔：练琴🎸+学习笔记分享', '');
+  ui.print('  网友你好，祝你生活愉快😊', '');
+  ui.print('', '');
+  ui.print('  置顶笔记：', 'important');
+  ui.print('  · qg# 游戏15解谜思路（06-10）', '');
+  ui.print('', '');
+  await ui.printDialogue('数字麻姐', [
+    '我作为数字人，没有直接访问她小红书数据的权限。',
+    '我只能看到公开的主页信息：账号基本信息、个人简介、置顶笔记。',
+    '如果你想了解更多，可能需要通过其他途径，比如解锁麻姐的手机。',
+  ], 'digital-human');
+}
+
+function showPhoneLocation() {
+  var e01 = EVIDENCE['E-01'];
+  ui.print('━━━ 手机定位记录 ━━━', 'system');
+  ui.print('', '');
+  e01.content.data.forEach(function(line) {
+    ui.print('  ' + line, '');
+  });
+  ui.print('', '');
+  ui.print(e01.content.analysis, 'important');
 }
 
 // ============================================================
@@ -315,13 +374,6 @@ async function handlePhonePassword(input) {
  * 健身房系统菜单
  */
 function runGymSystem() {
-  ui.print('━━━ 炼健身 ━━━', 'system');
-  ui.print('  [1] 教练信息', '');
-  ui.print('  [2] 门禁记录', '');
-  ui.print('  [3] 监控截图', '');
-  ui.print('  [4] Wi-Fi 日志', '');
-  ui.print('', '');
-  ui.print('输入编号 1-4，或 back 返回主菜单。', 'hint');
   game.getState()._currentSystem = '健身房';
   game.getState()._currentSystemStage = 'menu';
 }
@@ -385,14 +437,20 @@ function handleCombine(args) {
     const req = def.requires;
     if ((req[0] === e1 && req[1] === e2) || (req[0] === e2 && req[1] === e1)) {
       game.unlockCombine(cid);
-      ui.print('[新结论已生成]', 'evidence');
-      ui.print('', '');
-      ui.print(`[${cid}] ${def.name}`, 'important');
-      ui.print('', '');
-      ui.print(def.analysis, '');
-      ui.print('', '');
-      game.save();
-      checkStage4To5();
+      ui.print('[交叉分析中...]', 'hint');
+      setTimeout(async function() {
+        ui.print('', '');
+        ui.print('━━━ 交叉分析结果 ━━━', 'system');
+        ui.print('', '');
+        ui.print(`[${cid}] ${def.name}`, 'important');
+        ui.print('', '');
+        await ui.printDialogue('数字麻姐', [def.analysis], 'digital-human');
+        ui.print('', '');
+        ui.print('━━━ 结论已记录 ━━━', 'system');
+        ui.print('[新结论已解锁：' + cid + '｜' + def.name + ']', 'evidence');
+        game.save();
+        checkStage4To5();
+      }, 1500);
       return;
     }
   }
@@ -510,7 +568,7 @@ async function handleOASubcommand(action) {
       ], '你想查看谁的聊天记录？');
       if (choice === 'zhengqiao') {
         game.unlockEvidence('E-02');
-        ui.printDialogue('数字麻姐', [
+        await ui.printDialogue('数字麻姐', [
           '郑桥的聊天记录...我看看...',
           '这个人，最近和麻姐的私聊明显变多了。',
         ], 'digital-human');
@@ -536,7 +594,7 @@ async function handleOASubcommand(action) {
       ], '你想查看什么？');
       if (choice === 'list') {
         game.unlockEvidence('E-03');
-        ui.printDialogue('数字麻姐', [
+        await ui.printDialogue('数字麻姐', [
           '麻姐的邮箱里...有一封"门禁权限激活"的邮件。',
           '这是案发当天早上的。让我点进去看看...',
           '我还发现了麻姐的邮箱里有一封门禁权限激活的邮件...',
@@ -551,7 +609,7 @@ async function handleOASubcommand(action) {
         ui.print('[系统解锁：停车场系统]', 'evidence');
         ui.print('[系统解锁：手机解锁] 试试简单好记的密码', 'evidence');
         game.save();} else {
-        ui.printDialogue('数字麻姐', [
+        await ui.printDialogue('数字麻姐', [
           '申请说明：刷卡时提示"权限验证失败"，无法进入工位区域。',
           '这是...麻姐的门禁卡失效了？',
           '另外，我们需要查看她的手机数据。她的手机是锁屏状态。',
@@ -585,7 +643,7 @@ async function handleOASubcommand(action) {
 // 查看证据详情
 // ============================================================
 
-function handleViewEvidence(id) {
+async function handleViewEvidence(id) {
   const ev = EVIDENCE[id];
   if (!ev) { ui.print('证据 ' + id + ' 不存在。', 'error'); return; }
 
@@ -719,10 +777,8 @@ function handleViewEvidence(id) {
     ui.print('', '');
   }
 
-  // Always show analysis
   if (c.analysis) {
-    ui.print('── 分析 ──', 'important');
-    ui.print(c.analysis, '');
+    await ui.printDialogue('数字麻姐', [c.analysis], 'digital-human');
   }
 
   game.markEvidenceViewed(id);
@@ -758,11 +814,10 @@ async function handleDoorSystem(action) {
     } else {
       game.unlockEvidence('E-04');
       game.unlockEvidence('E-05');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '异常刷卡记录有两条值得注意的。',
-        '郑桥 12:48 离开公司后 13:55 才回来，期间出现在健身房附近。',
-        '麻姐 13:53 刷卡回公司，但之后没有任何刷卡记录——她进了公司之后就没有再出现。',
-        '她上班后失踪了。',
+        '郑桥 12:48 离开公司，13:55 才回来，中间有一个多小时的空档。',
+        '麻姐 13:53 刷卡回公司，但之后没有任何刷卡记录。',
       ], 'digital-human');
       ui.print('[新证据已解锁：E-04｜' + EVIDENCE['E-04'].name + ']', 'evidence');
       ui.print('[新证据已解锁：E-05｜' + EVIDENCE['E-05'].name + ']', 'evidence');
@@ -783,7 +838,7 @@ async function handleDoorSystem(action) {
 // 停车场系统 handler
 // ============================================================
 
-function handleParkingSystem(action) {
+async function handleParkingSystem(action) {
   var state = game.getState();
   if (action === '1') {
     if (state.unlockedEvidence.includes('E-06')) {
@@ -799,7 +854,7 @@ function handleParkingSystem(action) {
       ui.print(e06.analysis, 'important');
     } else {
       game.unlockEvidence('E-06');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '停车场车辆出入记录...让我看看。',
         '共 16 辆车有出入记录。',
         '其中郑桥的车鄂A·8K329 多次进出，值得注意。',
@@ -836,7 +891,7 @@ function handleParkingSystem(action) {
   }
 }
 
-function handleParkingLicenseQuery(raw) {
+async function handleParkingLicenseQuery(raw) {
   var state = game.getState();
   state._parkingLicenseQuery = false;
   var plate = raw.trim();
@@ -852,7 +907,7 @@ function handleParkingLicenseQuery(raw) {
     ui.print('  2026-06-10 18:57  中石化加油站（中南路站）', '');
     ui.print('  2026-06-09 09:42  广捷洗车（广埠屯店）', '');
     ui.print('', '');
-    ui.printDialogue('数字麻姐', [
+    await ui.printDialogue('数字麻姐', [
       '他的车经常去"广捷洗车"。案发当天 13:07 也去了一次。',
       '让我看看能不能在公共监控系统查到这家洗车店。',
     ], 'digital-human');
@@ -870,7 +925,7 @@ function handleParkingLicenseQuery(raw) {
   return true;
 }
 
-function handleMonitorSearch(raw) {
+async function handleMonitorSearch(raw) {
   var state = game.getState();
   var input = raw.trim().toLowerCase();
   if (input.indexOf('超市') >= 0 || input.indexOf('惠选') >= 0) {
@@ -881,7 +936,7 @@ function handleMonitorSearch(raw) {
       ui.print('', '');
       e07.data.forEach(function(line) { ui.print('  ' + line, ''); });
       ui.print('', '');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '超市门口的监控拍到了麻姐和一个黑衣年轻男性在交谈。',
         '那个男的身形瘦高，背着一个吉他包。麻姐还递给他一瓶水。',
       ], 'digital-human');
@@ -900,7 +955,7 @@ function handleMonitorSearch(raw) {
       ui.print('', '');
       e08.data.forEach(function(line) { ui.print('  ' + line, ''); });
       ui.print('', '');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '郑桥在洗车店卫生间待了 30 分钟，非常反常。',
       ], 'digital-human');
       ui.print('[新证据已解锁：E-08｜' + EVIDENCE['E-08'].name + ']', 'evidence');
@@ -933,7 +988,7 @@ async function handleMonitorSystem(action) {
       ui.print(e07.analysis, 'important');
     } else {
       game.unlockEvidence('E-07');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '超市门口的监控拍到了麻姐和一个黑衣年轻男性在交谈。',
         '那个男的身形瘦高，背着一个吉他包。',
         '麻姐还递给他一瓶水。',
@@ -950,7 +1005,7 @@ async function handleMonitorSystem(action) {
       ui.print(e08.analysis, 'important');
     } else {
       game.unlockEvidence('E-08');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '郑桥在洗车店的卫生间待了整整 30 分钟。',
         '这太反常了。正常洗车不会去卫生间待这么久。',
         '他可能从卫生间窗户离开，去了别的地方。',
@@ -965,29 +1020,72 @@ async function handleMonitorSystem(action) {
 // 短信系统 handler
 // ============================================================
 
-function handleSmsSystem() {
-  var state = game.getState();
-  if (state.unlockedEvidence.includes('E-12')) {
-    ui.print('[已解锁]', 'important');
-    ui.print('与 Embrace 的短信聊天记录：', '');
-    var e12 = EVIDENCE['E-12'].content;
+async function showSmsConversation(index) {
+  var e12 = EVIDENCE['E-12'].content;
+  if (index === 0) {
+    ui.print('━━━ 短信 - 与 157****6697 ━━━', 'system');
+    ui.print('', '');
     e12.embrace.forEach(function(msg) {
-      ui.print('  ' + msg.date + ' ' + msg.from + ': ' + msg.text, '');
+      ui.print('  ' + msg.date, '');
+      ui.print('  ' + msg.from + ': ' + msg.text, '');
+      ui.print('', '');
     });
-    ui.print('', '');
-    ui.print('其他短信：共 ' + e12.noise.length + ' 条，全部为验证码、运营商通知等。', 'hint');
-    ui.print('', '');
-    ui.print(e12.analysis, 'important');
-  } else {
-    game.unlockEvidence('E-12');
-    ui.printDialogue('数字麻姐', [
+    await ui.printDialogue('数字麻姐', [
       '麻姐的短信里有大量与 Embrace 的聊天记录。',
       '他们在计划一个见面，就在案发当天。',
       '注意 13:33 的两条消息，是在定位关闭之后发出的。',
+      '这两条是同一分钟内互相发的——Embrace 问"你在哪"，麻姐立刻回复。',
+      '表面上看像是普通对话，但也可能只是手机放在口袋/桌上的快捷回复。',
+      '要判断是否异常，需要结合其他证据。',
     ], 'digital-human');
+  } else {
+    var item = e12.noise[index - 1];
+    if (!item) { ui.print('该短信不存在。', 'error'); return; }
+    ui.print('━━━ 短信 - 与 ' + item.sender + ' ━━━', 'system');
+    ui.print('', '');
+    ui.print('  ' + item.date, '');
+    ui.print('  ' + item.text, '');
+    ui.print('', '');
+    ui.print('普通短信，无异常。', 'hint');
+  }
+}
+
+async function handleSmsSystem() {
+  var state = game.getState();
+  if (state.unlockedEvidence.includes('E-12')) {
+    ui.print('[已解锁] 短信记录', 'important');
+  } else {
+    game.unlockEvidence('E-12');
     ui.print('[新证据已解锁：E-12｜' + EVIDENCE['E-12'].name + ']', 'evidence');
     game.save();
   }
+  ui.print('', '');
+  ui.print('━━━ 短信 - 最近对话 ━━━', 'system');
+  ui.print('', '');
+  var e12 = EVIDENCE['E-12'].content;
+  ui.print('  1. 157****6697            最后消息 06-17 13:33   未读', '');
+  for (var i = 0; i < e12.noise.length; i++) {
+    var n = e12.noise[i];
+    var num = String(i + 2);
+    var pad = num.length === 1 ? ' ' : '';
+    ui.print('  ' + pad + num + '. ' + n.sender + '  最后消息 ' + n.date + (n.note === '验证码' || n.note === '银行短信' ? '  （' + n.note + '）' : ''), '');
+  }
+  ui.print('', '');
+  ui.print('共 22 条对话。输入编号查看详情。', 'hint');
+}
+
+async function handleSmsNumberInput(num) {
+  if (num === 1) {
+    showSmsConversation(0);
+    return true;
+  }
+  var e12 = EVIDENCE['E-12'].content;
+  if (num >= 2 && num <= e12.noise.length + 1) {
+    showSmsConversation(num - 1);
+    return true;
+  }
+  ui.print('无效编号。', 'error');
+  return false;
 }
 
 // ============================================================
@@ -997,55 +1095,104 @@ function handleSmsSystem() {
 async function handleWechatSystem(action) {
   var state = game.getState();
   if (action === '1') {
-    if (state.unlockedEvidence.includes('E-15')) {
-      ui.print('[已解锁] 老公聊天记录', 'important');
-      var e15 = EVIDENCE['E-15'].content;
-      e15.messages.forEach(function(msg) {
-        ui.print('  ' + msg.from + ': ' + msg.text, '');
-      });
-      ui.print('', '');
-      ui.print(e15.analysis, 'important');
-    } else {
+    var e15 = EVIDENCE['E-15'].content;
+    var isNew = !state.unlockedEvidence.includes('E-15');
+    if (isNew) {
       game.unlockEvidence('E-15');
-      ui.printDialogue('数字麻姐', [
+    } else {
+      ui.print('[已解锁] 老公聊天记录', 'important');
+    }
+    ui.print('━━━ 微信 - 与老公 ━━━', 'system');
+    ui.print('', '');
+    e15.messages.forEach(function(msg) {
+      ui.print('  ' + msg.from + ': ' + msg.text, '');
+    });
+    ui.print('', '');
+    if (isNew) {
+      await ui.printDialogue('数字麻姐', [
         '麻姐在微信里跟老公诉苦，说郑桥的行为让她"害怕"。',
         '她早就感觉到了郑桥的越界行为。',
       ], 'digital-human');
       ui.print('[新证据已解锁：E-15｜' + EVIDENCE['E-15'].name + ']', 'evidence');
       game.save();
+    } else {
+      ui.print(e15.analysis, 'important');
     }
   } else if (action === '2') {
-    if (state.unlockedEvidence.includes('E-16')) {
-      ui.print('[已解锁] 大怪兽教练聊天记录', 'important');
-      var e16 = EVIDENCE['E-16'].content;
-      e16.messages.forEach(function(msg) {
-        var d = msg.date ? '[' + msg.date + '] ' : '';
-        ui.print('  ' + d + msg.from + ': ' + msg.text, '');
-      });
-      ui.print('', '');
-      ui.print(e16.analysis, 'important');
-    } else {
+    var e16 = EVIDENCE['E-16'].content;
+    var isNew = !state.unlockedEvidence.includes('E-16');
+    if (isNew) {
       game.unlockEvidence('E-16');
-      ui.printDialogue('数字麻姐', [
+    } else {
+      ui.print('[已解锁] 大怪兽教练聊天记录', 'important');
+    }
+    ui.print('━━━ 微信 - 聊天记录 - 与大怪兽（教练） ━━━', 'system');
+    ui.print('', '');
+    var lastDate = '';
+    e16.messages.forEach(function(msg) {
+      var d = msg.date ? msg.date.split(' ')[0] : '';
+      if (d && d !== lastDate) {
+        if (lastDate) ui.print('', '');
+        ui.print('  ──', '');
+        lastDate = d;
+      }
+      var timePart = msg.date ? msg.date.split(' ')[1] + '  ' : '';
+      ui.print('  ' + timePart + msg.from + ': ' + msg.text, '');
+    });
+    ui.print('', '');
+    if (isNew) {
+      await ui.printDialogue('数字麻姐', [
         '教练说"12:05 见"，但麻姐并没有说这个时间。',
         '这个时间差很可疑。',
       ], 'digital-human');
       ui.print('[新证据已解锁：E-16｜' + EVIDENCE['E-16'].name + ']', 'evidence');
       game.save();
+    } else {
+      ui.print(e16.analysis, 'important');
     }
   } else if (action === '3') {
-    if (state.unlockedEvidence.includes('E-21')) {
-      ui.print('[已解锁] 微信支付记录', 'important');
-      var e21 = EVIDENCE['E-21'].content;
-      e21.payments.forEach(function(p) {
-        ui.print('  ' + p.time + ' ' + p.merchant + ' ' + p.amount, '');
-        if (p.items) ui.print('  备注：' + p.items, '');
-      });
+    async function showWechatPayments(e21, withDialogue) {
+      ui.print('━━━ 微信 - 聊天记录 - 微信支付 ━━━', 'system');
       ui.print('', '');
-      ui.print(e21.analysis, 'important');
-    } else {
+      ui.print('  微信支付自动推送的账单记录（最近 3 天）', '');
+      ui.print('', '');
+      var currentDate = '';
+      var totalSpent = 0;
+      for (var i = 0; i < e21.payments.length; i++) {
+        var p = e21.payments[i];
+        var date = p.time.split(' ')[0];
+        if (date !== currentDate) {
+          if (currentDate) ui.print('  ──────────', 'system');
+          currentDate = date;
+          if (i > 0) ui.print('', '');
+          ui.print('  ──────────', 'system');
+          ui.print('  2026-' + currentDate, 'important');
+          ui.print('  ──────────', 'system');
+        }
+        ui.print('  ' + p.time.split(' ')[1] + '  微信支付  ' + p.amount, '');
+        ui.print('        商家：' + p.merchant, '');
+        ui.print('        交易号：' + p.txnId, '');
+        ui.print('        支付方式：' + p.method, '');
+        if (p.items) ui.print('        商品：' + p.items, '');
+        ui.print('', '');
+        if (p.amount.charAt(0) !== '-') {
+          totalSpent += parseFloat(p.amount.replace(/[¥,]/g, ''));
+        }
+      }
+      ui.print('  ──────────', 'system');
+      ui.print('  导出时间：2026-06-17 13:30（自动）', '');
+      ui.print('  共 ' + e21.payments.length + ' 笔交易 ｜ 总消费金额：¥' + totalSpent.toFixed(2), '');
+      ui.print('  ──────────', 'system');
+      ui.print('', '');
+      if (withDialogue) {
+        await ui.printDialogue('数字麻姐', [e21.analysis], 'digital-human');
+      }
+    }
+    var isNew = !state.unlockedEvidence.includes('E-21');
+    if (isNew) {
       game.unlockEvidence('E-21');
-      ui.printDialogue('数字麻姐', [
+      await showWechatPayments(EVIDENCE['E-21'].content, false);
+      await ui.printDialogue('数字麻姐', [
         '麻姐在广埠屯惠选超市买了三瓶水。',
         '一瓶自己喝，一瓶给网友，还有一瓶去哪了？',
         '公共监控系统应该能查到这家超市的门口监控。',
@@ -1058,6 +1205,9 @@ async function handleWechatSystem(action) {
         ui.print('[系统提示：公共监控系统已解锁]', 'hint');
       }
       game.save();
+    } else {
+      ui.print('[已解锁] 微信支付记录', 'important');
+      await showWechatPayments(EVIDENCE['E-21'].content, true);
     }
   }
 }
@@ -1080,7 +1230,7 @@ async function handleAlbumSystem(action) {
       ui.print(e13.analysis, 'important');
     } else {
       game.unlockEvidence('E-13');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '麻姐的相册里有一张借条照片。',
         '教练邹大雄向她借了 2 万块钱，8 月底到期。',
         '这给了教练一个明确的经济动机。',
@@ -1099,7 +1249,7 @@ async function handleAlbumSystem(action) {
       ui.print(e14.analysis, 'important');
     } else {
       game.unlockEvidence('E-14');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '相册里的这段视频镜头扫到了健身房的 WiFi 信息。',
         '有了这个，我们也许能查看健身房的日志后台。',
         '健身房的系统应该可以解锁了。',
@@ -1129,7 +1279,7 @@ async function handleGymSystem(action) {
       ui.print(e17.analysis, 'important');
     } else {
       game.unlockEvidence('E-17');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '大怪兽教练的真名叫邹大雄。',
         '有了他的姓名和手机号，我们可以查询他的信用信息了。',
         '信用查询系统应该解锁了。',
@@ -1150,7 +1300,7 @@ async function handleGymSystem(action) {
       ui.print(e18.analysis, 'important');
     } else {
       game.unlockEvidence('E-18');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '健身房门禁记录显示麻姐 11:50 进入，但没有出场记录。',
         '而郑桥 11:54 进入，12:18 就出来了，后来又返回了几次。',
       ], 'digital-human');
@@ -1169,7 +1319,7 @@ async function handleGymSystem(action) {
       ui.print(e19.analysis, 'important');
     } else {
       game.unlockEvidence('E-19');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '监控截图显示邹大雄多次出现在女更衣室门口。',
         '这太可疑了。他在女更衣室门口徘徊观望了好几次。',
       ], 'digital-human');
@@ -1199,7 +1349,7 @@ async function handleGymSystem(action) {
       ui.print(e20.analysis, 'important');
     } else {
       game.unlockEvidence('E-20');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '健身房 WiFi 日志里有一个非常重要的发现。',
         '有人用健身房的网络搜索过"sedative"——镇静剂。',
         '这个 DNS 查询发生在凌晨 6 点，非常可疑。',
@@ -1248,7 +1398,7 @@ async function handleCreditSystem(action) {
       ui.print(e09.analysis, 'important');
     } else {
       game.unlockEvidence('E-09');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '教练邹大雄的信用记录很糟糕。',
         '',
         '负债约 47 万元，有 5 笔网贷逾期，还有境外赌博转账。',
@@ -1270,7 +1420,7 @@ async function handleCreditSystem(action) {
       ui.print(e10.analysis, 'important');
     } else {
       game.unlockEvidence('E-10');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '郑桥的信用记录正常，没有赌博、借贷或诉讼记录。',
         '没有明显的经济动机，但不能排除其他动机。',
       ], 'digital-human');
@@ -1288,7 +1438,7 @@ async function handleCreditSystem(action) {
       ui.print(e11.analysis, 'important');
     } else {
       game.unlockEvidence('E-11');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '网友 Embrace（张英河）是无辜的。',
         '在校大学生，无不良信用记录，无前科。',
       ], 'digital-human');
@@ -1313,14 +1463,14 @@ async function runStage3() {
 
   var state = game.getState();
   if (state.phoneUnlocked) {
-    ui.printDialogue('数字麻姐', [
+    await ui.printDialogue('数字麻姐', [
       '手机已经解锁了。你可以查看短信、微信、相册等数据。',
       '使用 help 查看可用命令。',
     ], 'digital-human');
     return;
   }
 
-  ui.printDialogue('数字麻姐', [
+  await ui.printDialogue('数字麻姐', [
     '麻姐的手机还在锁屏状态。',
     '她习惯用简单好记的数字密码——生日、纪念日这类。',
     '她习惯用简单好记的数字密码——生日、纪念日这类，比如 unlock + 四位数。',
@@ -1350,20 +1500,34 @@ async function runStage5() {
   if (game.hasShownIntro(5)) return;
   game.markStageIntro(5);
 
+  ui.print('[正在追踪访问来源...]', 'error');
+  setTimeout(function() {
+    ui.print('[来源定位：楚门科技 VPN 出口]', 'error');
+    ui.print('', '');
+  }, 2000);
+
   ui.shakeScreen();
+  await new Promise(r => setTimeout(r, 2500));
   ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
   ui.print('[WARNING] 检测到未授权的远程接入！', 'error');
   ui.print('[WARNING] 系统安全协议已触发...', 'error');
   ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
   ui.print('', '');
 
-  ui.printDialogue('？？？', [
+  await ui.printDialogue('？？？', [
     '别费劲了。你以为你在查案？你查的是我。',
     '',
     '我是郑桥。麻姐的消失，和你没关系。',
     '你现在有两个选择：',
     '退出，继续过你平静无聊的生活。',
     '或者——接受我的价码，我保证你不会再收到类似的消息。',
+    '',
+    '麻姐现在很安全。只要你保持沉默，我不会伤害她。',
+    '我也可以给你一些东西作为回报。',
+    '',
+    '一个网盘链接。里面有一些……你可能感兴趣的东西。',
+    '接受它，我们就是朋友。',
+    '不接受——我立刻清除所有数据。',
     '',
     '你还有 60 秒。超时未回复，我会删除所有云端数据。',
   ], 'zheng-qiao');
@@ -1381,7 +1545,7 @@ async function runStage5() {
   if (choice === 'accept') {
     state.playerChoice = 'accept';
     state.endingReached = 'ending1';
-    ui.printDialogue('郑桥', ['明智的选择。', '链接已经发给你了。'], 'zheng-qiao');
+    await ui.printDialogue('郑桥', ['明智的选择。', '链接已经发给你了。'], 'zheng-qiao');
     ui.print('', '');
     ui.print('[系统提示：已访问外部链接]', 'system');
     ui.print('[检测到恶意程序植入]', 'error');
@@ -1390,8 +1554,27 @@ async function runStage5() {
     game.save();
   } else if (choice === 'decline') {
     state.playerChoice = 'decline';
-    ui.printDialogue('郑桥', ['你确定？那就别怪我了。'], 'zheng-qiao');
+    await ui.printDialogue('郑桥', ['你确定？那就别怪我了。'], 'zheng-qiao');
     ui.print('', '');
+
+    if (!state.backupCreated) {
+      ui.print('[警告：郑桥正在锁定云端数据！]', 'error');
+      ui.print('你现在还可以备份本地信息。', 'error');
+      ui.print('', '');
+      var backupChoice = await ui.displayChoice([
+        { label: '立即备份（backup）', value: 'backup_now' },
+        { label: '来不及了，继续', value: 'no_backup' },
+      ], '是否立即备份？');
+
+      if (backupChoice === 'backup_now') {
+        state.backupCreated = true;
+        ui.print('[紧急备份中...]', 'hint');
+        ui.print('[部分数据已被清除，仅备份成功 ' + state.unlockedEvidence.length + ' 条信息]', 'hint');
+        ui.print('[本地备份完成]', 'evidence');
+        ui.print('', '');
+      }
+    }
+
     ui.print('[云端数据清除中...]', 'system');
     ui.print('[清除完成]', 'system');
     ui.print('', '');
@@ -1401,7 +1584,7 @@ async function runStage5() {
       ui.print('  他删除了云端的数据。', 'important');
       ui.print('  但你做了备份。', 'important');
       ui.print('', '');
-      ui.printDialogue('数字麻姐', [
+      await ui.printDialogue('数字麻姐', [
         '请用 submit 命令把本地信息上传到警方电子举报平台。',
       ], 'digital-human');
       // decline+已备份时等待玩家 submit
@@ -1418,7 +1601,7 @@ async function runStage5() {
 
       if (choice2 === 'nothing') {
         state.endingReached = 'ending4';
-        ui.printDialogue('数字麻姐', [
+        await ui.printDialogue('数字麻姐', [
           '不过，在他介入之前，我的应急协议已经启动了。',
           '我把核心信息打包上传到了警方电子举报平台。',
           '',
@@ -1439,7 +1622,7 @@ async function runStage5() {
   }
 }
 
-function handleZhengqiaoResponse(input) {
+async function handleZhengqiaoResponse(input) {
   var state = game.getState();
   if (!state._waitingForZhengqiao) return false;
 
@@ -1452,7 +1635,7 @@ function handleZhengqiaoResponse(input) {
     return true;
   }
 
-  ui.printDialogue('郑桥', ['什么意思？'], 'zheng-qiao');
+  await ui.printDialogue('郑桥', ['什么意思？'], 'zheng-qiao');
   return false;
 }
 

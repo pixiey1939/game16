@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/style.css?v=19">
 </head>
 <body>
   <div id="terminal">
@@ -43,10 +43,22 @@
   </div>
 
   <!-- 脚本加载顺序不变 -->
-<script src="js/evidence.js?v=4"></script>
-<script src="js/ui.js?v=4"></script>
-<script src="js/game.js?v=4"></script>
-<script src="js/command.js?v=4"></script>
-<script src="js/main.js?v=4"></script>
+<script src="js/evidence.js?v=19"></script>
+<script src="js/ui.js?v=19"></script>
+<script src="js/game.js?v=19"></script>
+<script src="js/command.js?v=19"></script>
+<script src="js/main.js?v=19"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(r) { r.unregister(); });
+  });
+}
+if ('caches' in window) {
+  caches.keys().then(function(names) {
+    names.forEach(function(name) { caches.delete(name); });
+  });
+}
+</script>
 </body>
 </html>
