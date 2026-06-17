@@ -943,8 +943,14 @@ async function handleWechatMiniSearch(raw) {
       return;
     }
     if (state._parkingLicenseQuery) {
-      handleParkingLicenseQuery(input);
-      return;
+      var trimmed_p = input.trim().toLowerCase();
+      var clearCmd = trimmed_p === 'clear' || trimmed_p.indexOf('clear ') === 0;
+      if (trimmed_p === 'back' || trimmed_p === 'help' || clearCmd || trimmed_p === 'cls') {
+        // let dispatch fall through to command handler
+      } else {
+        handleParkingLicenseQuery(input);
+        return;
+      }
     }
     if (state._monitorSearch) {
       handleMonitorSearch(input);

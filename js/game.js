@@ -792,45 +792,69 @@ async function handleViewEvidence(id) {
 async function handleDoorSystem(action) {
   var state = game.getState();
   if (action === '1') {
-    var e04 = EVIDENCE['E-04'].content;
-    ui.print('━━━ 门禁刷卡记录 - 2026-06-17（按时间排序） ━━━', 'system');
+    ui.print('━━━ 门禁刷卡记录 ━━━', 'system');
     ui.print('', '');
-    e04.data.forEach(function(line) {
-      ui.print('  ' + line.time + '  工号 ' + line.employeeId + '  刷卡' + line.direction, '');
-    });
-    ui.print('', '');
-    ui.print('这是今天所有员工的门禁刷卡记录（按时间顺序排列）。', 'hint');
-    ui.print('你可以回 OA 系统查一下通讯录，看看这些工号分别是谁。', 'hint');
+    ui.print('[正在导出完整门禁日志文件...]', 'hint');
+    downloadFile('asset/data/door_access_log.xlsx', 'ChumenTech_DoorAccessLog_2026-06-17.xlsx');
+    ui.print('[下载完成：ChumenTech_DoorAccessLog_2026-06-17.xlsx]', 'evidence');
   } else if (action === '2') {
-    if (state.unlockedEvidence.includes('E-04') && state.unlockedEvidence.includes('E-05')) {
-      ui.print('[已解锁] 异常刷卡记录', 'important');
-      var e05 = EVIDENCE['E-05'].content;
-      e05.data.forEach(function(rec) {
-        ui.print('  ' + rec.time + '  ' + rec.employeeId + ' ' + rec.name + ' — ' + rec.direction, '');
-        ui.print('  异常：' + rec.anomaly, 'important');
-        ui.print('', '');
-      });
-      ui.print(e05.analysis, 'important');
-    } else {
+    if (!state.unlockedEvidence.includes('E-04') || !state.unlockedEvidence.includes('E-05')) {
       game.unlockEvidence('E-04');
       game.unlockEvidence('E-05');
-      await ui.printDialogue('数字麻姐', [
-        '异常刷卡记录有两条值得注意的。',
-        '郑桥 12:48 离开公司，13:55 才回来，中间有一个多小时的空档。',
-        '麻姐 13:53 刷卡回公司，但之后没有任何刷卡记录。',
-      ], 'digital-human');
       ui.print('[新证据已解锁：E-04｜' + EVIDENCE['E-04'].name + ']', 'evidence');
       ui.print('[新证据已解锁：E-05｜' + EVIDENCE['E-05'].name + ']', 'evidence');
-      var e05 = EVIDENCE['E-05'].content;
       ui.print('', '');
-      e05.data.forEach(function(rec) {
-        ui.print('  ' + rec.time + '  ' + rec.employeeId + ' ' + rec.name + ' — ' + rec.direction, '');
-        ui.print('  异常：' + rec.anomaly, 'important');
-        ui.print('', '');
-      });
-      ui.print(e05.analysis, 'important');
       game.save();
     }
+    ui.print('━━━ 门禁异常统计 ━━━', 'system');
+    ui.print('', '');
+    ui.print('  上班时间：08:30  下班时间：17:30', 'hint');
+    ui.print('', '');
+
+    // 迟到统计（首次进入时间超过 08:30）
+    var lateList = [
+      { t: '08:32', name: '张浩然' }, { t: '08:35', name: '马志远' },
+      { t: '08:38', name: '何雨桐' }, { t: '08:40', name: '王博文' },
+      { t: '08:42', name: '李明杰' }, { t: '08:45', name: '陈立' },
+      { t: '08:48', name: '刘子轩' }, { t: '08:50', name: '赵一鸣' },
+      { t: '08:52', name: '赵磊' }, { t: '08:55', name: '周明' },
+      { t: '08:58', name: '孙艺' }, { t: '09:02', name: '高俊杰' },
+      { t: '09:05', name: '徐文静' }, { t: '09:08', name: '刘思远' },
+      { t: '09:12', name: '陈佳慧' }, { t: '09:15', name: '王晓东' },
+      { t: '09:18', name: '张晓明' }, { t: '09:22', name: '黄雨萱' },
+      { t: '09:25', name: '孙浩然' }, { t: '09:28', name: '刘雨桐' },
+      { t: '09:32', name: '赵志豪' }, { t: '09:35', name: '李雨晴' },
+      { t: '09:40', name: '王明远' }, { t: '09:45', name: '周佳音' },
+      { t: '09:48', name: '吴雨桐' }, { t: '09:52', name: '陈子豪' },
+      { t: '13:53', name: '梁洛邑' }, { t: '16:20', name: '林雨欣' },
+    ];
+    ui.print('  【迟到统计】共 ' + lateList.length + ' 人（首次刷卡时间超过 08:30）', '');
+    var group = '';
+    lateList.forEach(function(p) {
+      group += p.t + ' ' + p.name + '  ';
+    });
+    ui.print('  ' + group, '');
+    ui.print('', '');
+
+    // 下班未打卡统计
+    var noExitList = [
+      { t: '09:28', name: '刘雨桐' },
+      { t: '08:58', name: '孙艺' },
+      { t: '09:32', name: '赵志豪' },
+      { t: '16:20', name: '林雨欣' },
+      { t: '13:53', name: '梁洛邑' },
+    ];
+    ui.print('  【下班未打卡】共 ' + noExitList.length + ' 人（进入后无刷卡离开记录）', '');
+    noExitList.forEach(function(p) {
+      ui.print('  ' + p.t + ' 进入  ' + p.name, '');
+    });
+    ui.print('', '');
+    ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', '');
+    ui.print('', '');
+    await ui.printDialogue('数字麻姐', [
+      '麻姐门禁卡失效，因此早上没有刷卡进出的记录很合理。',
+      '但是下午 13:55 却有刷卡回公司的记录，且之后没有任何刷卡离开的记录。这里很奇怪！',
+    ], 'digital-human');
   }
 }
 
@@ -841,34 +865,21 @@ async function handleDoorSystem(action) {
 async function handleParkingSystem(action) {
   var state = game.getState();
   if (action === '1') {
-    if (state.unlockedEvidence.includes('E-06')) {
-      ui.print('[已解锁] 停车场车辆出入记录', 'important');
-      var e06 = EVIDENCE['E-06'].content;
-      e06.data.forEach(function(line) {
-        var note = line.note ? '（' + line.note + '）' : '';
-        ui.print('  ' + line.time + '  车牌 ' + line.plate + note + '  车辆' + line.direction, '');
-      });
-      ui.print('', '');
-      ui.print('共 16 辆车在停车场有出入记录。', 'hint');
-      ui.print('包含：14 辆员工通勤车、1 辆访客车、1 辆临时进出车。', 'hint');
-      ui.print(e06.analysis, 'important');
-    } else {
+    if (!state.unlockedEvidence.includes('E-06')) {
       game.unlockEvidence('E-06');
       await ui.printDialogue('数字麻姐', [
         '停车场车辆出入记录...让我看看。',
         '共 16 辆车有出入记录。',
-        '其中郑桥的车鄂A·8K329 多次进出，值得注意。',
       ], 'digital-human');
-      var e06 = EVIDENCE['E-06'].content;
-      ui.print('', '');
-      e06.data.forEach(function(line) {
-        var note = line.note ? '（' + line.note + '）' : '';
-        ui.print('  ' + line.time + '  车牌 ' + line.plate + note + '  车辆' + line.direction, '');
-      });
-      ui.print('', '');
       ui.print('[新证据已解锁：E-06｜' + EVIDENCE['E-06'].name + ']', 'evidence');
+      ui.print('', '');
       game.save();
     }
+    ui.print('━━━ 车辆出入记录 ━━━', 'system');
+    ui.print('', '');
+    ui.print('[正在导出停车场日志文件...]', 'hint');
+    downloadFile('asset/data/parking_log.xlsx', 'ChumenTech_ParkingLog_2026-06-17.xlsx');
+    ui.print('[下载完成：ChumenTech_ParkingLog_2026-06-17.xlsx]', 'evidence');
   } else if (action === '2') {
     ui.print('━━━ 车位使用情况 - 2026-06-17 ━━━', 'system');
     ui.print('', '');
@@ -1735,4 +1746,17 @@ function showEnding(ending) {
   ui.print('', '');
   ui.print('[游戏结束 — 感谢游玩]', 'system');
   ui.print('输入 clear confirm 清除存档，重新开始游戏。', 'hint');
+}
+
+// ============================================================
+// 工具函数：触发浏览器文件下载
+// ============================================================
+function downloadFile(url, filename) {
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename || url.split('/').pop();
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
