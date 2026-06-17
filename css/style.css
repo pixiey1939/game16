@@ -136,8 +136,9 @@ body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--text-secondary);
-  /* No animation — static dot */
+  background: #4ade80;
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+  animation: pulse 1.8s ease-in-out infinite;
 }
 
 @keyframes pulse {
