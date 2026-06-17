@@ -684,10 +684,16 @@ var command = (function () {
       ui.print('', '');
       if (!ws2.unlockedEvidence.includes('E-17')) {
         game.unlockEvidence('E-17');
-        await ui.printDialogue('数字麻姐', ['原来大怪兽教练的真实姓名叫邹大雄。', '有了姓名和手机号，我们可以查他的信用信息了。'], 'digital-human');
+        await ui.printDialogue('数字麻姐', [
+          '原来大怪兽教练的真实姓名叫邹大雄，手机号 138xxxx7753。',
+          '有了姓名和手机号，我们可以查他的信用信息。',
+          '不过……健身房内部的"管理后台"是不是也用教练本人登录的？要不要试试用他的姓名拼音 + 手机后 4 位碰一下运气？',
+        ], 'digital-human');
         ui.print("[新证据已解锁：E-17｜" + EVIDENCE['E-17'].name + "]", 'evidence');
         game.unlockSystem("信用查询");
         ui.print('[系统解锁：信用查询]', 'evidence');
+        ws2.gymAdminDiscovered = true;
+        ui.print('[系统入口已发现：炼·健身管理后台]', 'evidence');
         game.save();
       }
       state._navContext = 'wechat.mprog.2';
@@ -1192,10 +1198,16 @@ async function showGymCoachTeam() {
   ui.print('', '');
   if (!state.unlockedEvidence.includes('E-17')) {
     game.unlockEvidence('E-17');
-    await ui.printDialogue('数字麻姐', ['原来大怪兽教练的真实姓名叫邹大雄。', '有了姓名和手机号，我们可以查他的信用信息了。'], 'digital-human');
+    await ui.printDialogue('数字麻姐', [
+      '原来大怪兽教练的真实姓名叫邹大雄，手机号 138xxxx7753。',
+      '有了姓名和手机号，我们可以查他的信用信息。',
+      '不过……健身房内部的"管理后台"是不是也用教练本人登录的？要不要试试用他的姓名拼音 + 手机后 4 位碰一下运气？',
+    ], 'digital-human');
     ui.print("[新证据已解锁：E-17｜" + EVIDENCE['E-17'].name + "]", 'evidence');
     game.unlockSystem('信用查询');
     ui.print('[系统解锁：信用查询]', 'evidence');
+    state.gymAdminDiscovered = true;
+    ui.print('[系统入口已发现：炼·健身管理后台]', 'evidence');
     game.save();
   }
 }
@@ -1338,10 +1350,14 @@ async function handleCreditQuery(raw) {
   if (raw.indexOf('邹大雄') >= 0 || raw.indexOf('138') >= 0) {
     if (!state.unlockedEvidence.includes('E-09')) {
       game.unlockEvidence('E-09');
-      await ui.printDialogue('数字麻姐', ['教练信用记录非常糟糕。','负债约 47 万元，有赌博和催收。'], 'digital-human');
+      await ui.printDialogue('数字麻姐', [
+        '教练信用记录非常糟糕，负债约 47 万元，有赌博和催收。',
+        '一个财务这么糟糕的教练……难怪他能被郑桥用钱收买。',
+      ], 'digital-human');
       ui.print("[新证据已解锁：E-09|"+EVIDENCE["E-09"].name+"]", "evidence");
+    } else {
+      ui.print('邹大雄，负债约47万元（已查询）。', 'hint');
     }
-    ui.print('[已解锁] 教练信用：邹大雄，负债约47万', 'hint');
     state._navContext = null;
     game.save();
     return true;
