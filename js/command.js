@@ -165,6 +165,16 @@ var command = (function () {
       ];
     }
     if (ctx === 'wechat.apps') {
+      var state2 = game.getState();
+      if (state2.miniProgramAuthed) {
+        var items2 = [
+          { num: 1, label: '炼健身小程序', next: 'wechat.mprog.enter' },
+        ];
+        if (state2.gymAdminDiscovered) {
+          items2.push({ num: 2, label: '炼健身管理后台', next: 'wechat.gymadmin.enter' });
+        }
+        return items2;
+      }
       ui.print('  请输入小程序名称搜索：', 'hint');
       return [];
     }
@@ -658,7 +668,7 @@ var command = (function () {
       ui.print('  会员卡号：LF20210428001', '');
       ui.print('  入会时间：2024-08-15', '');
       ui.print('  状态：活跃', '');
-      state._navContext = 'wechat.mprog';
+      state._navContext = 'wechat.mprog.1';
       return true;
     }
     if (next === 'wechat.mprog.2') {
@@ -680,27 +690,7 @@ var command = (function () {
         ui.print('[系统解锁：信用查询]', 'evidence');
         game.save();
       }
-      if (!ws2.gymAdminDiscovered) {
-        await ui.printDialogue('数字麻姐', [
-          '健身房内部管理数据需要管理后台才能查。',
-          '让我试试——通过小程序的 API 接口，我能不能找到管理后台的链接。',
-        ], 'digital-human');
-        ui.print('[正在通过小程序 API 接口搜索管理后台入口...]', 'hint');
-        ui.print('[找到后台入口链接]', 'hint');
-        await ui.printDialogue('数字麻姐', [
-          '找到了！通过小程序 API 可以连接到健身房管理后台系统。',
-          '但这个后台需要账号密码才能登录。',
-          '刚才看到的教练工号或者联系方式，也许能试试？',
-          '我把它加到微信小程序菜单里。',
-        ], 'digital-human');
-        ws2.gymAdminDiscovered = true;
-        game.save();
-      } else {
-        await ui.printDialogue('数字麻姐', [
-          '健身房管理后台入口已发现。在微信小程序菜单里选择"炼健身管理后台"登录后，可以查看门禁记录、监控、Wi-Fi 日志和 DNS 日志。',
-        ], 'digital-human');
-      }
-      state._navContext = 'wechat.mprog';
+      state._navContext = 'wechat.mprog.2';
       return true;
     }
     if (next === 'wechat.mprog.3') {
@@ -712,7 +702,7 @@ var command = (function () {
       ui.print('  地点：广埠屯店', '');
       ui.print('', '');
       await ui.printDialogue('数字麻姐', ['今天中午麻姐约了大怪兽教练的直播课，12:15 开始。'], 'digital-human');
-      state._navContext = 'wechat.mprog';
+      state._navContext = 'wechat.mprog.3';
       return true;
     }
     if (next === 'wechat.gymadmin.enter') {
@@ -960,21 +950,41 @@ async function handleWechatMiniSearch(raw) {
       handleMonitorSearch(input);
       return;
     }
-    if (state._navContext === 'wechat.mprog.auth') {
-      handleWechatMiniProgAuth(input);
-      return;
-    }
     if (state._waitingForMiniProgramSearch) {
-      handleWechatMiniSearchWithAuth(input);
-      return;
+      var parsed0 = parseInput(input);
+      var cmd0 = parsed0 ? parsed0.cmd : '';
+      if (commands[cmd0] || commands[input] || input === 'back' || input === 'help' || input === 'access' || input === 'list' || input === 'cls' || /^\d+$/.test(input)) {
+      } else {
+        handleWechatMiniSearchWithAuth(input);
+        return;
+      }
     }
     if (state._navContext === 'wechat_mini_program') {
-      handleWechatMiniSearch(input);
-      return;
+      var parsed1 = parseInput(input);
+      var cmd1 = parsed1 ? parsed1.cmd : '';
+      if (commands[cmd1] || commands[input] || input === 'back' || input === 'help' || input === 'access' || input === 'list' || input === 'cls' || /^\d+$/.test(input)) {
+      } else {
+        handleWechatMiniSearch(input);
+        return;
+      }
     }
     if (state._navContext === 'wechat.apps') {
-      handleWechatMiniSearchWithAuth(input);
-      return;
+      var parsed2 = parseInput(input);
+      var cmd2 = parsed2 ? parsed2.cmd : '';
+      if (commands[cmd2] || commands[input] || input === 'back' || input === 'help' || input === 'access' || input === 'list' || input === 'cls' || /^\d+$/.test(input)) {
+      } else {
+        handleWechatMiniSearchWithAuth(input);
+        return;
+      }
+    }
+    if (state._navContext === 'wechat.mprog.auth') {
+      var parsed3 = parseInput(input);
+      var cmd3 = parsed3 ? parsed3.cmd : '';
+      if (commands[cmd3] || commands[input] || input === 'back' || input === 'help' || input === 'access' || input === 'list' || input === 'cls' || /^\d+$/.test(input)) {
+      } else {
+        handleWechatMiniProgAuth(input);
+        return;
+      }
     }
     if (state._creditQuery) {
       handleCreditQuery(input);
