@@ -955,6 +955,20 @@ async function handleWechatMiniSearch(raw) {
         return;
       }
     }
+    if (state._smsViewing) {
+      var trimmed_s = input.trim().toLowerCase();
+      var clearCmdS = trimmed_s === 'clear' || trimmed_s.indexOf('clear ') === 0;
+      if (trimmed_s === 'back') {
+        state._smsViewing = false;
+        handleSmsSystem();
+        return;
+      } else if (trimmed_s === 'help' || clearCmdS || trimmed_s === 'cls') {
+        // let dispatch fall through to command handler
+      } else {
+        ui.print('请输入 back 返回短信列表。', 'hint');
+        return;
+      }
+    }
     if (state._monitorSearch) {
       handleMonitorSearch(input);
       return;

@@ -1032,6 +1032,8 @@ async function handleMonitorSystem(action) {
 // ============================================================
 
 async function showSmsConversation(index) {
+  var state = game.getState();
+  state._smsViewing = true;
   var e12 = EVIDENCE['E-12'].content;
   if (index === 0) {
     ui.print('━━━ 短信 - 与 157****6697 ━━━', 'system');
