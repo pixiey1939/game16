@@ -1317,8 +1317,9 @@ async function handleGymSystem(action) {
     } else {
       game.unlockEvidence('E-18');
       await ui.printDialogue('数字麻姐', [
-        '健身房门禁记录显示麻姐 11:50 进入，但没有出场记录。',
-        '而郑桥 11:54 进入，12:18 就出来了，后来又返回了几次。',
+        '健身房门禁记录显示：麻姐 11:50 入馆，13:14 出大厅，13:31 又再进来——但之后再也没有出场记录。',
+        '而郑桥 11:54 入馆，12:18 就出来了——之后门禁再没拍到他。',
+        '可是他后来又多次出现在健身房附近……奇怪，WiFi 监控里倒是能查到。',
       ], 'digital-human');
       ui.print('[新证据已解锁：E-18｜' + EVIDENCE['E-18'].name + ']', 'evidence');
       game.save();
