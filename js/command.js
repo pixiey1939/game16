@@ -976,8 +976,17 @@ async function handleWechatMiniSearch(raw) {
       }
     }
     if (state._monitorSearch) {
-      handleMonitorSearch(input);
-      return;
+      var trimmed_m = input.trim().toLowerCase();
+      var clearCmdM = trimmed_m === 'clear' || trimmed_m.indexOf('clear ') === 0;
+      if (trimmed_m === 'back') {
+        state._monitorSearch = false;
+        state._navContext = null;
+      } else if (trimmed_m === 'help' || clearCmdM || trimmed_m === 'cls') {
+        // fall through to command handler
+      } else {
+        handleMonitorSearch(input);
+        return;
+      }
     }
     if (state._waitingForMiniProgramSearch) {
       var parsed0 = parseInput(input);

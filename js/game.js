@@ -958,6 +958,8 @@ async function handleMonitorSearch(raw) {
       ui.print('━━━ 广埠屯惠选超市 - 公共监控（已查询）━━━', 'system');
       e07.data.forEach(function(line) { ui.print('  ' + line, ''); });
     }
+    state._monitorSearch = false;
+    return true;
   } else if (input.indexOf('洗车') >= 0 || input.indexOf('广捷') >= 0) {
     if (!state.unlockedEvidence.includes('E-08')) {
       game.unlockEvidence('E-08');
@@ -976,12 +978,13 @@ async function handleMonitorSearch(raw) {
       ui.print('━━━ 广捷洗车（广埠屯店）- 公共监控（已查询）━━━', 'system');
       e08.data.forEach(function(line) { ui.print('  ' + line, ''); });
     }
+    state._monitorSearch = false;
+    return true;
   } else {
     ui.print('未找到匹配"' + raw.trim() + '"的商户监控记录。', 'error');
     ui.print('目前可查询的商户：含"超市"或"洗车"关键词。', 'hint');
+    return true;
   }
-  state._monitorSearch = false;
-  return true;
 }
 
 // ============================================================
