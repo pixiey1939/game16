@@ -1308,12 +1308,9 @@ async function handleGymSystem(action) {
   } else if (action === '2') {
     if (state.unlockedEvidence.includes('E-18')) {
       ui.print('[已解锁] 健身房门禁记录', 'important');
-      var e18 = EVIDENCE['E-18'].content;
-      e18.records.forEach(function(rec) {
-        ui.print('  ' + rec.time + ' ' + rec.memberId + ' ' + rec.name + ' (' + rec.method + ')', '');
-      });
-      ui.print('', '');
-      ui.print(e18.analysis, 'important');
+      ui.print('[正在导出健身房门禁日志文件...]', 'hint');
+      downloadFile('asset/data/gym_access_log.xlsx', 'LianFitness_DoorAccessLog_2026-06-17.xlsx');
+      ui.print('[下载完成：LianFitness_DoorAccessLog_2026-06-17.xlsx]', 'evidence');
     } else {
       game.unlockEvidence('E-18');
       await ui.printDialogue('数字麻姐', [
@@ -1322,6 +1319,9 @@ async function handleGymSystem(action) {
         '可是他后来又多次出现在健身房附近……奇怪，WiFi 监控里倒是能查到。',
       ], 'digital-human');
       ui.print('[新证据已解锁：E-18｜' + EVIDENCE['E-18'].name + ']', 'evidence');
+      ui.print('[正在导出健身房门禁日志文件...]', 'hint');
+      downloadFile('asset/data/gym_access_log.xlsx', 'LianFitness_DoorAccessLog_2026-06-17.xlsx');
+      ui.print('[下载完成：LianFitness_DoorAccessLog_2026-06-17.xlsx]', 'evidence');
       game.save();
     }
   } else if (action === '3') {
