@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/style.css?v=25">
+  <link rel="stylesheet" href="css/style.css?v=29">
 </head>
 <body>
   <div id="terminal">
@@ -20,15 +20,8 @@
     <!-- 实时时钟：顶部显示（JS 每秒更新） -->
     <div id="header-clock" class="header-clock">00:00:00</div>
 
-    <!-- 终端顶部：ASCII art + 副标题 -->
+    <!-- 终端顶部：副标题（ASCII art 由 JS startScreen() 动态输出） -->
     <div id="header">
-      <pre class="ascii-title">
- ██████╗  █████╗ ███╗   ███╗███████╗     ██╗ ██████╗
-██╔════╝ ██╔══██╗████╗ ████║██╔════╝     ██║ ╚════██╗
-██║  ███╗███████║██╔████╔██║█████╗       ██║  █████╔╝
-██║   ██║██╔══██║██║╚██╔╝██║██╔══╝       ╚═║  ╚═══██╗
-╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗     ██║ ██████╔╝
- ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝     ╚═╝ ╚═════╝</pre>
       <p class="subtitle">消失的麻姐</p>
     </div>
 
@@ -43,11 +36,11 @@
   </div>
 
   <!-- 脚本加载顺序不变 -->
-<script src="js/evidence.js?v=25"></script>
-<script src="js/ui.js?v=25"></script>
-<script src="js/game.js?v=25"></script>
-<script src="js/command.js?v=25"></script>
-<script src="js/main.js?v=25"></script>
+<script src="js/evidence.js?v=29"></script>
+<script src="js/ui.js?v=29"></script>
+<script src="js/game.js?v=29"></script>
+<script src="js/command.js?v=29"></script>
+<script src="js/main.js?v=29"></script>
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(function(regs) {
