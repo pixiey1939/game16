@@ -1114,6 +1114,7 @@ async function showOAChatChenli() {
   ui.print('  14:22 陈立: 好的，辛苦。', '');
   ui.print('', '');
   await ui.printDialogue('数字麻姐', ['陈立是产品研发部的产品总监。聊天都是正常的工作沟通——产品评审、周报、需求变更。没有任何私人话题。'], 'digital-human');
+  ui.print('输入 back 返回。', 'hint');
 }
 
 async function showOAChatQianmin() {
@@ -1139,6 +1140,7 @@ async function showOAChatQianmin() {
   ui.print('  14:35 梁洛邑: 收到，谢谢！', '');
   ui.print('', '');
   await ui.printDialogue('数字麻姐', ['钱敏是行政部专员。聊天都是关于门禁卡、端午节值班、福利发放等行政事务。完全是正常的工作沟通。'], 'digital-human');
+  ui.print('输入 back 返回。', 'hint');
 }
 
 async function showOAChatZhaolei() {
@@ -1159,6 +1161,7 @@ async function showOAChatZhaolei() {
   ui.print('  16:05 梁洛邑: 可以，下次我提前两天发。', '');
   ui.print('', '');
   await ui.printDialogue('数字麻姐', ['赵磊是技术部后端工程师。聊天都是技术接口、PR review、需求文档相关的纯工作内容。'], 'digital-human');
+  ui.print('输入 back 返回。', 'hint');
 }
 
 async function showOAChatSunyi() {
@@ -1175,6 +1178,7 @@ async function showOAChatSunyi() {
   ui.print('  15:25 梁洛邑: 收到，我看一眼。', '');
   ui.print('', '');
   await ui.printDialogue('数字麻姐', ['孙艺是设计部 UI。聊天就是设计稿交付相关，很简短。'], 'digital-human');
+  ui.print('输入 back 返回。', 'hint');
 }
 
 function showGymBasicInfo() {
@@ -1246,7 +1250,7 @@ function showOAContacts() {
   ui.print('  赵磊（后端工程师）', '');
   ui.print('  孙艺（UI 设计师）', '');
   ui.print('', '');
-  ui.print('选择 2 查看聊天记录，3 查看邮箱，4 查看流程。', 'hint');
+  ui.print('输入 back 返回上级菜单。', 'hint');
 }
 
 async function showOAChatZhengqiao() {
