@@ -31,6 +31,7 @@ const ui = (() => {
       'digital-human': 45,
       'zheng-qiao':    45,
       '':              10,
+      'bulk':           2,   // fast display for large text blocks
     };
     return map[type] !== undefined ? map[type] : 10;
   }
@@ -150,14 +151,12 @@ const ui = (() => {
    * @returns {null} (Use printDialogue if you need to await completion.)
    */
   function print(text, type = '', opts = {}) {
-    _enqueue({
+    return _enqueue({
       type: 'line',
       text: text ?? '',
       cls: type,
       speed: opts.speed != null ? opts.speed : _getSpeed(type),
     });
-    // Fire-and-forget — callers that need ordering use printDialogue + await
-    return null;
   }
 
   /**
@@ -217,12 +216,15 @@ const ui = (() => {
   }
 
   /**
-   * Display the opening start-screen messages.
+   * Opening start-screen: connection sequence.
    */
-  function startScreen() {
-    print('', '');
-    print('[Terminal initializing…]', 'hint');
-    setTimeout(() => print('[Connection established]', 'hint'), 500);
+  async function startScreen() {
+    await print('[终端初始化...]', 'system', {speed: 80});
+    await _sleep(600);
+    await print('[正在连接服务器...]', 'system', {speed: 80});
+    await _sleep(800);
+    await print('[连接成功]', 'system', {speed: 60});
+    await _sleep(400);
   }
 
   // --- Input helpers -----------------------------------------------------------

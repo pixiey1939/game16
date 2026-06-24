@@ -333,7 +333,7 @@ var command = (function () {
     if (ctx === '信用查询') {
       ui.print('', '');
       ui.print('请输入"姓名+手机号"查询个人信用：', 'hint');
-      ui.print('  示例：邹大雄 138xxxx7753', 'hint');
+      ui.print('  示例：邹大雄 138****7753', 'hint');
       game.getState()._creditQuery = true;
       return;
     }
@@ -685,11 +685,11 @@ var command = (function () {
       if (!ws2.unlockedEvidence.includes('E-17')) {
         game.unlockEvidence('E-17');
         await ui.printDialogue('数字麻姐', [
-          '原来大怪兽教练的真实姓名叫邹大雄，手机号 138xxxx7753。',
+'原来大怪兽教练的真实姓名叫邹大雄，手机号 138****7753。',
           '有了姓名和手机号，我们可以查他的信用信息。',
           '不过……健身房内部的"管理后台"是不是也用教练本人登录的？要不要试试用他的姓名拼音 + 手机后 4 位碰一下运气？',
         ], 'digital-human');
-        ui.print("[新证据已解锁：E-17｜" + EVIDENCE['E-17'].name + "]", 'evidence');
+ui.print("→ 获取到一条新信息：" + EVIDENCE['E-17'].name, 'evidence');
         game.unlockSystem("信用查询");
         ui.print('[系统解锁：信用查询]', 'evidence');
         ws2.gymAdminDiscovered = true;
@@ -1208,11 +1208,11 @@ async function showGymCoachTeam() {
   if (!state.unlockedEvidence.includes('E-17')) {
     game.unlockEvidence('E-17');
     await ui.printDialogue('数字麻姐', [
-      '原来大怪兽教练的真实姓名叫邹大雄，手机号 138xxxx7753。',
+      '原来大怪兽教练的真实姓名叫邹大雄，手机号 138****7753。',
       '有了姓名和手机号，我们可以查他的信用信息。',
       '不过……健身房内部的"管理后台"是不是也用教练本人登录的？要不要试试用他的姓名拼音 + 手机后 4 位碰一下运气？',
     ], 'digital-human');
-    ui.print("[新证据已解锁：E-17｜" + EVIDENCE['E-17'].name + "]", 'evidence');
+    ui.print("→ 获取到一条新信息：" + EVIDENCE['E-17'].name, 'evidence');
     game.unlockSystem('信用查询');
     ui.print('[系统解锁：信用查询]', 'evidence');
     state.gymAdminDiscovered = true;
@@ -1272,7 +1272,7 @@ async function showOAChatZhengqiao() {
     ui.print('', '');
     await ui.printDialogue('数字麻姐', [e02.analysis], 'digital-human');
     ui.print('', '');
-    ui.print('输入 list 查看完整证据，或 combine 组合证据。', 'hint');
+    ui.print('输入 list 查看已获取的信息，或 combine 组合分析。', 'hint');
   }
   if (state.unlockedEvidence.includes('E-02')) {
     ui.print('[已解锁] OA 聊天记录 — 郑桥', 'important');
@@ -1280,7 +1280,7 @@ async function showOAChatZhengqiao() {
   } else {
     game.unlockEvidence('E-02');
     await ui.printDialogue('数字麻姐', ['看看郑桥的聊天记录...','这个人最近和麻姐私聊明显变多了。'], 'digital-human');
-    ui.print("[新证据已解锁：E-02｜" + EVIDENCE["E-02"].name + "]", "evidence");
+    ui.print("→ 获取到一条新信息：" + EVIDENCE["E-02"].name, "evidence");
     printZhengqiaoMessages();
     game.save();
   }
@@ -1322,7 +1322,7 @@ async function showOAWorkflow1() {
         '门禁和停车场系统已解锁。',
         '另外，手机是锁屏状态，试试 unlock 解锁手机。',
       ], 'digital-human');
-      ui.print('[新证据已解锁：E-03｜' + EVIDENCE['E-03'].name + ']', 'evidence');
+      ui.print('→ 获取到一条新信息：' + EVIDENCE['E-03'].name, 'evidence');
       ui.print('[系统解锁：门禁 / 停车场]', 'evidence');
       ui.print('[企业邮箱通知：门禁激活成功]', 'evidence');
       game.save();
@@ -1351,7 +1351,7 @@ async function showOAEmailByIndex(index) {
   if (e03.analysis && m.id === 'M-2026-2098') {
     await ui.printDialogue('数字麻姐', [e03.analysis], 'digital-human');
   }
-  ui.print('输入 list 查看完整证据。', 'hint');
+  ui.print('输入 list 查看完整信息。', 'hint');
 }
 
 async function handleCreditQuery(raw) {
@@ -1363,7 +1363,7 @@ async function handleCreditQuery(raw) {
         '教练信用记录非常糟糕，负债约 47 万元，有赌博和催收。',
         '一个财务这么糟糕的教练……难怪他能被郑桥用钱收买。',
       ], 'digital-human');
-      ui.print("[新证据已解锁：E-09|"+EVIDENCE["E-09"].name+"]", "evidence");
+      ui.print("→ 获取到一条新信息："+EVIDENCE["E-09"].name, "evidence");
     } else {
       ui.print('邹大雄，负债约47万元（已查询）。', 'hint');
     }
@@ -1375,7 +1375,7 @@ async function handleCreditQuery(raw) {
     if (!state.unlockedEvidence.includes('E-10')) {
       game.unlockEvidence('E-10');
       ui.print('郑桥信用记录：信用良好，无逾期。', 'hint');
-      ui.print("[新证据已解锁：E-10|"+EVIDENCE["E-10"].name+"]", "evidence");
+      ui.print("→ 获取到一条新信息："+EVIDENCE["E-10"].name, "evidence");
     }
     state._navContext = null;
     game.save();
@@ -1385,14 +1385,14 @@ async function handleCreditQuery(raw) {
     if (!state.unlockedEvidence.includes('E-11')) {
       game.unlockEvidence('E-11');
       await ui.printDialogue('数字麻姐', ['网友张英河无不良信用记录。'], 'digital-human');
-      ui.print("[新证据已解锁：E-11|"+EVIDENCE["E-11"].name+"]", "evidence");
+      ui.print("→ 获取到一条新信息："+EVIDENCE["E-11"].name, "evidence");
     }
     state._navContext = null;
     game.save();
     return true;
   }
   ui.print("未找到该人员。请输入\"姓名+手机号\"格式。", "error");
-  ui.print("  示例：邹大雄 138xxxx7753", "hint");
+  ui.print("  示例：邹大雄 138****7753", "hint");
   return true;
 }
 // === 命令注册 ===
@@ -1406,15 +1406,15 @@ command.register('help', {
     ui.print('  access     查看我可以访问的系统列表', '');
     ui.print('  list       查看目前已收集的信息清单', '');
     if (state.unlockedEvidence.length >= 2) {
-      ui.print('  combine    组合分析证据（如 combine E-05+E-18）', '');
+      ui.print('  combine    组合分析信息（如 combine E-05+E-18）', '');
       ui.print('  conclusions 查看已生成结论', '');
     }
-    ui.print('  view       查看证据详情（如 view E-01）', '');
+    ui.print('  view       查看信息详情（如 view E-01）', '');
     ui.print('  back       返回上一级', '');
     ui.print('  cls        清屏（不影响存档）', '');
     ui.print('  clear      删除存档（clear confirm）', '');
-    ui.print('  save       保存游戏', '');
-    ui.print('  load       加载游戏', '');
+    ui.print('  save       保存对话记录', '');
+    ui.print('  load       加载对话记录', '');
     if (state.currentStage >= 2 && !state.phoneUnlocked) {
       ui.print('  unlock     解锁手机（输入 unlock + 密码）', '');
     }
@@ -1422,7 +1422,7 @@ command.register('help', {
       ui.print('  backup     创建数据备份', '');
     }
     if (state.currentStage >= 5) {
-      ui.print('  submit     提交证据至警方', '');
+      ui.print('  submit     提交信息至警方', '');
     }
     ui.print('', '');
     ui.print('输入其他内容我会尝试理解你的意思。', 'hint');
@@ -1430,11 +1430,11 @@ command.register('help', {
 });
 
 command.register('list', {
-  desc: '查看已解锁证据',
+  desc: '查看已获取的信息',
   fn: function() {
     var state = game.getState();
     if (state.unlockedEvidence.length === 0) {
-      ui.print('你还没有解锁任何证据。', 'hint');
+      ui.print('目前还没有获取到任何信息。', 'hint');
       return;
     }
     state.unlockedEvidence.forEach(function(id) {
@@ -1453,7 +1453,7 @@ command.register('access', {
 });
 
 command.register('combine', {
-  desc: '组合分析证据',
+  desc: '组合分析信息',
   unlockedWhen: function(s) { return s.unlockedEvidence.length >= 2; },
   requiresArgs: true,
   usage: 'combine E-XX+E-YY',
@@ -1465,7 +1465,7 @@ command.register('conclusions', {
   fn: function() {
     var state = game.getState();
     if (state.combineUnlocked.length === 0) {
-      ui.print('你还没有生成任何结论。使用 combine 组合证据。', 'hint');
+      ui.print('你还没有生成任何结论。使用 combine 组合信息。', 'hint');
       return;
     }
     state.combineUnlocked.forEach(function(cid) {
@@ -1488,7 +1488,7 @@ command.register('backup', {
       state.backupCreated = true;
       ui.print('', '');
       await ui.printDialogue('数字麻姐', [
-        '已将所有证据数据备份到本地。',
+        '已将所有数据备份到本地。',
         '如果有人试图删除云端数据，我们的备份还在。',
       ], 'digital-human');
       ui.print('', '');
@@ -1503,7 +1503,7 @@ command.register('backup', {
 });
 
 command.register('submit', {
-  desc: '提交证据至警方',
+  desc: '提交信息至警方',
   unlockedWhen: function(s) { return s.currentStage >= 5; },
   fn: async function() {
     var state = game.getState();
@@ -1530,14 +1530,14 @@ command.register('unlock', {
 });
 
 command.register('view', {
-  desc: '查看证据详情',
+  desc: '查看信息详情',
   requiresArgs: true,
   usage: 'view E-XX',
   fn: function(args) {
     var id = args[0].toUpperCase();
     if (!id.match(/^E-\d{2}$/)) { ui.print('格式错误：view E-XX', 'error'); return; }
     var state = game.getState();
-    if (!state.unlockedEvidence.includes(id)) { ui.print('证据 ' + id + ' 未解锁。', 'error'); return; }
+    if (!state.unlockedEvidence.includes(id)) { ui.print('信息 ' + id + ' 未获取到。', 'error'); return; }
     handleViewEvidence(id);
   },
 });
@@ -1550,7 +1550,7 @@ command.register('cls', {
 });
 
 command.register('clear', {
-  desc: '清除存档',
+  desc: '清除对话记录',
   requiresArgs: true,
   usage: 'clear confirm',
   fn: function(args) {
@@ -1560,12 +1560,12 @@ command.register('clear', {
 });
 
 command.register('save', {
-  desc: '保存游戏',
+  desc: '保存对话记录',
   fn: function() { saveGame(); },
 });
 
 command.register('load', {
-  desc: '加载游戏',
+  desc: '加载对话记录',
   fn: function() {
     if (!hasSaveCheck()) { ui.print('没有可用的存档', 'warning'); return; }
     loadGame();
