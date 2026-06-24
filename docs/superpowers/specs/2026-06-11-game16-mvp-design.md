@@ -151,7 +151,7 @@ const EVIDENCE = {
     content: {
       title: '2026年6月17日麻姐手机定位记录',
       data: [
-        { time: '11:35', location: '离开楚门科技（光谷大道）' },
+        { time: '11:35', location: '离开楚门科技（中南路）' },
         { time: '11:50', location: '到达广埠屯区域' },
         { time: '11:50-13:30', location: '停留在广埠屯区域' },
         { time: '13:30', location: '定位被手动关闭' },
