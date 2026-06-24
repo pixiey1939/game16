@@ -348,7 +348,15 @@ async function handlePhonePassword(input) {
   if (input === '1222') {
     state.phoneUnlocked = true;
     ui.print('✅ 密码正确', 'hint');
-    ui.print('正在读取手机数据...', 'hint');
+    ui.print('[正在读取手机数据...]', 'hint', { speed: 60 });
+    await new Promise(r => setTimeout(r, 1200));
+    ui.print('[正在同步短信记录...]', 'hint', { speed: 60 });
+    await new Promise(r => setTimeout(r, 800));
+    ui.print('[正在同步微信聊天记录...]', 'hint', { speed: 50 });
+    await new Promise(r => setTimeout(r, 1000));
+    ui.print('[正在同步相册数据...]', 'hint', { speed: 50 });
+    await new Promise(r => setTimeout(r, 600));
+    ui.print('[数据同步完成]', 'hint');
     game.unlockSystem('短信');
     game.unlockSystem('微信');
     game.unlockSystem('相册');
@@ -1339,14 +1347,14 @@ async function handleGymSystem(action) {
       ui.print('→ 获取到一条新信息：' + EVIDENCE['E-19'].name, 'evidence');
       game.save();
     }
-  } else if (action === '4') {
+    } else if (action === '4') {
     if (state.unlockedEvidence.includes('E-20')) {
       ui.print('[已解锁] 健身房 Wi-Fi 日志', 'important');
-      ui.print('[正在导出 Wi-Fi 日志文件...]', 'hint');
+      ui.print('[正在导出 Wi-Fi 日志文件...]', 'hint', { speed: 50 });
+      await new Promise(r => setTimeout(r, 1500));
       downloadFile('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-06-17.xlsx');
       ui.print('[下载完成：LianFitness_WifiLog_2026-06-17.xlsx]', 'evidence');
       var e20 = EVIDENCE['E-20'].content;
-      ui.print('  WiFi: ' + e20.wifi, '');
       ui.print('', '');
       if (e20.keyConnections) {
         ui.print('[关键连接记录]', 'important');
@@ -1365,32 +1373,31 @@ async function handleGymSystem(action) {
       ui.print(e20.analysis, 'important');
     } else {
       game.unlockEvidence('E-20');
-      await ui.printDialogue('数字麻姐', [
-        '健身房 WiFi 日志里有一个非常重要的发现。',
-        '有人用健身房的网络搜索过"sedative"——镇静剂。',
-        '这个 DNS 查询发生在凌晨 6 点，非常可疑。',
-      ], 'digital-human');
-      ui.print('→ 获取到一条新信息：' + EVIDENCE['E-20'].name, 'evidence');
-      ui.print('[正在导出 Wi-Fi 日志文件...]', 'hint');
+      ui.print('[正在导出 Wi-Fi 日志文件...]', 'hint', { speed: 50 });
+      await new Promise(r => setTimeout(r, 1500));
       downloadFile('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-06-17.xlsx');
       ui.print('[下载完成：LianFitness_WifiLog_2026-06-17.xlsx]', 'evidence');
+      await ui.printDialogue('数字麻姐', [
+        '日志导出来了！WiFi 记录里有一个非常重要的发现——',
+        '凌晨 6 点有人用健身房网络搜索了"sedative"（镇静剂网站），非常可疑。',
+        'DNS 日志里可以看到对应的 MAC 地址，你需要结合健身房会员信息来确认这个人是谁。',
+        '试试用手机号去健身房那边匹配一下，看看能不能对上号。',
+      ], 'digital-human');
+      ui.print('→ 获取到一条新信息：' + EVIDENCE['E-20'].name, 'evidence');
       game.save();
     }
   } else if (action === '5') {
     if (state.unlockedEvidence.includes('E-20')) {
       var e20 = EVIDENCE['E-20'].content;
-      ui.print('[正在导出 DNS 日志文件...]', 'hint');
+      ui.print('[正在导出 DNS 日志文件...]', 'hint', { speed: 50 });
+      await new Promise(r => setTimeout(r, 1200));
       downloadFile('asset/data/dns_log.xlsx', 'LianFitness_DnsLog_2026-06-17.xlsx');
       ui.print('[下载完成：LianFitness_DnsLog_2026-06-17.xlsx]', 'evidence');
-      ui.print('━━━ DNS 日志 ━━━', 'system');
-      ui.print('', '');
-      if (e20.dns) {
-        e20.dns.forEach(function(d) {
-          ui.print('  ' + d.time + '  ' + d.domain + '  (' + d.note + ')', 'bulk');
-        });
-      }
-      ui.print('', '');
-      ui.print('注意：06:04 有对镇静剂网站(b2b-sedative.xyz)的查询，来自 MAC 9A:5D:C3:72:E4:18（郑桥手机）。', 'important');
+      await ui.printDialogue('数字麻姐', [
+        'DNS 日志已经导出了。文件里可以看到所有在健身房 WiFi 上产生的 DNS 查询记录。',
+        '注意那个凌晨 6 点的镇静剂网站查询——MAC 地址是 9A:5D:C3:72:E4:18，对应郑桥的手机（189****6629）。',
+        '你可以对比一下健身房会员信息里的手机号，看能不能找到更多线索。',
+      ], 'digital-human');
     } else {
       ui.print('请先查看 Wi-Fi 日志获取相关信息。', 'hint');
     }

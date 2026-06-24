@@ -307,7 +307,13 @@ var command = (function () {
       for (var i = 0; i < items.length; i++) {
         var it = items[i];
         var name = it.label || it.name || '';
-        var pad = name.length<=5?'        ':name.length<=7?'      ':name.length<=9?'    ':'  ';
+        // 计算字符显示宽度（中文占 2，英文数字占 1）
+        var dw = 0;
+        for (var k = 0; k < name.length; k++) {
+          dw += (name.charCodeAt(k) >= 0x4e00 && name.charCodeAt(k) <= 0x9fff) ? 2 : 1;
+        }
+        var pad = '';
+        for (var j = 0; j < Math.max(1, 18 - dw); j++) pad += ' ';
         ui.print('  ' + it.num + '. ' + name + pad + it.desc, '');
       }
       ui.print('请输入编号或名称进入对应系统：', 'hint');
