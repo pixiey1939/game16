@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   ui.initClock();
+  ui.setDigitalStatus(false);
 
   const input = document.getElementById('command-input');
   const output = document.getElementById('output');
@@ -26,6 +27,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 启动游戏
   setTimeout(async () => {
+    // ===== 二周目检测 =====
+    // 读取 localStorage save 数据，检查是否 previous completion 存在
+    try {
+      var saveRaw = localStorage.getItem('game16-save-v1');
+      if (saveRaw) {
+        var saveData = JSON.parse(saveRaw);
+        if (saveData.state && saveData.state.endingReached) {
+          // 有通关记录 → 触发 D线（隐藏结局）
+          ui.print('[检测到历史会话记录]', 'hint');
+          runDLine();
+          input.focus();
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('二周目检测失败:', e);
+    }
+
     let state = game.getState();
 
     if (hasSaveCheck()) {
