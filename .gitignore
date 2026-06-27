@@ -27,5 +27,8 @@ package-lock.json
 # Test artifacts
 test-results/
 
+# 生成产物（由 scripts/build-photo-zip.sh 生成，不入 git）
+asset/photo.zip
+
 # Planning docs (local)
 .omo/
