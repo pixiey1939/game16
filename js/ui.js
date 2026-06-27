@@ -197,6 +197,35 @@ const ui = (() => {
     setTimeout(() => term.classList.remove('shake'), 700);
   }
 
+  function whiteScreen(duration) {
+    duration = duration || 1500;
+    var overlay = document.getElementById('flash-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'flash-overlay';
+      document.body.appendChild(overlay);
+    }
+    overlay.classList.remove('hide');
+    overlay.classList.add('show');
+    setTimeout(function() {
+      overlay.classList.remove('show');
+      overlay.classList.add('hide');
+    }, duration);
+  }
+
+  function setDigitalStatus(hacked) {
+    var badge = document.getElementById('digital-avatar');
+    if (!badge) return;
+    var label = badge.querySelector('.avatar-label');
+    if (hacked) {
+      badge.classList.add('hacked');
+      if (label) label.textContent = '数字麻姐 · 失联';
+    } else {
+      badge.classList.remove('hacked');
+      if (label) label.textContent = '数字麻姐 · 在线';
+    }
+  }
+
   /**
    * Stage-transition banner with fade-out / fade-in illusion.
    * @param {number} stageNum - Numeric stage identifier (1-5).
@@ -381,6 +410,9 @@ const ui = (() => {
       output.appendChild(prompt);
     }
 
+    var activate;
+    var keyHandler;
+
     const container = document.createElement('div');
     container.className = 'choice-group';
     const buttons = [];
@@ -410,7 +442,7 @@ const ui = (() => {
     if (commandInput) commandInput.disabled = true;
 
     return new Promise((resolve) => {
-      function activate(idx) {
+      activate = function(idx) {
         if (idx < 0 || idx >= options.length) return;
         buttons.forEach((b, i) => {
           b.disabled = true;
@@ -422,9 +454,9 @@ const ui = (() => {
         }
         window.removeEventListener('keydown', keyHandler);
         resolve(options[idx].value);
-      }
+      };
 
-      function keyHandler(e) {
+      keyHandler = function(e) {
         // Ignore events originating from the command input to prevent double-handling
         // with main.js's input.keydown listener (race condition when async showXxx
         // calls displayChoice immediately after dispatch).
@@ -445,7 +477,7 @@ const ui = (() => {
             activate(idx);
           }
         }
-      }
+      };
 
       function moveFocus(idx) {
         buttons[focusedIndex].classList.remove('focused');
@@ -491,11 +523,50 @@ const ui = (() => {
     if (existing) existing.remove();
   }
 
+  // --- Livestream overlay --------------------------------------------------------
+
+  /**
+   * Show the livestream overlay with video area and comments.
+   * @param {object} [content] - Content object.
+   *   content.videoText {string} - Text for the video area.
+   *   content.comments  {string[]} - Array of comment strings.
+   */
+  function showLivestream(content) {
+    var overlay = document.getElementById('livestream-overlay');
+    var video = document.getElementById('ls-video');
+    var comments = document.getElementById('ls-comments');
+    if (!overlay) return;
+    if (content && content.videoText) video.textContent = content.videoText;
+    if (content && content.comments) {
+      var html = '';
+      for (var i = 0; i < content.comments.length; i++) {
+        html += '<div>' + content.comments[i] + '</div>';
+      }
+      comments.innerHTML = html;
+    }
+    overlay.style.display = 'flex';
+    requestAnimationFrame(function() {
+      overlay.classList.add('visible');
+    });
+  }
+
+  /**
+   * Hide the livestream overlay with fade-out.
+   */
+  function hideLivestream() {
+    var overlay = document.getElementById('livestream-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('visible');
+    setTimeout(function() {
+      overlay.style.display = 'none';
+    }, 1500);
+  }
+
   // -----------------------------------------------------------------------------
   // Public API
   return {
     // Existing functions
-    print, printLines, clear, shakeScreen, stageTransition,
+    print, printLines, clear, shakeScreen, whiteScreen, setDigitalStatus, stageTransition,
     startScreen, getInput, focusInput, clearInput, getInputValue,
     // New functions (Batch 2)
     printDialogue,
@@ -506,5 +577,15 @@ const ui = (() => {
     scrollOutputToBottom,
     showLoadingIndicator,
     hideLoadingIndicator,
+    disableInput: function() {
+      var inputEl = document.getElementById('command-input');
+      if (inputEl) {
+        inputEl.disabled = true;
+        inputEl.placeholder = '';
+      }
+    },
+    // Livestream overlay
+    showLivestream: showLivestream,
+    hideLivestream: hideLivestream,
   };
 })();
