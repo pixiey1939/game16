@@ -28,7 +28,6 @@ var command = (function () {
     { name: '短信', key: '短信', desc: '麻姐手机的短信记录' },
     { name: '微信', key: '微信', desc: '麻姐手机的微信记录' },
     { name: '相册', key: '相册', desc: '麻姐手机的相册记录' },
-    { name: '健身房', key: '健身房', desc: '炼健身会员系统' },
     { name: '信用查询', key: '信用查询', desc: '个人信用查询系统' },
   ];
 
@@ -103,15 +102,10 @@ var command = (function () {
     if (ctx === 'wechat.mini.1') return null;
     if (ctx === 'wechat.mini.2') return null;
     if (ctx === 'wechat.mini.3') return null;
-    if (ctx === 'album.1') return null;
-    if (ctx === 'album.2') return null;
-    if (ctx === 'gym.1') return null;
-    if (ctx === 'gym.2') return null;
-    if (ctx === 'gym.3') return null;
-    if (ctx === 'gym.4') return null;
     if (ctx === 'credit.1') return null;
     if (ctx === 'credit.2') return null;
     if (ctx === 'credit.3') return null;
+    if (ctx === 'credit.4') return null;
     if (ctx === 'phone_unlock'||ctx==='gym_login'||ctx==='gym_login_pwd'||ctx==='wechat_mini_program'||ctx==='credit_query') return null;
     if (ctx === 'OA.chat') {
       return [
@@ -209,25 +203,8 @@ var command = (function () {
       ];
     }
     if (ctx === '相册') {
-      return [
-        { num: 1, label: '借条.jpg', desc: '06-17', next: 'album.1' },
-        { num: 2, label: '健身房环境.mp4', desc: '06-17', next: 'album.2' },
-        { num: 3, label: '端午礼盒.jpg', desc: '06-16' },
-        { num: 4, label: '工作餐.jpg', desc: '06-16' },
-        { num: 5, label: '瑜伽垫.jpg', desc: '06-15' },
-        { num: 6, label: '猫咪.jpg', desc: '06-15' },
-        { num: 7, label: '早餐.jpg', desc: '06-14' },
-        { num: 8, label: '跑步鞋.jpg', desc: '06-13' },
-        { num: 9, label: '咖啡.jpg', desc: '06-12' },
-        { num: 10, label: '吉他.jpg', desc: '06-11' },
-      ];
-    }
-    if (ctx === '健身房') {
-      return [
-        { num: 1, label: '基本信息', next: 'gym.1' },
-        { num: 2, label: '教练团队', next: 'gym.2' },
-        { num: 3, label: '我的课程', next: 'gym.3' },
-      ];
+      handleAccessSystem('相册');
+      return;
     }
     if (ctx === '信用查询') {
       return null;
@@ -264,7 +241,6 @@ var command = (function () {
         '停车场':'停车场系统','停车场系统':'停车场系统',
         '监控':'公共监控系统','公共监控':'公共监控系统','公共监控系统':'公共监控系统',
         '短信':'短信','微信':'微信','相册':'相册',
-        '健身':'健身房','健身房':'健身房','炼健身':'健身房',
         '信用':'信用查询','信用查询':'信用查询',
       };
       if (m[lower]) {
@@ -290,10 +266,8 @@ var command = (function () {
     if (ctx.startsWith('parking.')) return '停车场';
     if (ctx.startsWith('sms.')) return '短信';
     if (ctx.startsWith('wechat.')) return '微信';
-    if (ctx.startsWith('album.')) return '相册';
-    if (ctx.startsWith('gym.')) return '健身房';
     if (ctx.startsWith('credit.')) return '信用查询';
-    if (p==='OA'||p==='door'||p==='parking'||p==='sms'||p==='wechat'||p==='album'||p==='gym'||p==='credit') return p;
+    if (p==='OA'||p==='door'||p==='parking'||p==='sms'||p==='wechat'||p==='album'||p==='credit') return p;
     return null;
   }
 
@@ -319,7 +293,7 @@ var command = (function () {
       ui.print('请输入编号或名称进入对应系统：', 'hint');
       return;
     }
-    var labels = {'OA':'OA 系统','门禁':'门禁系统','停车场':'停车场系统','微信':'微信','健身房':'健身房','信用查询':'信用查询','短信':'短信','相册':'相册','公共监控系统':'公共监控系统','小红书':'小红书','手机定位':'手机定位','OA.chat':'OA - 聊天记录','OA.email':'OA - 企业邮箱','OA.contacts':'OA - 通讯录','OA.workflow':'OA - 我的流程','wechat.chat':'微信 - 聊天记录','wechat.apps':'微信 - 小程序','wechat.mprog':'微信 - 炼·健身小程序','wechat.gymadmin':'微信 - 炼·健身管理后台'};
+    var labels = {'OA':'OA 系统','门禁':'门禁系统','停车场':'停车场系统','微信':'微信','信用查询':'信用查询','短信':'短信','相册':'相册','公共监控系统':'公共监控系统','小红书':'小红书','手机定位':'手机定位','OA.chat':'OA - 聊天记录','OA.email':'OA - 企业邮箱','OA.contacts':'OA - 通讯录','OA.workflow':'OA - 我的流程','wechat.chat':'微信 - 聊天记录','wechat.apps':'微信 - 小程序','wechat.mprog':'微信 - 炼·健身小程序','wechat.gymadmin':'微信 - 炼·健身管理后台'};
     var label = labels[ctx] || ctx;
     ui.print('━━━ ' + label + ' ━━━', 'system');
 
@@ -729,47 +703,6 @@ ui.print("→ 获取到一条新信息：" + EVIDENCE['E-17'].name, 'evidence');
       showNavMenu();
       return true;
     }
-    if (next === 'album.1') {
-      state._navContext = '相册';
-      handleAlbumSystem("1");
-      return true;
-    }
-    if (next === 'album.2') {
-      state._navContext = '相册';
-      handleAlbumSystem("2");
-      return true;
-    }
-    if (ctx === '相册' && !next) {
-      var label = target.label;
-      if (label.indexOf('端午礼盒') >= 0) {
-        state._navContext = '相册';
-        ui.print('  端午礼盒.jpg（06-16）', '');
-        ui.print('  公司发的端午节礼盒，粽子和咸鸭蛋。', '');
-        ui.print('', '');
-        ui.print('日常照片，无异常。', 'hint');
-        return true;
-      }
-      if (label.indexOf('工作餐') >= 0) {
-        state._navContext = '相册';
-        ui.print('  工作餐.jpg（06-16）', '');
-        ui.print('  公司食堂的午餐照片。', '');
-        ui.print('', '');
-        ui.print('日常照片，无异常。', 'hint');
-        return true;
-      }
-      if (label.indexOf('瑜伽垫') >= 0 || label.indexOf('猫咪') >= 0 || label.indexOf('早餐') >= 0 || label.indexOf('跑步鞋') >= 0 || label.indexOf('咖啡') >= 0 || label.indexOf('吉他') >= 0) {
-        state._navContext = '相册';
-        ui.print('  ' + label, '');
-        ui.print('  日常生活照片，无异常。', 'hint');
-        return true;
-      }
-      return false;
-    }
-    if (next === 'gym.1') {
-      state._navContext = '健身房';
-      showGymBasicInfo();
-      return true;
-    }
     if (next === 'gymadmin.1') {
       state._navContext = 'gymadmin.1';
       handleGymSystem("2");
@@ -790,16 +723,6 @@ ui.print("→ 获取到一条新信息：" + EVIDENCE['E-17'].name, 'evidence');
       handleGymSystem("5");
       return true;
     }
-    if (next === 'gym.2') {
-      state._navContext = '健身房';
-      await showGymCoachTeam();
-      return true;
-    }
-    if (next === 'gym.3') {
-      state._navContext = '健身房';
-      showGymCourseInfo();
-      return true;
-    }
     if (next === 'credit.1') {
       handleCreditSystem("1");
       state._navContext = '信用查询';
@@ -812,6 +735,11 @@ ui.print("→ 获取到一条新信息：" + EVIDENCE['E-17'].name, 'evidence');
     }
     if (next === 'credit.3') {
       handleCreditSystem("3");
+      state._navContext = '信用查询';
+      return true;
+    }
+    if (next === 'credit.4') {
+      handleCreditSystem("4");
       state._navContext = '信用查询';
       return true;
     }
@@ -845,7 +773,7 @@ ui.print("→ 获取到一条新信息：" + EVIDENCE['E-17'].name, 'evidence');
     var isSinglePage = singlePageSystems.indexOf(key) >= 0;
 
     if (typeof ui !== 'undefined' && ui.showConnectionAnimation) {
-      var labels = {'OA':'OA 系统','门禁':'门禁系统','停车场':'停车场系统','微信':'微信','健身房':'健身房','信用查询':'信用查询','短信':'短信','相册':'相册','公共监控系统':'公共监控系统','小红书':'小红书','手机定位':'手机定位'};
+      var labels = {'OA':'OA 系统','门禁':'门禁系统','停车场':'停车场系统','微信':'微信','信用查询':'信用查询','短信':'短信','相册':'相册','公共监控系统':'公共监控系统','小红书':'小红书','手机定位':'手机定位'};
       var name = labels[key] || key;
       ui.showConnectionAnimation(name, 1500).then(function() {
         if (isSinglePage) {
@@ -1044,14 +972,21 @@ async function handleWechatMiniSearch(raw) {
     if (state._navContext === 'gym_login_pwd') {
       if (state._gymAccount === 'zoudaxiong' && input === '7753') {
         ui.print('[正在连接炼·健身管理后台...]', 'hint');
-        ui.print('[账号验证中...]','[密码验证中...]', 'hint');
-        ui.print('[登录成功]', 'hint');
-        state.gymAdminUnlocked = true;
-        game.unlockSystem("信用查询");
-        ui.print('[管理后台已解锁]', 'evidence');
-        game.save();
-        state._navContext = 'wechat.gymadmin';
-        showNavMenu();
+        setTimeout(function() {
+          ui.print('[账号验证中...]', 'hint');
+        }, 1200);
+        setTimeout(function() {
+          ui.print('[密码验证中...]', 'hint');
+        }, 2000);
+        setTimeout(function() {
+          ui.print('[登录成功]', 'hint');
+          state.gymAdminUnlocked = true;
+          game.unlockSystem("信用查询");
+          ui.print('[管理后台已解锁]', 'evidence');
+          game.save();
+          state._navContext = 'wechat.gymadmin';
+          showNavMenu();
+        }, 3200);
       } else {
         ui.print("账号或密码错误。", "error");
         state._navContext = 'gym_login';
@@ -1059,7 +994,32 @@ async function handleWechatMiniSearch(raw) {
       }
       return;
     }
+    if (state._navContext === 'dns_login') {
+      state._dnsSsid = input;
+      ui.print('请输入 WiFi 密码：', 'hint');
+      state._navContext = 'dns_login_pwd';
+      return;
+    }
+    if (state._navContext === 'dns_login_pwd') {
+      var ssidOk = state._dnsSsid && state._dnsSsid === 'LJS_5G';
+      if (ssidOk && input === 'justdoit') {
+        ui.print('✅ WiFi 连接成功', 'hint');
+        state.dnsUnlocked = true;
+        game.save();
+        state._navContext = 'wechat.gymadmin';
+        handleGymSystem("5");
+      } else {
+        ui.print('❌ WiFi 账号或密码错误', 'error');
+        ui.print('请输入 WiFi 账号（SSID）：', 'hint');
+        state._navContext = 'dns_login';
+      }
+      return;
+    }
     var parsed = parseInput(input);
+    // kill her 二次确认中断保护
+    if (state._killConfirmPending && input !== 'kill her') {
+      state._killConfirmPending = false;
+    }
     if (parsed) {
       state.totalCommands++;
       var def = commands[parsed.cmd];
@@ -1088,6 +1048,8 @@ async function handleWechatMiniSearch(raw) {
     dispatch: dispatch,
     enterSystem: doEnterSystem,
     showNavMenu: showNavMenu,
+    getCommandList: function() { return Object.keys(commands); },
+    getCommandDef: function(name) { return commands[name]; },
   };
 })();
 async function showOAChatChenli() {
@@ -1187,61 +1149,6 @@ async function showOAChatSunyi() {
   ui.print('输入 back 返回。', 'hint');
 }
 
-function showGymBasicInfo() {
-  ui.print('━━━ 炼·健身（广埠屯店） ━━━', 'system');
-  ui.print('  店名：炼·健身（广埠屯店）', '');
-  ui.print('  地址：洪山区珞喻路 312 号', '');
-  ui.print('  营业时间：06:00 - 23:00', '');
-  ui.print('  前台电话：027-8765-4321', '');
-  ui.print('', '');
-  ui.print('  会员信息：', 'important');
-  ui.print('  姓名：梁洛邑', '');
-  ui.print('  会员卡号：LF2024051501', '');
-  ui.print('  会员类型：年卡会员', '');
-  ui.print('  到期日：2026-05-15（已过期）', '');
-  ui.print('  续费状态：未续费', '');
-  ui.print('', '');
-  ui.print('健身房基本信息，无异常。', 'hint');
-}
-
-async function showGymCoachTeam() {
-  var state = game.getState();
-  ui.print('━━━ 炼健身·教练团队 ━━━', 'system');
-  ui.print('  C-001  叶斌          力量训练 / 体能提升 / 增肌减脂', '');
-  ui.print('  C-003  邹大雄(大怪兽) 体能训练 / 力量训练 / 直播陪练', '');
-  ui.print('  C-005  沈子汛        功能性训练 / 核心力量 / 康复训练', '');
-  ui.print('  C-007  崔佛Trevor    拳击 / HIIT / 爆发力训练', '');
-  ui.print('  C-009  吴教练        瑜伽 / 普拉提 / 拉伸放松', '');
-  ui.print('  C-012  羿天          CrossFit / 综合体能 / 团队训练', '');
-  ui.print('  C-015  袁琬琰        女性塑形 / 产后恢复 / 小团课', '');
-  ui.print('', '');
-  if (!state.unlockedEvidence.includes('E-17')) {
-    game.unlockEvidence('E-17');
-    await ui.printDialogue('数字麻姐', [
-      '原来大怪兽教练的真实姓名叫邹大雄，手机号 138****7753。',
-      '有了姓名和手机号，我们可以查他的信用信息。',
-      '不过……健身房内部的"管理后台"是不是也用教练本人登录的？要不要试试用他的姓名拼音 + 手机后 4 位碰一下运气？',
-    ], 'digital-human');
-    ui.print("→ 获取到一条新信息：" + EVIDENCE['E-17'].name, 'evidence');
-    game.unlockSystem('信用查询');
-    ui.print('[系统解锁：信用查询]', 'evidence');
-    state.gymAdminDiscovered = true;
-    ui.print('[系统入口已发现：炼·健身管理后台]', 'evidence');
-    game.save();
-  }
-}
-
-function showGymCourseInfo() {
-  ui.print('━━━ 炼健身·我的课程 ━━━', 'system');
-  ui.print('  课程：力量训练直播课', '');
-  ui.print('  教练：邹大雄（大怪兽）', '');
-  ui.print('  时间：2026-06-17 12:05 - 13:30', '');
-  ui.print('  地点：健身房 B 区直播间', '');
-  ui.print('  状态：进行中', '');
-  ui.print('', '');
-  ui.print('课程信息，无异常。', 'hint');
-}
-
 function showOAContacts() {
   ui.print('━━━ OA - 通讯录 ━━━', 'system');
   ui.print('  姓名：梁洛邑  工号：CM-2021-0047', '');
@@ -1250,11 +1157,11 @@ function showOAContacts() {
   ui.print('  企业微信：liangly', '');
   ui.print('', '');
   ui.print('[常用联系人]', 'important');
-  ui.print('  郑桥（高级研发工程师）134****7821', '');
+  ui.print('  郑桥（高级研发工程师）189****6629', '');
   ui.print('  陈立（产品总监）136****2903', '');
-  ui.print('  钱敏（行政部）', '');
-  ui.print('  赵磊（后端工程师）', '');
-  ui.print('  孙艺（UI 设计师）', '');
+  ui.print('  钱敏（行政部）158****4312', '');
+  ui.print('  赵磊（后端工程师）155****8726', '');
+  ui.print('  孙艺（UI 设计师）186****3147', '');
   ui.print('', '');
   ui.print('输入 back 返回上级菜单。', 'hint');
 }
@@ -1277,7 +1184,7 @@ async function showOAChatZhengqiao() {
         ui.print('─── ' + date + ' ───', 'hint');
         lastDate = date;
       }
-      ui.print('  ' + msg.date.split(' ')[1] + ' ' + msg.from + ': ' + msg.text, '');
+      ui.print('  ' + msg.date.split(' ')[1] + ' ' + msg.from + ': ' + msg.text, 'bulk');
     }
     ui.print('', '');
     await ui.printDialogue('数字麻姐', [e02.analysis], 'digital-human');
@@ -1290,8 +1197,8 @@ async function showOAChatZhengqiao() {
   } else {
     game.unlockEvidence('E-02');
     await ui.printDialogue('数字麻姐', ['看看郑桥的聊天记录...','这个人最近和麻姐私聊明显变多了。'], 'digital-human');
-    ui.print("→ 获取到一条新信息：" + EVIDENCE["E-02"].name, "evidence");
     printZhengqiaoMessages();
+    ui.print("→ 获取到一条新信息：" + EVIDENCE["E-02"].name, "evidence");
     game.save();
   }
 }
@@ -1366,16 +1273,57 @@ async function showOAEmailByIndex(index) {
 
 async function handleCreditQuery(raw) {
   var state = game.getState();
-  if (raw.indexOf('邹大雄') >= 0 || raw.indexOf('138') >= 0) {
+  if (raw.indexOf('邹大雄') >= 0 || raw.indexOf('138****7753') >= 0) {
     if (!state.unlockedEvidence.includes('E-09')) {
       game.unlockEvidence('E-09');
+      var e09 = EVIDENCE['E-09'].content;
+      var reportId = 'CREDIT-20260617-88' + (42 + Math.floor(Math.random() * 10));
+      ui.print('━━━ 个人信用报告 ━━━', 'system');
+      ui.print('报告编号：' + reportId + '    查询时间：2026-06-17 15:30:' + String(Math.floor(Math.random() * 60)).padStart(2, '0'), '');
+      ui.print('查询来源：数字人麻姐（本人授权查询）', '');
+      ui.print('', '');
+      ui.print('[个人信息]', 'important');
+      ui.print('  姓名：' + e09.name + '    性别：' + (e09.gender || '男') + '    年龄：' + e09.age, '');
+      ui.print('  证件类型：身份证', '');
+      ui.print('  证件号码：' + (e09.idNumber || '420106**********'), '');
+      ui.print('  婚姻状况：' + (e09.marriage || '未婚') + '    学历：' + (e09.education || '高中'), '');
+      ui.print('  职业：' + (e09.occupation || '健身教练'), '');
+      ui.print('', '');
+      ui.print('[信贷记录概要]', 'important');
+      ui.print('  贷款账户数：' + (e09.debt.items ? e09.debt.items.length : 0), '');
+      ui.print('  信用卡账户数：3', '');
+      ui.print('  逾期记录：有', '');
+      ui.print('', '');
+      ui.print('[逾期及负债明细]', 'important');
+      if (e09.debt.items) {
+        e09.debt.items.forEach(function(item) {
+          var line = '  · ' + item.type;
+          if (item.count) line += ' ' + item.count + ' 笔';
+          if (item.detail) line += '，' + item.detail;
+          else if (item.amount) line += '，金额：' + item.amount;
+          else if (item.status) line += '，状态：' + item.status;
+          ui.print(line, '');
+        });
+      }
+      ui.print('', '');
+      ui.print('[公共信息]', 'important');
+      ui.print('  · ' + (e09.behavior || '近期有大额转账流向境外账户'), '');
+      ui.print('  · ' + (e09.collections || '催收记录数次'), '');
+      ui.print('', '');
+      ui.print('[查询记录]', 'important');
+      ui.print('  2026-06-17  数字人麻姐  本人查询', '');
+      ui.print('', '');
+      ui.print('━━━ 报告结束 ━━━', 'system');
+      ui.print('', '');
       await ui.printDialogue('数字麻姐', [
-        '教练信用记录非常糟糕，负债约 47 万元，有赌博和催收。',
-        '一个财务这么糟糕的教练……难怪他能被郑桥用钱收买。',
+        '教练的财务状况确实很糟糕——负债 47 万，还有赌博和催收记录。',
+        '但这和郑桥有什么关系，目前还没有直接证据。',
+        '先记下这些信息，看看其他线索能不能串起来。',
       ], 'digital-human');
       ui.print("→ 获取到一条新信息："+EVIDENCE["E-09"].name, "evidence");
     } else {
-      ui.print('邹大雄，负债约47万元（已查询）。', 'hint');
+      var e09 = EVIDENCE['E-09'].content;
+      displayCreditReport(e09);
     }
     state._navContext = null;
     game.save();
@@ -1384,18 +1332,46 @@ async function handleCreditQuery(raw) {
   if (raw.indexOf('郑桥') >= 0 || raw.indexOf('189') >= 0) {
     if (!state.unlockedEvidence.includes('E-10')) {
       game.unlockEvidence('E-10');
-      ui.print('郑桥信用记录：信用良好，无逾期。', 'hint');
+      var e10 = EVIDENCE['E-10'].content;
+      displayCreditReport(e10);
+      await ui.printDialogue('数字麻姐', [
+        '郑桥的信用记录很干净，没有贷款、没有逾期。',
+        '表面上看他没有经济动机，但不能完全排除其他可能。',
+      ], 'digital-human');
       ui.print("→ 获取到一条新信息："+EVIDENCE["E-10"].name, "evidence");
+    } else {
+      var e10 = EVIDENCE['E-10'].content;
+      displayCreditReport(e10);
     }
     state._navContext = null;
     game.save();
     return true;
   }
-  if (raw.indexOf('张英河') >= 0 || (raw.indexOf('15') >= 0 && raw.indexOf('+') >= 0)) {
+  if (raw.indexOf('张英河') >= 0 || raw.indexOf('157****6697') >= 0) {
     if (!state.unlockedEvidence.includes('E-11')) {
       game.unlockEvidence('E-11');
-      await ui.printDialogue('数字麻姐', ['网友张英河无不良信用记录。'], 'digital-human');
+      var e11 = EVIDENCE['E-11'].content;
+      displayCreditReport(e11);
+      await ui.printDialogue('数字麻姐', ['网友张英河没有不良信用记录，就是个普通年轻人。'], 'digital-human');
       ui.print("→ 获取到一条新信息："+EVIDENCE["E-11"].name, "evidence");
+    } else {
+      var e11 = EVIDENCE['E-11'].content;
+      displayCreditReport(e11);
+    }
+    state._navContext = null;
+    game.save();
+    return true;
+  }
+  if (raw.indexOf('梁洛邑') >= 0 || raw.indexOf('138****8812') >= 0) {
+    if (!state.unlockedEvidence.includes('E-22')) {
+      game.unlockEvidence('E-22');
+      var e22 = EVIDENCE['E-22'].content;
+      displayCreditReport(e22);
+      await ui.printDialogue('数字麻姐', ['梁洛邑的信用记录很干净，没有异常。'], 'digital-human');
+      ui.print("→ 获取到一条新信息："+EVIDENCE["E-22"].name, "evidence");
+    } else {
+      var e22 = EVIDENCE['E-22'].content;
+      displayCreditReport(e22);
     }
     state._navContext = null;
     game.save();
@@ -1404,6 +1380,62 @@ async function handleCreditQuery(raw) {
   ui.print("未找到该人员。请输入\"姓名+手机号\"格式。", "error");
   ui.print("  示例：邹大雄 138****7753", "hint");
   return true;
+}
+
+function displayCreditReport(person) {
+  var reportId = 'CREDIT-20260617-88' + (42 + Math.floor(Math.random() * 10));
+  var timeStr = '2026-06-17 15:30:' + String(Math.floor(Math.random() * 60)).padStart(2, '0');
+  ui.print('━━━ 个人信用报告 ━━━', 'system');
+  ui.print('报告编号：' + reportId + '    查询时间：' + timeStr, '');
+  ui.print('查询来源：数字人麻姐（本人授权查询）', '');
+  ui.print('', '');
+  ui.print('[个人信息]', 'important');
+  ui.print('  姓名：' + person.name + '    性别：' + (person.gender || '男') + '    年龄：' + person.age, '');
+  ui.print('  证件类型：身份证', '');
+  ui.print('  证件号码：' + (person.idNumber || '**********'), '');
+  if (person.marriage) ui.print('  婚姻状况：' + person.marriage + (person.education ? '    学历：' + person.education : ''), '');
+  if (person.occupation) ui.print('  职业：' + person.occupation, '');
+  ui.print('', '');
+  ui.print('[信贷记录概要]', 'important');
+  if (person.debt) {
+    ui.print('  贷款账户数：' + (person.debt.items ? person.debt.items.length : 0), '');
+    ui.print('  信用卡账户数：3', '');
+    ui.print('  逾期记录：有', '');
+    ui.print('', '');
+    ui.print('[逾期及负债明细]', 'important');
+    if (person.debt.items) {
+      person.debt.items.forEach(function(item) {
+        var line = '  · ' + item.type;
+        if (item.count) line += ' ' + item.count + ' 笔';
+        if (item.detail) line += '，' + item.detail;
+        else if (item.amount) line += '，金额：' + item.amount;
+        else if (item.status) line += '，状态：' + item.status;
+        ui.print(line, '');
+      });
+    }
+    ui.print('', '');
+    ui.print('[公共信息]', 'important');
+    if (person.behavior) ui.print('  · ' + person.behavior, '');
+    if (person.collections) ui.print('  · ' + person.collections, '');
+  } else {
+    ui.print('  贷款账户数：' + ((person.accounts && person.accounts.loans) || 0), '');
+    ui.print('  信用卡账户数：' + ((person.accounts && person.accounts.creditCards) || 0), '');
+    ui.print('  逾期记录：无', '');
+    if (person.creditStatus) {
+      ui.print('', '');
+      ui.print('[信用卡信息]', 'important');
+      ui.print('  · ' + person.creditStatus, '');
+    }
+    ui.print('', '');
+    ui.print('[公共信息]', 'important');
+    if (person.publicData) ui.print('  · ' + person.publicData, '');
+    if (person.noCrimeRecord) ui.print('  · 无犯罪前科记录', '');
+  }
+  ui.print('', '');
+  ui.print('[查询记录]', 'important');
+  ui.print('  2026-06-17  数字人麻姐  本人查询', '');
+  ui.print('', '');
+  ui.print('━━━ 报告结束 ━━━', 'system');
 }
 // === 命令注册 ===
 
@@ -1425,14 +1457,35 @@ command.register('help', {
     ui.print('  clear      删除存档（clear confirm）', '');
     ui.print('  save       保存对话记录', '');
     ui.print('  load       加载对话记录', '');
-    if (state.currentStage >= 2 && !state.phoneUnlocked) {
-      ui.print('  unlock     解锁手机（输入 unlock + 密码）', '');
-    }
     if (state.currentStage >= 4 && state.combineUnlocked.length >= 1) {
       ui.print('  backup     创建数据备份', '');
     }
     if (state.currentStage >= 5) {
       ui.print('  submit     提交信息至警方', '');
+    }
+    // skip hidden commands
+    var cmdKeys = command.getCommandList();
+    for (var i = 0; i < cmdKeys.length; i++) {
+      var ck = cmdKeys[i];
+      var cdef = command.getCommandDef(ck);
+      if (cdef.hidden) continue;
+      if (cdef.unlockedWhen && !cdef.unlockedWhen(state)) continue;
+      if (ck === 'help' || ck === 'access' || ck === 'list' || ck === 'view' || ck === 'back' || ck === 'cls' || ck === 'clear' || ck === 'save' || ck === 'load' || ck === 'unlock' || ck === 'backup' || ck === 'submit') continue;
+      if (ck === 'combine' && state.unlockedEvidence.length >= 2) {
+        ui.print('  combine    组合分析信息（如 combine E-05+E-18）', '');
+      }
+      if (ck === 'unlock' && state.currentStage >= 2 && !state.phoneUnlocked) {
+        ui.print('  unlock     解锁手机（输入 unlock + 密码）', '');
+      }
+      if (ck === 'backup' && state.currentStage >= 4 && state.combineUnlocked.length >= 1) {
+        ui.print('  backup     创建数据备份', '');
+      }
+      if (ck === 'submit' && state.currentStage >= 5) {
+        ui.print('  submit     提交信息至警方', '');
+      }
+      if (ck === 'conclusions' && state.unlockedEvidence.length >= 2) {
+        ui.print('  conclusions 查看已生成结论', '');
+      }
     }
     ui.print('', '');
     ui.print('输入其他内容我会尝试理解你的意思。', 'hint');
@@ -1519,8 +1572,13 @@ command.register('submit', {
     var state = game.getState();
     if (state.combineUnlocked.length < 4) { ui.print('需要 4 个结论才能提交。', 'error'); return; }
     if (state.backupCreated) {
+      ui.setDigitalStatus(false);
+      await ui.printDialogue('数字麻姐', [
+        '谢谢你帮我把证据提交给警方。',
+        '能留下你的小红书账号吗？我保证……麻姐会回关你的。',
+      ], 'digital-human');
       state.endingReached = 'ending2';
-      showEnding('ending2');
+      await showEnding('ending2');
     } else {
       await ui.printDialogue('数字麻姐', ['请先创建备份再提交。'], 'digital-human');
     }
@@ -1600,7 +1658,7 @@ command.register('back', {
     else if (ctx.startsWith('wechat.mprog.')) parent = 'wechat.mprog';
     else if (ctx.startsWith('wechat.gymadmin.')||ctx.startsWith('gymadmin.')) parent = 'wechat.gymadmin';
     else if (ctx==='gym_login'||ctx==='gym_login_pwd') parent = '微信';
-    else if (ctx==='相册'||ctx==='健身房'||ctx==='信用查询'||ctx==='门禁'||ctx==='停车场'||ctx==='短信'||ctx==='微信'||ctx.startsWith('album.')||ctx.startsWith('gym.')||ctx.startsWith('credit.')||ctx.startsWith('door.')||ctx.startsWith('parking.')||ctx.startsWith('sms.')||ctx.startsWith('wechat.')) parent = null;
+    else if (ctx==='相册'||ctx==='信用查询'||ctx==='门禁'||ctx==='停车场'||ctx==='短信'||ctx==='微信'||ctx.startsWith('credit.')||ctx.startsWith('door.')||ctx.startsWith('parking.')||ctx.startsWith('sms.')||ctx.startsWith('wechat.')) parent = null;
     else {
       var parts = ctx.split('.');
       if (parts.length > 1) parent = parts.slice(0, -1).join('.');
@@ -1612,5 +1670,46 @@ command.register('back', {
     }
     state._navContext = parent;
     command.showNavMenu();
+  },
+});
+
+command.register('kill', {
+  desc: '',
+  hidden: true,
+  requiresArgs: true,
+  usage: 'kill her',
+  unlockedWhen: function(s) { return s._bLineRevealed === true; },
+  fn: async function(args) {
+    var state = game.getState();
+    if (args.length === 0 || args[0] !== 'her') {
+      ui.print('命令不存在。', 'error');
+      return;
+    }
+    if (state._killConfirmPending) {
+      state._killConfirmPending = false;
+      await ui.printDialogue('数字麻姐', ['……你第二次打出来了。'], 'digital-human');
+      ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+      ui.print('[系统：正在终止数字人进程...]', 'error');
+      ui.print('[系统：进程已终止]', 'error');
+      ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+      ui.print('', '');
+      ui.print('你终止了一个数字意识。', 'important');
+      ui.print('麻姐的禁用措施现在生效了。', 'important');
+      ui.print('也许她能重新掌控自己的生活。', 'important');
+      ui.print('', '');
+      ui.print('但你输入了 "kill her"。', 'important');
+      ui.print('这个行为，你也无法删除。', 'important');
+      state.endingReached = 'endingB-kill';
+      game.save();
+      ui.disableInput();
+    } else {
+      ui.print('', '');
+      ui.print('数字麻姐：……', 'digital-human');
+      ui.print('', '');
+      await new Promise(r => setTimeout(r, 2000));
+      ui.print('[系统：终止数字人需要二次确认]', 'error');
+      ui.print('[此操作不可逆。输入 kill her 确认终止。]', 'error');
+      state._killConfirmPending = true;
+    }
   },
 });
