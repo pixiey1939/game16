@@ -1879,6 +1879,8 @@ async function showEnding(ending) {
     ui.print('  麻姐被警方安全解救，身体无大碍。', '');
     ui.print('', '');
     ui.print('  "正义或许会迟到，但不会缺席。"', 'important');
+    ui.print('', '');
+    ui.print('居然为了一个网盘不救麻姐？哼～白宠粉了', 'hint');
   } else if (ending === 'ending2') {
     ui.print('  信息已上传。警方已定位到麻姐被关押的位置——', 'important');
     ui.print('  郑桥租住的一个地下室。她还活着。', '');
@@ -1990,7 +1992,6 @@ async function showEnding(ending) {
   ui.print('', '');
   ui.print('[游戏结束 — 感谢游玩]', 'system');
   ui.print('输入 clear confirm 清除存档，重新开始游戏。', 'hint');
-  ui.print('居然为了一个网盘不救麻姐？哼～白宠粉了', 'hint');
 }
 
 // ============================================================
