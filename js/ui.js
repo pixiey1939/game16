@@ -39,10 +39,10 @@ const ui = (() => {
   async function _processQueue() {
     if (_busy) return;
     _busy = true;
-    const el = ensureOutput();
 
     while (_queue.length) {
       const item = _queue.shift();
+      const el = ensureOutput();
 
       if (item.type === 'dialogue') {
         const box = document.createElement('div');
@@ -80,13 +80,13 @@ const ui = (() => {
       line.className = cls ? `line ${cls}` : 'line';
 
       if (!item.text) {
-        el.appendChild(line);
+        el && el.appendChild(line);
         scrollOutputToBottom();
         if (item._resolve) item._resolve();
         continue;
       }
 
-      el.appendChild(line);
+      el && el.appendChild(line);
       for (let i = 0; i < item.text.length; i++) {
         line.textContent += item.text[i];
         scrollOutputToBottom();
@@ -155,7 +155,7 @@ const ui = (() => {
       type: 'line',
       text: text ?? '',
       cls: type,
-      speed: opts.speed != null ? opts.speed : _getSpeed(type),
+      speed: opts.speed != null ? opts.speed : (_endingSpeed != null ? _endingSpeed : _getSpeed(type)),
     });
   }
 
@@ -172,10 +172,11 @@ const ui = (() => {
    * Clear all output lines (does NOT affect header/input UI).
    * Also aborts any pending queue items — they are discarded.
    */
-  function clear() {
+function clear() {
     _queue.length = 0;
     _busy = false;
     _drainResolve = null;
+    _endingSpeed = null;
     const el = ensureOutput();
     if (el) el.innerHTML = '';
   }
@@ -562,6 +563,49 @@ const ui = (() => {
     }, 1500);
   }
 
+  // --- Ending overlay --------------------------------------------------------
+
+  var _originalOutputEl = null;
+  var _endingOverlayRAF = null;
+  var _endingSpeed = null;
+
+  async function showEndingOverlay() {
+    await _waitForDrain();
+    var overlay = document.getElementById('ending-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'ending-overlay';
+      var content = document.createElement('div');
+      content.className = 'ending-content';
+      overlay.appendChild(content);
+      document.body.appendChild(overlay);
+    }
+    var contentEl = overlay.querySelector('.ending-content');
+    _originalOutputEl = outputEl;
+    outputEl = contentEl;
+    _endingSpeed = 100;
+    setDigitalStatus(false);
+    if (_endingOverlayRAF) cancelAnimationFrame(_endingOverlayRAF);
+    _endingOverlayRAF = requestAnimationFrame(function() {
+      overlay.classList.add('visible');
+      _endingOverlayRAF = null;
+    });
+  }
+
+  function hideEndingOverlay() {
+    var overlay = document.getElementById('ending-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('visible');
+    _endingSpeed = null;
+    setTimeout(function() {
+      overlay.style.display = 'none';
+    }, 1200);
+    if (_originalOutputEl) {
+      outputEl = _originalOutputEl;
+      _originalOutputEl = null;
+    }
+  }
+
   // -----------------------------------------------------------------------------
   // Public API
   return {
@@ -587,5 +631,8 @@ const ui = (() => {
     // Livestream overlay
     showLivestream: showLivestream,
     hideLivestream: hideLivestream,
+    // Ending overlay
+    showEndingOverlay: showEndingOverlay,
+    hideEndingOverlay: hideEndingOverlay,
   };
 })();
