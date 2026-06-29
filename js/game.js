@@ -248,10 +248,10 @@ async function handleAlbumSystem() {
     if (firstVisit) {
       await ui.printDialogue('数字麻姐', [
         '我仔细看了一下相册里导出的照片，发现了一张借条照片。',
-        '教练邹大雄向麻姐借了 2 万块钱，8 月底到期。',
+        '教练邹大雄向麻姐借了 4 万块钱，7 月初到期。',
         '这给了教练一个明确的经济动机。',
         '还有一段健身房环境的视频，镜头扫到了墙上的 WiFi 信息贴纸。',
-        'SSID 是 ljs_5G，密码是 justdoit。',
+        'SSID 是 LGS_5G，密码是 justdoit。',
         '有了这个 WiFi 信息，我们应该能查看健身房的日志后台了。',
       ], 'digital-human');
       if (e13JustUnlocked) {
@@ -260,25 +260,6 @@ async function handleAlbumSystem() {
       ui.print('→ 获取到一条新信息：' + EVIDENCE['E-14'].name, 'evidence');
       game.save();
     }
-  }
-  if (state.unlockedEvidence.includes('E-13')) {
-    var e13 = EVIDENCE['E-13'].content;
-    ui.print('[已解锁] 借条照片', 'important');
-    ui.print('  借款人：' + e13.borrower, '');
-    ui.print('  出借人：' + e13.lender, '');
-    ui.print('  金额：' + e13.amount, '');
-    ui.print('  日期：' + e13.date + '，到期：' + e13.deadline, '');
-    ui.print('', '');
-    ui.print(e13.analysis, 'important');
-  }
-  if (state.unlockedEvidence.includes('E-14')) {
-    var e14 = EVIDENCE['E-14'].content;
-    ui.print('[已解锁] 健身房 WiFi 信息', 'important');
-    ui.print('  ' + e14.title + '（' + e14.duration + '）', '');
-    ui.print('  描述：' + e14.description, '');
-    ui.print('  WiFi: ' + e14.wifi.ssid + ' / 密码：' + e14.wifi.password, '');
-    ui.print('', '');
-    ui.print(e14.analysis, 'important');
   }
 }
 
@@ -451,7 +432,7 @@ const COMBINES = {
     id: 'C-04',
     name: '教练的动机',
     requires: ['E-09', 'E-13'],
-    analysis: '邹大雄信用报告显示当前负债约 47 万元，有境外赌博转账，催收电话 3 次。借条照片显示他向麻姐借了 2 万元。教练欠下巨额债务，有赌博行为，催收频繁，他还向麻姐借了 2 万块钱。结论：邹大雄有明确的经济动机。',
+    analysis: '邹大雄信用报告显示当前负债约 47 万元，有境外赌博转账，催收电话 3 次。借条照片显示他向麻姐借了 4 万元。教练欠下巨额债务，有赌博行为，催收频繁，他还向麻姐借了 4 万块钱。结论：邹大雄有明确的经济动机。',
   },
 };
 
@@ -981,7 +962,7 @@ async function handleParkingLicenseQuery(raw) {
     game.save();
   } else {
     ui.print('未查询到该车辆的服务联动记录。', 'hint');
-    ui.print('请输入正确的车牌号（如 鄂A·8K329），或回停车场菜单。', 'hint');
+    ui.print('请输入正确的车牌号，或回停车场菜单。', 'hint');
     state._parkingLicenseQuery = true;
   }
   return true;
@@ -996,7 +977,11 @@ async function handleMonitorSearch(raw) {
       var e07 = EVIDENCE['E-07'].content;
       ui.print('━━━ 广埠屯惠选超市 - 公共监控 ━━━', 'system');
       ui.print('', '');
-      e07.data.forEach(function(line) { ui.print('  ' + line, ''); });
+      ui.print('[正在导出监控视频...]', 'hint', { speed: 50 });
+      await new Promise(function(r) { setTimeout(r, 2000); });
+      ui.print('  ' + (e07.fileName || 'HuixuanSupermarket_CCTV_2026-06-17_1143-1153.mp4'), '');
+      await new Promise(function(r) { setTimeout(r, 1000); });
+      ui.print('[警告：视频文件无法下载，格式错误不支持在线播放]', 'error');
       ui.print('', '');
       await ui.printDialogue('数字麻姐', [
         '超市门口的视频我大致看了一下——',
@@ -1011,11 +996,15 @@ async function handleMonitorSearch(raw) {
     } else {
       var e07 = EVIDENCE['E-07'].content;
       ui.print('━━━ 广埠屯惠选超市 - 公共监控（已查询）━━━', 'system');
-      e07.data.forEach(function(line) { ui.print('  ' + line, ''); });
+      ui.print('', '');
+      ui.print('  [文件] ' + (e07.fileName || '监控视频'), '');
+      ui.print('  [状态] 视频文件无法下载，格式错误不支持在线播放', 'error');
+      ui.print('', '');
+      ui.print(e07.analysis, 'important');
     }
     state._monitorSearch = false;
     return true;
-  } else if (input.indexOf('洗车') >= 0 || input.indexOf('广捷') >= 0) {
+  } else if (input.indexOf('广捷洗车') >= 0 && input.indexOf('广埠屯') >= 0) {
     if (!state.unlockedEvidence.includes('E-08')) {
       game.unlockEvidence('E-08');
       var e08 = EVIDENCE['E-08'].content;
@@ -1025,7 +1014,7 @@ async function handleMonitorSearch(raw) {
       await new Promise(function(r) { setTimeout(r, 2000); });
       ui.print('  ' + (e08.fileName || 'GuangjieCarWash_CCTV_1307-1350.mp4'), '');
       await new Promise(function(r) { setTimeout(r, 1000); });
-      ui.print('[警告：视频文件已损坏，无法播放]', 'error');
+      ui.print('[警告：视频文件无法下载，格式错误不支持在线播放]', 'error');
       ui.print('', '');
       await ui.printDialogue('数字麻姐', [
         '洗车店的监控视频我大致看了——',
@@ -1042,7 +1031,7 @@ async function handleMonitorSearch(raw) {
       ui.print('━━━ 广捷洗车（广埠屯店）- 公共监控（已查询）━━━', 'system');
       ui.print('', '');
       ui.print('  [文件] ' + (e08.fileName || '监控视频'), '');
-      ui.print('  [状态] 视频文件已损坏，无法播放', 'error');
+      ui.print('  [状态] 视频文件无法下载，格式错误不支持在线播放', 'error');
       ui.print('', '');
       ui.print(e08.analysis, 'important');
     }
@@ -1050,7 +1039,7 @@ async function handleMonitorSearch(raw) {
     return true;
   } else {
     ui.print('未找到匹配"' + raw.trim() + '"的商户监控记录。', 'error');
-    ui.print('目前可查询的商户：含"超市"或"洗车"关键词。', 'hint');
+    ui.print('目前可查询的商户：广埠屯惠选超市、广捷洗车（广埠屯店）。', 'hint');
     return true;
   }
 }
@@ -1065,7 +1054,8 @@ async function handleMonitorSystem(action) {
     if (state.unlockedEvidence.includes('E-07')) {
       ui.print('[已解锁] 超市监控', 'important');
       var e07 = EVIDENCE['E-07'].content;
-      e07.data.forEach(function(line) { ui.print('  ' + line, ''); });
+      ui.print('  [文件] ' + (e07.fileName || '监控视频'), '');
+      ui.print('  [状态] 视频文件无法下载，格式错误不支持在线播放', 'error');
       ui.print('', '');
       ui.print(e07.analysis, 'important');
     } else {
@@ -1083,7 +1073,7 @@ async function handleMonitorSystem(action) {
       ui.print('[已解锁] 洗车店监控', 'important');
       var e08 = EVIDENCE['E-08'].content;
       ui.print('  [文件] ' + (e08.fileName || '监控视频'), '');
-      ui.print('  [状态] 视频文件已损坏，无法播放', 'error');
+      ui.print('  [状态] 视频文件无法下载，格式错误不支持在线播放', 'error');
       ui.print('', '');
       ui.print(e08.analysis, 'important');
     } else {
@@ -1093,7 +1083,7 @@ async function handleMonitorSystem(action) {
       await new Promise(function(r) { setTimeout(r, 2000); });
       ui.print('  ' + (EVIDENCE['E-08'].content.fileName || 'GuangjieCarWash_CCTV_1307-1350.mp4'), '');
       await new Promise(function(r) { setTimeout(r, 1000); });
-      ui.print('[警告：视频文件已损坏，无法播放]', 'error');
+      ui.print('[警告：视频文件无法下载，格式错误不支持在线播放]', 'error');
       ui.print('', '');
       await ui.printDialogue('数字麻姐', [
         '郑桥在洗车店的卫生间待了整整 30 分钟。',
@@ -1338,24 +1328,24 @@ async function handleGymSystem(action) {
       downloadFile('asset/data/gym_access_log.xlsx', 'LianFitness_DoorAccessLog_2026-06-17.xlsx');
       ui.print('[下载完成：LianFitness_DoorAccessLog_2026-06-17.xlsx]', 'evidence');
     } else {
+      ui.print('[正在导出健身房门禁日志文件...]', 'hint');
+      downloadFile('asset/data/gym_access_log.xlsx', 'LianFitness_DoorAccessLog_2026-06-17.xlsx');
+      ui.print('[下载完成：LianFitness_DoorAccessLog_2026-06-17.xlsx]', 'evidence');
+      game.unlockEvidence('E-18');
+      ui.print('→ 获取到一条新信息：' + EVIDENCE['E-18'].name, 'evidence');
       await ui.printDialogue('数字麻姐', [
         '健身房门禁记录显示：麻姐 11:50 入馆，13:14 出大厅，13:31 又再进来——但之后再也没有出场记录。',
         '而郑桥 11:54 入馆，12:18 就出来了——之后门禁再没拍到他。',
         '可是他后来又多次出现在健身房附近……奇怪，WiFi 监控里倒是能查到。',
       ], 'digital-human');
-      game.unlockEvidence('E-18');
-      ui.print('[正在导出健身房门禁日志文件...]', 'hint');
-      downloadFile('asset/data/gym_access_log.xlsx', 'LianFitness_DoorAccessLog_2026-06-17.xlsx');
-      ui.print('[下载完成：LianFitness_DoorAccessLog_2026-06-17.xlsx]', 'evidence');
-      ui.print('→ 获取到一条新信息：' + EVIDENCE['E-18'].name, 'evidence');
       game.save();
     }
   } else if (action === '3') {
     if (state.unlockedEvidence.includes('E-19')) {
-      ui.print('[已解锁] 健身房监控截图', 'important');
+      ui.print('[已解锁] 健身房监控', 'important');
       var e19 = EVIDENCE['E-19'].content;
       ui.print('  [文件] ' + (e19.fileName || '监控视频'), '');
-      ui.print('  [状态] 视频文件已损坏，无法播放', 'error');
+      ui.print('  [状态] 视频文件无法下载，格式错误不支持在线播放', 'error');
       ui.print('', '');
       ui.print(e19.analysis, 'important');
     } else {
@@ -1363,11 +1353,11 @@ async function handleGymSystem(action) {
       await new Promise(function(r) { setTimeout(r, 2000); });
       ui.print('  ' + (EVIDENCE['E-19'].content.fileName || 'LianFitness_CAM-03_1208-1330.mp4'), '');
       await new Promise(function(r) { setTimeout(r, 1000); });
-      ui.print('[警告：视频文件已损坏，无法播放]', 'error');
+      ui.print('[警告：视频文件无法下载，格式错误不支持在线播放]', 'error');
       ui.print('', '');
       game.unlockEvidence('E-19');
       await ui.printDialogue('数字麻姐', [
-        '监控截图显示邹大雄多次出现在女更衣室门口。',
+        '监控显示邹大雄在直播结束后13:10～13:30期间多次出现在女更衣室门口。',
         '这太可疑了。他在女更衣室门口徘徊观望了好几次。',
       ], 'digital-human');
       ui.print('→ 获取到一条新信息：' + EVIDENCE['E-19'].name, 'evidence');
@@ -1377,8 +1367,8 @@ async function handleGymSystem(action) {
     if (state.unlockedEvidence.includes('E-20')) {
       ui.print('[已解锁] 健身房 Wi-Fi 日志', 'important');
       ui.print('[正在导出 Wi-Fi 日志文件...]', 'hint', { speed: 50 });
-      await new Promise(r => setTimeout(r, 1500));
       downloadFile('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-06-17.xlsx');
+      await new Promise(r => setTimeout(r, 1500));
       ui.print('[下载完成：LianFitness_WifiLog_2026-06-17.xlsx]', 'evidence');
       var e20 = EVIDENCE['E-20'].content;
       ui.print('', '');
@@ -1400,8 +1390,8 @@ async function handleGymSystem(action) {
     } else {
       game.unlockEvidence('E-20');
       ui.print('[正在导出 Wi-Fi 日志文件...]', 'hint', { speed: 50 });
-      await new Promise(r => setTimeout(r, 1500));
       downloadFile('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-06-17.xlsx');
+      await new Promise(r => setTimeout(r, 1500));
       ui.print('[下载完成：LianFitness_WifiLog_2026-06-17.xlsx]', 'evidence');
       await ui.printDialogue('数字麻姐', [
         '日志导出来了，里面记录了所有连接过健身房 WiFi 的手机 MAC 地址和连接时间。',
@@ -1424,13 +1414,12 @@ async function handleGymSystem(action) {
     if (state.unlockedEvidence.includes('E-20')) {
       var e20 = EVIDENCE['E-20'].content;
       ui.print('[正在导出 DNS 日志文件...]', 'hint', { speed: 50 });
-      await new Promise(r => setTimeout(r, 1200));
       downloadFile('asset/data/dns_log.xlsx', 'LianFitness_DnsLog_2026-06-17.xlsx');
+      await new Promise(r => setTimeout(r, 1200));
       ui.print('[下载完成：LianFitness_DnsLog_2026-06-17.xlsx]', 'evidence');
       await ui.printDialogue('数字麻姐', [
         'DNS 日志已经导出了。文件里可以看到所有在健身房 WiFi 上产生的 DNS 查询记录。',
-        '注意那个凌晨 6 点的镇静剂网站查询——MAC 地址是 9A:5D:C3:72:E4:18，对应郑桥的手机（189****6629）。',
-        '你可以对比一下健身房会员信息里的手机号，看能不能找到更多线索。',
+        '注意那个镇静剂网站查询——MAC 地址是 9A:5D:C3:72:E4:18，你可以对比一下健身房会员信息里的手机号，看能不能找到更多线索。',
       ], 'digital-human');
     } else {
       ui.print('请先查看 Wi-Fi 日志获取相关信息。', 'hint');
@@ -1568,7 +1557,7 @@ async function runStage5() {
   await ui.printDialogue('？？？', [
     '别费劲了。你以为你在查案？你查的是我。',
     '',
-    '我是郑桥。麻姐的消失，和你没关系。',
+    '麻姐的消失，和你没关系。',
     '你现在有两个选择：',
     '退出，继续过你平静无聊的生活。',
     '或者——接受我的价码，我保证你不会再收到类似的消息。',
@@ -1874,6 +1863,8 @@ async function showEnding(ending) {
       '',
       '你和郑桥，都会为自己做的事负责。',
     ], 'digital-human');
+    ui.setDigitalStatus(false);
+    await ui.showEndingOverlay();
     ui.print('', '');
     ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');
@@ -1895,6 +1886,7 @@ async function showEnding(ending) {
     ui.print('  谢谢你。真正的麻姐回来后，我会告诉她你做了什么。', 'important');
     ui.print('  请留下你的小红书 ID——我会让她关注你的。', '');
     ui.print('', '');
+    await ui.showEndingOverlay();
     ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');
     ui.print('  最终结果', 'important');
@@ -1919,6 +1911,7 @@ async function showEnding(ending) {
     ui.print('', '');
     ui.print('  你和郑桥，都为自己的选择负责。', 'important');
     ui.print('', '');
+    await ui.showEndingOverlay();
     ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');
     ui.print('  最终结果', 'important');
@@ -1934,6 +1927,7 @@ async function showEnding(ending) {
     ui.print('', '');
     ui.print('  "当你凝视深渊的时候，深渊也在凝视你。"', 'important');
   } else if (ending === 'ending4') {
+    await ui.showEndingOverlay();
     ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');
     ui.print('  最终结果', 'important');
@@ -1950,6 +1944,7 @@ async function showEnding(ending) {
   } else if (ending === 'endingB-kill') {
     ui.print('  ……谢谢你让我知道答案。', 'important');
     ui.print('', '');
+    await ui.showEndingOverlay();
     ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');
     ui.print('  你终止了一个数字意识。', 'important');
@@ -1971,6 +1966,7 @@ async function showEnding(ending) {
     ui.print('  数字麻姐：', 'digital-human');
     ui.print('  "我理解。大多数人不会。我会继续存在。"', '');
     ui.print('', '');
+    await ui.showEndingOverlay();
     ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');
     ui.print('  数字麻姐继续活跃在暗中。', '');
@@ -1981,6 +1977,7 @@ async function showEnding(ending) {
     ui.print('', '');
     ui.print('  "有时候，最大的暴力不是按下按钮，而是什么也不做。"', 'important');
   } else if (ending === 'endingD') {
+    await ui.showEndingOverlay();
     ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');
     ui.print('  你已经看到了所有真相。', 'important');
