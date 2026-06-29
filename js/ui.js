@@ -585,6 +585,8 @@ function clear() {
     outputEl = contentEl;
     _endingSpeed = 100;
     setDigitalStatus(false);
+    var avatarEl = document.getElementById('digital-avatar');
+    if (avatarEl) avatarEl.style.display = 'none';
     if (_endingOverlayRAF) cancelAnimationFrame(_endingOverlayRAF);
     _endingOverlayRAF = requestAnimationFrame(function() {
       overlay.classList.add('visible');

@@ -1867,7 +1867,6 @@ async function showEnding(ending) {
     ui.setDigitalStatus(false);
     await ui.showEndingOverlay();
     ui.print('', '');
-    ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');
     ui.print('  最终结果', 'important');
     ui.print('', '');
@@ -1888,7 +1887,6 @@ async function showEnding(ending) {
     ui.print('  请留下你的小红书 ID——我会让她关注你的。', '');
     ui.print('', '');
     await ui.showEndingOverlay();
-    ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');
     ui.print('  最终结果', 'important');
     ui.print('', '');
@@ -1913,7 +1911,6 @@ async function showEnding(ending) {
     ui.print('  你和郑桥，都为自己的选择负责。', 'important');
     ui.print('', '');
     await ui.showEndingOverlay();
-    ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');
     ui.print('  最终结果', 'important');
     ui.print('', '');
@@ -1929,7 +1926,6 @@ async function showEnding(ending) {
     ui.print('  "当你凝视深渊的时候，深渊也在凝视你。"', 'important');
   } else if (ending === 'ending4') {
     await ui.showEndingOverlay();
-    ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');
     ui.print('  最终结果', 'important');
     ui.print('', '');
@@ -1992,10 +1988,9 @@ async function showEnding(ending) {
   }
 
   ui.print('', '');
-  ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
-  ui.print('', '');
   ui.print('[游戏结束 — 感谢游玩]', 'system');
   ui.print('输入 clear confirm 清除存档，重新开始游戏。', 'hint');
+  ui.print('居然为了一个网盘不救麻姐？哼～白宠粉了', 'hint');
 }
 
 // ============================================================
