@@ -900,7 +900,7 @@ async function handleParkingSystem(action) {
     ui.print('━━━ 车辆出入记录 ━━━', 'system');
     ui.print('', '');
     ui.print('[正在导出停车场日志文件...]', 'hint');
-    downloadFile('asset/data/parking_log.xlsx', 'ChumenTech_ParkingLog_2026-06-17.xlsx');
+    await prefetchAndDownload('asset/data/parking_log.xlsx', 'ChumenTech_ParkingLog_2026-06-17.xlsx');
     ui.print('[下载完成：ChumenTech_ParkingLog_2026-06-17.xlsx]', 'evidence');
     if (!state.unlockedEvidence.includes('E-06')) {
       game.unlockEvidence('E-06');
@@ -1325,11 +1325,11 @@ async function handleGymSystem(action) {
     if (state.unlockedEvidence.includes('E-18')) {
       ui.print('[已解锁] 健身房门禁记录', 'important');
       ui.print('[正在导出健身房门禁日志文件...]', 'hint');
-      downloadFile('asset/data/gym_access_log.xlsx', 'LianFitness_DoorAccessLog_2026-06-17.xlsx');
+      await prefetchAndDownload('asset/data/gym_access_log.xlsx', 'LianFitness_DoorAccessLog_2026-06-17.xlsx');
       ui.print('[下载完成：LianFitness_DoorAccessLog_2026-06-17.xlsx]', 'evidence');
     } else {
       ui.print('[正在导出健身房门禁日志文件...]', 'hint');
-      downloadFile('asset/data/gym_access_log.xlsx', 'LianFitness_DoorAccessLog_2026-06-17.xlsx');
+      await prefetchAndDownload('asset/data/gym_access_log.xlsx', 'LianFitness_DoorAccessLog_2026-06-17.xlsx');
       ui.print('[下载完成：LianFitness_DoorAccessLog_2026-06-17.xlsx]', 'evidence');
       game.unlockEvidence('E-18');
       ui.print('→ 获取到一条新信息：' + EVIDENCE['E-18'].name, 'evidence');
@@ -1366,7 +1366,7 @@ async function handleGymSystem(action) {
     if (state.unlockedEvidence.includes('E-20')) {
       ui.print('[已解锁] 健身房 Wi-Fi 日志', 'important');
       ui.print('[正在导出 Wi-Fi 日志文件...]', 'hint', { speed: 50 });
-      downloadFile('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-06-17.xlsx');
+      await prefetchAndDownload('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-06-17.xlsx');
       ui.print('[下载完成：LianFitness_WifiLog_2026-06-17.xlsx]', 'evidence');
       var e20 = EVIDENCE['E-20'].content;
       ui.print('', '');
@@ -1388,7 +1388,7 @@ async function handleGymSystem(action) {
     } else {
       game.unlockEvidence('E-20');
       ui.print('[正在导出 Wi-Fi 日志文件...]', 'hint', { speed: 50 });
-      downloadFile('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-06-17.xlsx');
+      await prefetchAndDownload('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-06-17.xlsx');
       ui.print('[下载完成：LianFitness_WifiLog_2026-06-17.xlsx]', 'evidence');
       await ui.printDialogue('数字麻姐', [
         '日志导出来了，里面记录了所有连接过健身房 WiFi 的手机 MAC 地址和连接时间。',
@@ -1411,7 +1411,7 @@ async function handleGymSystem(action) {
     if (state.unlockedEvidence.includes('E-20')) {
       var e20 = EVIDENCE['E-20'].content;
       ui.print('[正在导出 DNS 日志文件...]', 'hint', { speed: 50 });
-      downloadFile('asset/data/dns_log.xlsx', 'LianFitness_DnsLog_2026-06-17.xlsx');
+      await prefetchAndDownload('asset/data/dns_log.xlsx', 'LianFitness_DnsLog_2026-06-17.xlsx');
       ui.print('[下载完成：LianFitness_DnsLog_2026-06-17.xlsx]', 'evidence');
       await ui.printDialogue('数字麻姐', [
         'DNS 日志已经导出了。文件里可以看到所有在健身房 WiFi 上产生的 DNS 查询记录。',
