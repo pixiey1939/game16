@@ -476,12 +476,12 @@ var command = (function () {
       return true;
     }
     if (next === 'wechat.chat.dashou') {
-      state._navContext = 'wechat.chat';
+      state._navContext = 'wechat.chat.dashou';
       handleWechatSystem("2");
       return true;
     }
     if (next === 'wechat.chat.laogong') {
-      state._navContext = 'wechat.chat';
+      state._navContext = 'wechat.chat.laogong';
       handleWechatSystem("1");
       return true;
     }
@@ -1001,7 +1001,7 @@ async function handleWechatMiniSearch(raw) {
       return;
     }
     if (state._navContext === 'dns_login_pwd') {
-      var ssidOk = state._dnsSsid && state._dnsSsid === 'LJS_5G';
+      var ssidOk = state._dnsSsid && state._dnsSsid === 'LGS_5G';
       if (ssidOk && input === 'justdoit') {
         ui.print('✅ WiFi 连接成功', 'hint');
         state.dnsUnlocked = true;
@@ -1457,35 +1457,14 @@ command.register('help', {
     ui.print('  clear      删除存档（clear confirm）', '');
     ui.print('  save       保存对话记录', '');
     ui.print('  load       加载对话记录', '');
+    if (state.currentStage >= 2 && !state.phoneUnlocked) {
+      ui.print('  unlock     解锁手机（输入 unlock + 密码）', '');
+    }
     if (state.currentStage >= 4 && state.combineUnlocked.length >= 1) {
       ui.print('  backup     创建数据备份', '');
     }
     if (state.currentStage >= 5) {
       ui.print('  submit     提交信息至警方', '');
-    }
-    // skip hidden commands
-    var cmdKeys = command.getCommandList();
-    for (var i = 0; i < cmdKeys.length; i++) {
-      var ck = cmdKeys[i];
-      var cdef = command.getCommandDef(ck);
-      if (cdef.hidden) continue;
-      if (cdef.unlockedWhen && !cdef.unlockedWhen(state)) continue;
-      if (ck === 'help' || ck === 'access' || ck === 'list' || ck === 'view' || ck === 'back' || ck === 'cls' || ck === 'clear' || ck === 'save' || ck === 'load' || ck === 'unlock' || ck === 'backup' || ck === 'submit') continue;
-      if (ck === 'combine' && state.unlockedEvidence.length >= 2) {
-        ui.print('  combine    组合分析信息（如 combine E-05+E-18）', '');
-      }
-      if (ck === 'unlock' && state.currentStage >= 2 && !state.phoneUnlocked) {
-        ui.print('  unlock     解锁手机（输入 unlock + 密码）', '');
-      }
-      if (ck === 'backup' && state.currentStage >= 4 && state.combineUnlocked.length >= 1) {
-        ui.print('  backup     创建数据备份', '');
-      }
-      if (ck === 'submit' && state.currentStage >= 5) {
-        ui.print('  submit     提交信息至警方', '');
-      }
-      if (ck === 'conclusions' && state.unlockedEvidence.length >= 2) {
-        ui.print('  conclusions 查看已生成结论', '');
-      }
     }
     ui.print('', '');
     ui.print('输入其他内容我会尝试理解你的意思。', 'hint');
