@@ -486,7 +486,7 @@ var command = (function () {
       return true;
     }
     if (next === 'wechat.pay') {
-      state._navContext = 'wechat.chat';
+      state._navContext = 'wechat.chat.pay';
       handleWechatSystem("3");
       return true;
     }
@@ -506,7 +506,7 @@ var command = (function () {
     if (ctx === 'wechat.chat' && !next) {
       var label = target.label;
       if (label.indexOf('产品研发') >= 0) {
-        state._navContext = 'wechat.chat';
+        state._navContext = 'wechat.chat.workgroup';
         ui.print('━━━ 产品研发部工作群（5人） ━━━', 'system');
         ui.print('', '');
         ui.print('─── 06-16 ───', 'hint');
@@ -525,7 +525,7 @@ var command = (function () {
         return true;
       }
       if (label.indexOf('姐妹') >= 0) {
-        state._navContext = 'wechat.chat';
+        state._navContext = 'wechat.chat.jiejie';
         ui.print('━━━ 姐妹群（4人） ━━━', 'system');
         ui.print('', '');
         ui.print('─── 06-13 ───', 'hint');
@@ -537,7 +537,7 @@ var command = (function () {
         return true;
       }
       if (label.indexOf('妈妈') >= 0) {
-        state._navContext = 'wechat.chat';
+        state._navContext = 'wechat.chat.mama';
         ui.print('━━━ 妈妈 ━━━', 'system');
         ui.print('  ⚠️ 该对话最后消息 06-10，不在导出范围内', 'warning');
         ui.print('', '');
@@ -548,7 +548,7 @@ var command = (function () {
         return true;
       }
       if (label.indexOf('普拉提') >= 0) {
-        state._navContext = 'wechat.chat';
+        state._navContext = 'wechat.chat.peipei';
         ui.print('━━━ 普拉提佩佩 ━━━', 'system');
         ui.print('', '');
         ui.print('─── 06-17 ───', 'hint');
@@ -563,7 +563,7 @@ var command = (function () {
         return true;
       }
       if (label.indexOf('文件') >= 0) {
-        state._navContext = 'wechat.chat';
+        state._navContext = 'wechat.chat.filehelper';
         ui.print('━━━ 文件传输助手 ━━━', 'system');
         ui.print('', '');
         ui.print('  06-16 14:20  [文件] 端午上线方案_V3.0.pdf', '');
@@ -576,7 +576,7 @@ var command = (function () {
         return true;
       }
       if (label.indexOf('老板') >= 0) {
-        state._navContext = 'wechat.chat';
+        state._navContext = 'wechat.chat.laoban';
         ui.print('━━━ 老板（赵总） ━━━', 'system');
         ui.print('', '');
         ui.print('─── 06-16 ───', 'hint');
@@ -589,7 +589,7 @@ var command = (function () {
         return true;
       }
       if (label === '57') {
-        state._navContext = 'wechat.chat';
+        state._navContext = 'wechat.chat.57';
         ui.print('━━━ 57 ━━━', 'system');
         ui.print('', '');
         ui.print('─── 06-13 ───', 'hint');
@@ -610,7 +610,7 @@ var command = (function () {
         return true;
       }
       if (label.indexOf('美团') >= 0) {
-        state._navContext = 'wechat.chat';
+        state._navContext = 'wechat.chat.meituan';
         ui.print('━━━ 美团外卖 ━━━', 'system');
         ui.print('', '');
         ui.print('─── 06-12 ───', 'hint');
@@ -1647,7 +1647,7 @@ command.register('back', {
     else if (ctx==='wechat.chat'||ctx==='wechat.pay') parent = '微信';
     else if (ctx==='wechat.apps') parent = '微信';
     else if (ctx==='wechat.mprog'||ctx==='wechat.gymadmin') parent = 'wechat.apps';
-    else if (ctx==='wechat.chat.dashou'||ctx==='wechat.chat.laogong') parent = 'wechat.chat';
+    else if (ctx.startsWith('wechat.chat.')) parent = 'wechat.chat';
     else if (ctx.startsWith('wechat.mprog.')) parent = 'wechat.mprog';
     else if (ctx.startsWith('wechat.gymadmin.')||ctx.startsWith('gymadmin.')) parent = 'wechat.gymadmin';
     else if (ctx==='gym_login'||ctx==='gym_login_pwd') parent = '微信';
