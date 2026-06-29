@@ -959,61 +959,79 @@ async function handleWechatMiniSearch(raw) {
       }
     }
     if (state._creditQuery) {
-      handleCreditQuery(input);
-      state._creditQuery = false;
-      return;
-    }
-    if (state._navContext === 'gym_login') {
-      state._gymAccount = input;
-      ui.print('管理后台密码：', 'hint');
-      state._navContext = 'gym_login_pwd';
-      return;
-    }
-    if (state._navContext === 'gym_login_pwd') {
-      if (state._gymAccount === 'zoudaxiong' && input === '7753') {
-        ui.print('[正在连接炼·健身管理后台...]', 'hint');
-        setTimeout(function() {
-          ui.print('[账号验证中...]', 'hint');
-        }, 1200);
-        setTimeout(function() {
-          ui.print('[密码验证中...]', 'hint');
-        }, 2000);
-        setTimeout(function() {
-          ui.print('[登录成功]', 'hint');
-          state.gymAdminUnlocked = true;
-          game.unlockSystem("信用查询");
-          ui.print('[管理后台已解锁]', 'evidence');
-          game.save();
-          state._navContext = 'wechat.gymadmin';
-          showNavMenu();
-        }, 3200);
+      var parsedCq = parseInput(input);
+      var cmdCq = parsedCq ? parsedCq.cmd : '';
+      var trimmedCq = input.trim().toLowerCase();
+      if (commands[cmdCq] || commands[input] || trimmedCq === 'back' || trimmedCq === 'help' || trimmedCq === 'access' || trimmedCq === 'list' || trimmedCq === 'cls' || /^\d+$/.test(input)) {
       } else {
-        ui.print("账号或密码错误。", "error");
-        state._navContext = 'gym_login';
-        ui.print('管理后台账号：', 'hint');
+        handleCreditQuery(input);
+        state._creditQuery = false;
+        return;
       }
-      return;
     }
-    if (state._navContext === 'dns_login') {
-      state._dnsSsid = input;
-      ui.print('请输入 WiFi 密码：', 'hint');
-      state._navContext = 'dns_login_pwd';
-      return;
-    }
-    if (state._navContext === 'dns_login_pwd') {
-      var ssidOk = state._dnsSsid && state._dnsSsid === 'LJS_5G';
-      if (ssidOk && input === 'justdoit') {
-        ui.print('✅ WiFi 连接成功', 'hint');
-        state.dnsUnlocked = true;
-        game.save();
-        state._navContext = 'wechat.gymadmin';
-        handleGymSystem("5");
+    if (state._navContext === 'gym_login' || state._navContext === 'gym_login_pwd') {
+      var parsedGym = parseInput(input);
+      var cmdGym = parsedGym ? parsedGym.cmd : '';
+      var trimmedGym = input.trim().toLowerCase();
+      if (commands[cmdGym] || commands[input] || trimmedGym === 'back' || trimmedGym === 'help' || trimmedGym === 'access' || trimmedGym === 'list' || trimmedGym === 'cls' || /^\d+$/.test(input)) {
       } else {
-        ui.print('❌ WiFi 账号或密码错误', 'error');
-        ui.print('请输入 WiFi 账号（SSID）：', 'hint');
-        state._navContext = 'dns_login';
+        if (state._navContext === 'gym_login') {
+          state._gymAccount = input;
+          ui.print('管理后台密码：', 'hint');
+          state._navContext = 'gym_login_pwd';
+        } else {
+          if (state._gymAccount === 'zoudaxiong' && input === '7753') {
+            ui.print('[正在连接炼·健身管理后台...]', 'hint');
+            setTimeout(function() {
+              ui.print('[账号验证中...]', 'hint');
+            }, 1200);
+            setTimeout(function() {
+              ui.print('[密码验证中...]', 'hint');
+            }, 2000);
+            setTimeout(function() {
+              ui.print('[登录成功]', 'hint');
+              state.gymAdminUnlocked = true;
+              game.unlockSystem("信用查询");
+              ui.print('[管理后台已解锁]', 'evidence');
+              game.save();
+              state._navContext = 'wechat.gymadmin';
+              showNavMenu();
+            }, 3200);
+          } else {
+            ui.print("账号或密码错误。", "error");
+            state._navContext = 'gym_login';
+            ui.print('管理后台账号：', 'hint');
+          }
+        }
+        return;
       }
-      return;
+    }
+    if (state._navContext === 'dns_login' || state._navContext === 'dns_login_pwd') {
+      var parsedDns = parseInput(input);
+      var cmdDns = parsedDns ? parsedDns.cmd : '';
+      var trimmedDns = input.trim().toLowerCase();
+      if (commands[cmdDns] || commands[input] || trimmedDns === 'back' || trimmedDns === 'help' || trimmedDns === 'access' || trimmedDns === 'list' || trimmedDns === 'cls' || /^\d+$/.test(input)) {
+      } else {
+        if (state._navContext === 'dns_login') {
+          state._dnsSsid = input;
+          ui.print('请输入 WiFi 密码：', 'hint');
+          state._navContext = 'dns_login_pwd';
+        } else {
+          var ssidOk = state._dnsSsid && state._dnsSsid === 'LJS_5G';
+          if (ssidOk && input === 'justdoit') {
+            ui.print('✅ WiFi 连接成功', 'hint');
+            state.dnsUnlocked = true;
+            game.save();
+            state._navContext = 'wechat.gymadmin';
+            handleGymSystem("5");
+          } else {
+            ui.print('❌ WiFi 账号或密码错误', 'error');
+            ui.print('请输入 WiFi 账号（SSID）：', 'hint');
+            state._navContext = 'dns_login';
+          }
+        }
+        return;
+      }
     }
     var parsed = parseInput(input);
     // kill her 二次确认中断保护
