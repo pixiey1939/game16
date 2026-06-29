@@ -879,10 +879,6 @@ async function handleWechatMiniSearch(raw) {
 
   function dispatch(input) {
     var state = game.getState();
-    if (state._waitingForZhengqiao) {
-      handleZhengqiaoResponse(input);
-      return;
-    }
     if (state._parkingLicenseQuery) {
       var trimmed_p = input.trim().toLowerCase();
       var clearCmd = trimmed_p === 'clear' || trimmed_p.indexOf('clear ') === 0;

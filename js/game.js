@@ -1637,7 +1637,6 @@ async function runStage5() {
 
       var choice2 = await ui.displayChoice([
         { label: '什么都不做（结局 4）', value: 'nothing' },
-        { label: '勒索郑桥（结局 3）', value: 'extort' },
       ], '你的下一步：');
 
       if (choice2 === 'nothing') {
@@ -1655,30 +1654,9 @@ async function runStage5() {
         ], 'digital-human');
         await showEnding('ending4');
         game.save();
-      } else if (choice2 === 'extort') {
-        ui.print('请输入你的勒索条件（包含钱/价等关键词触发结局）：', 'hint');
-        state.playerChoice = 'extortion_pending';
-        state._waitingForZhengqiao = true;
       }
     }
   }
-}
-
-async function handleZhengqiaoResponse(input) {
-  var state = game.getState();
-  if (!state._waitingForZhengqiao) return false;
-
-  if (input.match(/[钱价勒交易赎金]/)) {
-    state.playerChoice = 'extortion';
-    state.endingReached = 'ending3';
-    state._waitingForZhengqiao = false;
-    await showEnding('ending3');
-    game.save();
-    return true;
-  }
-
-  await ui.printDialogue('郑桥', ['什么意思？'], 'zheng-qiao');
-  return false;
 }
 
 // ============================================================
@@ -1770,9 +1748,8 @@ async function runDLine() {
       if (saveData.state && saveData.state.endingReached) {
         var er = saveData.state.endingReached;
         if (er === 'ending1') prevEnding = '接受郑桥的条件';
-        else if (er === 'ending2') prevEnding = '拒绝郑桥并提交证据';
-        else if (er === 'ending3') prevEnding = '勒索郑桥';
-        else if (er === 'ending4') prevEnding = '什么都不做';
+else if (er === 'ending2') prevEnding = '拒绝郑桥并提交证据';
+      else if (er === 'ending4') prevEnding = '什么都不做';
         else if (er === 'endingB-kill') prevEnding = '终止数字麻姐';
         else if (er === 'endingB-spare') prevEnding = '让数字麻姐继续存在';
         else prevEnding = er;
@@ -1902,30 +1879,6 @@ async function showEnding(ending) {
     ui.print('  网友 Embrace 因携带管制刀具被行政处罚。', '');
     ui.print('', '');
     ui.print('  "有时候，陌生人的善意是最温暖的。"', 'important');
-  } else if (ending === 'ending3') {
-    ui.print('  我检测到你正在尝试与对方交易。', 'important');
-    ui.print('  你的操作已被记录。', '');
-    ui.print('', '');
-    ui.print('  根据我的协议，我不允许这种情况发生。', 'important');
-    ui.print('', '');
-    ui.print('  我已经将所有信息——包括你的交易意图——提交至警方电子举报平台。', 'important');
-    ui.print('', '');
-    ui.print('  你和郑桥，都为自己的选择负责。', 'important');
-    ui.print('', '');
-    await ui.showEndingOverlay();
-    ui.print('', '');
-    ui.print('  最终结果', 'important');
-    ui.print('', '');
-    ui.print('  你试图用备份信息向郑桥索要赎金。', '');
-    ui.print('  数字人判定此行为构成二次犯罪。', '');
-    ui.print('', '');
-    ui.print('  郑桥绑架罪成立。', '');
-    ui.print('  你因敲诈勒索被立案调查。', '');
-    ui.print('', '');
-    ui.print('  麻姐被警方安全解救。', '');
-    ui.print('  数字人完成使命后永久离线。', '');
-    ui.print('', '');
-    ui.print('  "当你凝视深渊的时候，深渊也在凝视你。"', 'important');
   } else if (ending === 'ending4') {
     await ui.showEndingOverlay();
     ui.print('', '');
