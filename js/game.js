@@ -825,7 +825,7 @@ async function handleDoorSystem(action) {
     ui.print('━━━ 门禁刷卡记录 ━━━', 'system');
     ui.print('', '');
     ui.print('[正在导出完整门禁日志文件...]', 'hint');
-    downloadFile('asset/data/door_access_log.xlsx', 'ChumenTech_DoorAccessLog_2026-06-17.xlsx');
+    await prefetchAndDownload('asset/data/door_access_log.xlsx', 'ChumenTech_DoorAccessLog_2026-06-17.xlsx');
     ui.print('[下载完成：ChumenTech_DoorAccessLog_2026-06-17.xlsx]', 'evidence');
     if (!state.unlockedEvidence.includes('E-04')) {
       game.unlockEvidence('E-04');
@@ -2004,4 +2004,23 @@ function downloadFile(url, filename) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+}
+
+async function prefetchAndDownload(url, filename) {
+  var fname = filename || url.split('/').pop();
+  try {
+    var res = await fetch(url);
+    var blob = await res.blob();
+    var blobUrl = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fname;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 1000);
+  } catch (e) {
+    downloadFile(url, fname);
+  }
 }
