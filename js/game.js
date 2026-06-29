@@ -1569,10 +1569,17 @@ async function runStage5() {
   ui.print('', '');
   ui.print('请回复你的选择：', 'error');
 
+  var cancelCountdown = ui.showCountdown(60, function() {
+    ui.hideCountdown();
+    game.clearSave();
+  });
+
   var choice = await ui.displayChoice([
     { label: '接受你的条件', value: 'accept' },
     { label: '拒绝，继续调查', value: 'decline' },
   ], '请做出选择：');
+
+  cancelCountdown();
 
   var state = game.getState();
 

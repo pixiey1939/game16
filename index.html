@@ -7,10 +7,10 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/style.css?v=51">
+  <link rel="stylesheet" href="css/style.css?v=52">
   <script src="js/evidence.js?v=52"></script>
-  <script src="js/ui.js?v=51"></script>
-  <script src="js/game.js?v=54"></script>
+  <script src="js/ui.js?v=52"></script>
+  <script src="js/game.js?v=55"></script>
   <script src="js/command.js?v=55"></script>
   <script src="js/main.js?v=51"></script>
 </head>
@@ -24,6 +24,12 @@
 
     <!-- 实时时钟：顶部显示（JS 每秒更新） -->
     <div id="header-clock" class="header-clock">00:00:00</div>
+
+    <div id="countdown-overlay" class="countdown-overlay" style="display:none;">
+      <div class="countdown-label">⚠ 距离数据清除还有</div>
+      <div class="countdown-time">60</div>
+      <div class="countdown-unit">秒</div>
+    </div>
 
     <!-- 终端顶部：副标题（ASCII art 由 JS startScreen() 动态输出） -->
     <div id="header">

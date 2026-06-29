@@ -606,6 +606,44 @@ function clear() {
     }
   }
 
+  function showCountdown(seconds, onTimeout) {
+    var overlay = document.getElementById('countdown-overlay');
+    var timeEl = overlay ? overlay.querySelector('.countdown-time') : null;
+    if (!overlay || !timeEl) return function() {};
+    var remaining = seconds;
+    var fired = false;
+    timeEl.textContent = String(remaining);
+    overlay.style.display = 'flex';
+    requestAnimationFrame(function() {
+      overlay.classList.add('visible');
+    });
+    var intervalId = setInterval(function() {
+      remaining -= 1;
+      if (remaining < 0) remaining = 0;
+      timeEl.textContent = String(remaining);
+      if (remaining <= 0 && !fired) {
+        fired = true;
+        clearInterval(intervalId);
+        if (typeof onTimeout === 'function') onTimeout();
+      }
+    }, 1000);
+    return function cancel() {
+      if (fired) return;
+      fired = true;
+      clearInterval(intervalId);
+      hideCountdown();
+    };
+  }
+
+  function hideCountdown() {
+    var overlay = document.getElementById('countdown-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('visible');
+    setTimeout(function() {
+      overlay.style.display = 'none';
+    }, 300);
+  }
+
   // -----------------------------------------------------------------------------
   // Public API
   return {
@@ -634,5 +672,8 @@ function clear() {
     // Ending overlay
     showEndingOverlay: showEndingOverlay,
     hideEndingOverlay: hideEndingOverlay,
+    // Threat countdown overlay (60s ultimatum scene)
+    showCountdown: showCountdown,
+    hideCountdown: hideCountdown,
   };
 })();
