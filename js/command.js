@@ -1299,7 +1299,6 @@ async function handleCreditQuery(raw) {
       var reportId = 'CREDIT-20260617-88' + (42 + Math.floor(Math.random() * 10));
       ui.print('━━━ 个人信用报告 ━━━', 'system');
       ui.print('报告编号：' + reportId + '    查询时间：2026-06-17 15:30:' + String(Math.floor(Math.random() * 60)).padStart(2, '0'), '');
-      ui.print('查询来源：数字人麻姐（本人授权查询）', '');
       ui.print('', '');
       ui.print('[个人信息]', 'important');
       ui.print('  姓名：' + e09.name + '    性别：' + (e09.gender || '男') + '    年龄：' + e09.age, '');
@@ -1329,14 +1328,10 @@ async function handleCreditQuery(raw) {
       ui.print('  · ' + (e09.behavior || '近期有大额转账流向境外账户'), '');
       ui.print('  · ' + (e09.collections || '催收记录数次'), '');
       ui.print('', '');
-      ui.print('[查询记录]', 'important');
-      ui.print('  2026-06-17  数字人麻姐  本人查询', '');
-      ui.print('', '');
       ui.print('━━━ 报告结束 ━━━', 'system');
       ui.print('', '');
       await ui.printDialogue('数字麻姐', [
         '教练的财务状况确实很糟糕——负债 47 万，还有赌博和催收记录。',
-        '但这和郑桥有什么关系，目前还没有直接证据。',
         '先记下这些信息，看看其他线索能不能串起来。',
       ], 'digital-human');
       ui.print("→ 获取到一条新信息："+EVIDENCE["E-09"].name, "evidence");

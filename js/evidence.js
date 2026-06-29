@@ -75,13 +75,12 @@ const EVIDENCE = {
       marriage: '未婚',
       education: '高中',
       idNumber: '4203**********4488',
-      occupation: '健身教练（炼健身·光谷店）',
+      occupation: '无',
       debt: {
         total: '约 47 万元',
         items: [
           { type: '网贷逾期', count: 5, detail: '累计逾期金额 16.8 万元' },
           { type: '银行消费贷', status: '逾期 3 个月', detail: '当前逾期金额 8.5 万元' },
-          { type: '民间借贷', amount: '约 15 万', detail: '出借方：个人' },
         ],
       },
       behavior: '2026年3月-6月期间，多笔大额转账流向境外账户（柬埔寨、菲律宾），疑似网络赌博平台代理',
