@@ -631,6 +631,7 @@ var command = (function () {
         ui.print('请输入小程序名称搜索：', 'hint');
         ws._waitingForMiniProgramSearch = true;
         game.getState()._navContext = 'wechat_mini_program';
+        await ui.printDialogue('数字麻姐', ['搜搜麻姐健身房的小程序试试。'], 'digital-human');
         return true;
       }
       state._navContext = 'wechat.mprog';
@@ -973,7 +974,7 @@ async function handleWechatMiniSearch(raw) {
       var parsedGym = parseInput(input);
       var cmdGym = parsedGym ? parsedGym.cmd : '';
       var trimmedGym = input.trim().toLowerCase();
-      if (commands[cmdGym] || commands[input] || trimmedGym === 'back' || trimmedGym === 'help' || trimmedGym === 'access' || trimmedGym === 'list' || trimmedGym === 'cls' || /^\d+$/.test(input)) {
+      if (commands[cmdGym] || commands[input] || trimmedGym === 'back' || trimmedGym === 'help' || trimmedGym === 'access' || trimmedGym === 'list' || trimmedGym === 'cls') {
       } else {
         if (state._navContext === 'gym_login') {
           state._gymAccount = input;
