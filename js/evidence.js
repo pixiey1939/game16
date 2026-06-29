@@ -247,7 +247,7 @@ const EVIDENCE = {
       title: '健身房环境视频',
       duration: '28 秒',
       description: '麻姐拍摄，镜头扫过墙面时拍到张贴的 WiFi 信息贴纸',
-      wifi: { ssid: 'LGS_5G', password: 'justdoit' },
+      wifi: { ssid: 'LJS_5G', password: 'justdoit' },
       analysis: '这条 WiFi 信息可用于连接健身房 WiFi 日志后台。',
     },
   },
@@ -844,7 +844,7 @@ const EVIDENCE = {
     unlockSystem: '健身房',
     autoUnlock: false,
     content: {
-      wifi: 'LGS_5G',
+      wifi: 'LJS_5G',
       keyConnections: [
         { time: '06:02:33', mac: '3C:2A:F4:88:D1:07', phone: '139xxxx4210', note: '连接' },
         { time: '06:05:14', mac: '8A:7C:E2:19:B3:44', phone: '183xxxx6518', note: '连接' },

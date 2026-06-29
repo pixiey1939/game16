@@ -251,7 +251,7 @@ async function handleAlbumSystem() {
         '教练邹大雄向麻姐借了 4 万块钱，7 月初到期。',
         '这给了教练一个明确的经济动机。',
         '还有一段健身房环境的视频，镜头扫到了墙上的 WiFi 信息贴纸。',
-        'SSID 是 LGS_5G，密码是 justdoit。',
+        'SSID 是 LJS_5G，密码是 justdoit。',
         '有了这个 WiFi 信息，我们应该能查看健身房的日志后台了。',
       ], 'digital-human');
       if (e13JustUnlocked) {
@@ -1336,7 +1336,6 @@ async function handleGymSystem(action) {
       await ui.printDialogue('数字麻姐', [
         '健身房门禁记录显示：麻姐 11:50 入馆，13:14 出大厅，13:31 又再进来——但之后再也没有出场记录。',
         '而郑桥 11:54 入馆，12:18 就出来了——之后门禁再没拍到他。',
-        '可是他后来又多次出现在健身房附近……奇怪，WiFi 监控里倒是能查到。',
       ], 'digital-human');
       game.save();
     }
@@ -1368,7 +1367,6 @@ async function handleGymSystem(action) {
       ui.print('[已解锁] 健身房 Wi-Fi 日志', 'important');
       ui.print('[正在导出 Wi-Fi 日志文件...]', 'hint', { speed: 50 });
       downloadFile('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-06-17.xlsx');
-      await new Promise(r => setTimeout(r, 1500));
       ui.print('[下载完成：LianFitness_WifiLog_2026-06-17.xlsx]', 'evidence');
       var e20 = EVIDENCE['E-20'].content;
       ui.print('', '');
@@ -1391,7 +1389,6 @@ async function handleGymSystem(action) {
       game.unlockEvidence('E-20');
       ui.print('[正在导出 Wi-Fi 日志文件...]', 'hint', { speed: 50 });
       downloadFile('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-06-17.xlsx');
-      await new Promise(r => setTimeout(r, 1500));
       ui.print('[下载完成：LianFitness_WifiLog_2026-06-17.xlsx]', 'evidence');
       await ui.printDialogue('数字麻姐', [
         '日志导出来了，里面记录了所有连接过健身房 WiFi 的手机 MAC 地址和连接时间。',
@@ -1415,7 +1412,6 @@ async function handleGymSystem(action) {
       var e20 = EVIDENCE['E-20'].content;
       ui.print('[正在导出 DNS 日志文件...]', 'hint', { speed: 50 });
       downloadFile('asset/data/dns_log.xlsx', 'LianFitness_DnsLog_2026-06-17.xlsx');
-      await new Promise(r => setTimeout(r, 1200));
       ui.print('[下载完成：LianFitness_DnsLog_2026-06-17.xlsx]', 'evidence');
       await ui.printDialogue('数字麻姐', [
         'DNS 日志已经导出了。文件里可以看到所有在健身房 WiFi 上产生的 DNS 查询记录。',

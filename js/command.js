@@ -1001,7 +1001,7 @@ async function handleWechatMiniSearch(raw) {
       return;
     }
     if (state._navContext === 'dns_login_pwd') {
-      var ssidOk = state._dnsSsid && state._dnsSsid === 'LGS_5G';
+      var ssidOk = state._dnsSsid && state._dnsSsid === 'LJS_5G';
       if (ssidOk && input === 'justdoit') {
         ui.print('✅ WiFi 连接成功', 'hint');
         state.dnsUnlocked = true;
