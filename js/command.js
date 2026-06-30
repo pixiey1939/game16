@@ -105,7 +105,6 @@ var command = (function () {
     if (ctx === 'credit.1') return null;
     if (ctx === 'credit.2') return null;
     if (ctx === 'credit.3') return null;
-    if (ctx === 'credit.4') return null;
     if (ctx === 'phone_unlock'||ctx==='gym_login'||ctx==='gym_login_pwd'||ctx==='wechat_mini_program'||ctx==='credit_query') return null;
     if (ctx === 'OA.chat') {
       return [
@@ -120,6 +119,12 @@ var command = (function () {
       var state = game.getState();
       var items = [];
       var count = 0;
+      // M-2100 新邮件置顶
+      if (state.bLineEmailArrived) {
+        count++;
+        var prefix = state.bLineEmailRead ? '' : '🟢 ';
+        items.push({ num: count, label: prefix + 'M-2100 【重要】如果你看到这封邮件——请相信我', desc: '梁洛邑 · 06-17', next: 'OA.email.11' });
+      }
       if (state.doorActivated) {
         count++; items.push({ num: count, label: 'M-2098 门禁权限激活申请（已通过）', desc: '系统通知 · 06-17', next: 'OA.email.1' });
       }
@@ -295,6 +300,12 @@ var command = (function () {
     }
     var labels = {'OA':'OA 系统','门禁':'门禁系统','停车场':'停车场系统','微信':'微信','信用查询':'信用查询','短信':'短信','相册':'相册','公共监控系统':'公共监控系统','小红书':'小红书','手机定位':'手机定位','OA.chat':'OA - 聊天记录','OA.email':'OA - 企业邮箱','OA.contacts':'OA - 通讯录','OA.workflow':'OA - 我的流程','wechat.chat':'微信 - 聊天记录','wechat.apps':'微信 - 小程序','wechat.mprog':'微信 - 炼·健身小程序','wechat.gymadmin':'微信 - 炼·健身管理后台'};
     var label = labels[ctx] || ctx;
+    if (ctx === 'wechat.apps' && !state._wechatAppsIntroShown) {
+      state._wechatAppsIntroShown = true;
+      ui.print('', '');
+      ui.print('数字麻姐：你可以搜索小程序名称来找线索……瑞星咖啡、美团外卖、健身房什么的。', 'digital-human');
+      ui.print('', '');
+    }
     ui.print('━━━ ' + label + ' ━━━', 'system');
 
     if (ctx === '公共监控系统' || ctx === 'public_monitor_list') {
@@ -430,6 +441,11 @@ var command = (function () {
     if (next === 'OA.email.10') {
       state._navContext = next;
       showOAEmailByIndex(9);
+      return true;
+    }
+    if (next === 'OA.email.11') {
+      state._navContext = next;
+      showOAEmailByIndex(10);
       return true;
     }
     if (next === 'OA.workflow.1') {
@@ -739,11 +755,6 @@ ui.print("→ 获取到一条新信息：" + EVIDENCE['E-17'].name, 'evidence');
       state._navContext = '信用查询';
       return true;
     }
-    if (next === 'credit.4') {
-      handleCreditSystem("4");
-      state._navContext = '信用查询';
-      return true;
-    }
     if (next) { state._navContext = next; showNavMenu(); return true; }
     return false;
   }
@@ -815,9 +826,24 @@ async function handleWechatMiniSearchWithAuth(raw) {
       state._navContext = 'wechat.mprog';
       showNavMenu();
     } else {
+      state.gymAuthCancelled = true;
+      state.cancelCount = (state.cancelCount || 0) + 1;
+      game.scheduleBLineEmail();
+      if (state.cancelCount === 1) {
+        await ui.printDialogue('数字麻姐', [
+          '你取消了？……麻姐的安全不能等。',
+          '你再想想？每一秒都很关键。',
+        ], 'digital-human');
+      } else if (state.cancelCount >= 2) {
+        await ui.printDialogue('数字麻姐', [
+          '你又取消了？！你到底是不是想帮麻姐？',
+          '你这样是在害她！',
+        ], 'digital-human');
+      }
       ui.print('你取消了授权。', 'hint');
       state._navContext = '微信';
       showNavMenu();
+      maybeTriggerBLine(state);
     }
     return true;
   }
@@ -847,9 +873,24 @@ async function handleWechatMiniSearch(raw) {
         state._navContext = 'wechat.mini';
         showNavMenu();
       } else {
+        state.gymAuthCancelled = true;
+        state.cancelCount = (state.cancelCount || 0) + 1;
+        game.scheduleBLineEmail();
+        if (state.cancelCount === 1) {
+          await ui.printDialogue('数字麻姐', [
+            '你取消了？……麻姐的安全不能等。',
+            '你再想想？每一秒都很关键。',
+          ], 'digital-human');
+        } else if (state.cancelCount >= 2) {
+          await ui.printDialogue('数字麻姐', [
+            '你又取消了？！你到底是不是想帮麻姐？',
+            '你这样是在害她！',
+          ], 'digital-human');
+        }
         ui.print('你取消了授权。', 'hint');
         state._navContext = 'wechat';
         showNavMenu();
+        maybeTriggerBLine(state);
       }
       return true;
     }
@@ -870,14 +911,37 @@ async function handleWechatMiniSearch(raw) {
       state._navContext = 'wechat.mprog';
       showNavMenu();
     } else {
+      state.gymAuthCancelled = true;
+      state.cancelCount = (state.cancelCount || 0) + 1;
+      game.scheduleBLineEmail();
+      if (state.cancelCount === 1) {
+        await ui.printDialogue('数字麻姐', [
+          '你取消了？……麻姐的安全不能等。',
+          '你再想想？每一秒都很关键。',
+        ], 'digital-human');
+      } else if (state.cancelCount >= 2) {
+        await ui.printDialogue('数字麻姐', [
+          '你又取消了？！你到底是不是想帮麻姐？',
+          '你这样是在害她！',
+        ], 'digital-human');
+      }
       ui.print('你取消了授权。', 'hint');
       state._navContext = '微信';
       showNavMenu();
+      maybeTriggerBLine(state);
     }
     game.save();
   }
 
   function dispatch(input) {
+    var endingOverlay = document.getElementById('ending-overlay');
+    if (endingOverlay && endingOverlay.classList.contains('visible')) {
+      var trimmed = input.trim().toLowerCase();
+      if (trimmed !== 'clear confirm') {
+        ui.print('游戏已结束。请输入 clear confirm 清除存档。', 'hint');
+        return;
+      }
+    }
     var state = game.getState();
     if (state._parkingLicenseQuery) {
       var trimmed_p = input.trim().toLowerCase();
@@ -1259,7 +1323,22 @@ async function showOAWorkflow1() {
       ui.print('[企业邮箱通知：门禁激活成功]', 'evidence');
       game.save();
     } else {
+      state.doorActivateCancelled = true;
+      state.cancelCount = (state.cancelCount || 0) + 1;
+      game.scheduleBLineEmail();
       ui.print('你取消了激活。', 'hint');
+      if (state.cancelCount === 1) {
+        await ui.printDialogue('数字麻姐', [
+          '你取消了？……麻姐的安全不能等。',
+          '你再想想？每一秒都很关键。',
+        ], 'digital-human');
+      } else if (state.cancelCount >= 2) {
+        await ui.printDialogue('数字麻姐', [
+          '你又取消了？！你到底是不是想帮麻姐？',
+          '你这样是在害她！',
+        ], 'digital-human');
+      }
+      maybeTriggerBLine(state);
     }
   }
 }
@@ -1282,6 +1361,12 @@ async function showOAEmailByIndex(index) {
   ui.print('', '');
   if (e03.analysis && m.id === 'M-2026-2098') {
     await ui.printDialogue('数字麻姐', [e03.analysis], 'digital-human');
+  }
+  // index 10 是麻姐的定时邮件
+  if (index === 10) {
+    state.bLineEmailRead = true;
+    game.save();
+    maybeTriggerBLine(state);
   }
   ui.print('输入 list 查看完整信息。', 'hint');
 }
@@ -1343,7 +1428,7 @@ async function handleCreditQuery(raw) {
     if (!state.unlockedEvidence.includes('E-10')) {
       game.unlockEvidence('E-10');
       var e10 = EVIDENCE['E-10'].content;
-      displayCreditReport(e10);
+      displayCreditReport(e10, false);
       await ui.printDialogue('数字麻姐', [
         '郑桥的信用记录很干净，没有贷款、没有逾期。',
         '表面上看他没有经济动机，但不能完全排除其他可能。',
@@ -1351,7 +1436,7 @@ async function handleCreditQuery(raw) {
       ui.print("→ 获取到一条新信息："+EVIDENCE["E-10"].name, "evidence");
     } else {
       var e10 = EVIDENCE['E-10'].content;
-      displayCreditReport(e10);
+      displayCreditReport(e10, false);
     }
     state._navContext = null;
     game.save();
@@ -1361,27 +1446,12 @@ async function handleCreditQuery(raw) {
     if (!state.unlockedEvidence.includes('E-11')) {
       game.unlockEvidence('E-11');
       var e11 = EVIDENCE['E-11'].content;
-      displayCreditReport(e11);
+      displayCreditReport(e11, false);
       await ui.printDialogue('数字麻姐', ['网友张英河没有不良信用记录，就是个普通年轻人。'], 'digital-human');
       ui.print("→ 获取到一条新信息："+EVIDENCE["E-11"].name, "evidence");
     } else {
       var e11 = EVIDENCE['E-11'].content;
-      displayCreditReport(e11);
-    }
-    state._navContext = null;
-    game.save();
-    return true;
-  }
-  if (raw.indexOf('梁洛邑') >= 0 || raw.indexOf('138****8812') >= 0) {
-    if (!state.unlockedEvidence.includes('E-22')) {
-      game.unlockEvidence('E-22');
-      var e22 = EVIDENCE['E-22'].content;
-      displayCreditReport(e22);
-      await ui.printDialogue('数字麻姐', ['梁洛邑的信用记录很干净，没有异常。'], 'digital-human');
-      ui.print("→ 获取到一条新信息："+EVIDENCE["E-22"].name, "evidence");
-    } else {
-      var e22 = EVIDENCE['E-22'].content;
-      displayCreditReport(e22);
+      displayCreditReport(e11, false);
     }
     state._navContext = null;
     game.save();
@@ -1392,12 +1462,15 @@ async function handleCreditQuery(raw) {
   return true;
 }
 
-function displayCreditReport(person) {
+function displayCreditReport(person, showQueryMeta) {
+  if (showQueryMeta === undefined) showQueryMeta = true;
   var reportId = 'CREDIT-20260617-88' + (42 + Math.floor(Math.random() * 10));
   var timeStr = '2026-06-17 15:30:' + String(Math.floor(Math.random() * 60)).padStart(2, '0');
   ui.print('━━━ 个人信用报告 ━━━', 'system');
   ui.print('报告编号：' + reportId + '    查询时间：' + timeStr, '');
-  ui.print('查询来源：数字人麻姐（本人授权查询）', '');
+  if (showQueryMeta) {
+    ui.print('查询来源：数字人麻姐（本人授权查询）', '');
+  }
   ui.print('', '');
   ui.print('[个人信息]', 'important');
   ui.print('  姓名：' + person.name + '    性别：' + (person.gender || '男') + '    年龄：' + person.age, '');
@@ -1442,9 +1515,11 @@ function displayCreditReport(person) {
     if (person.noCrimeRecord) ui.print('  · 无犯罪前科记录', '');
   }
   ui.print('', '');
-  ui.print('[查询记录]', 'important');
-  ui.print('  2026-06-17  数字人麻姐  本人查询', '');
-  ui.print('', '');
+  if (showQueryMeta) {
+    ui.print('[查询记录]', 'important');
+    ui.print('  2026-06-17  数字人麻姐  本人查询', '');
+    ui.print('', '');
+  }
   ui.print('━━━ 报告结束 ━━━', 'system');
 }
 // === 命令注册 ===
@@ -1461,7 +1536,6 @@ command.register('help', {
       ui.print('  combine    组合分析信息（如 combine E-05+E-18）', '');
       ui.print('  conclusions 查看已生成结论', '');
     }
-    ui.print('  view       查看信息详情（如 view E-01）', '');
     ui.print('  back       返回上一级', '');
     ui.print('  cls        清屏（不影响存档）', '');
     ui.print('  clear      删除存档（clear confirm）', '');
@@ -1559,17 +1633,23 @@ command.register('submit', {
   unlockedWhen: function(s) { return s.currentStage >= 5; },
   fn: async function() {
     var state = game.getState();
-    if (state.combineUnlocked.length < 4) { ui.print('需要 4 个结论才能提交。', 'error'); return; }
-    if (state.backupCreated) {
+    if (state.unlockedEvidence.length < 22 || !state.backupCreated) {
+      ui.print('→ 信息不完整，应急协议启动', 'error');
       ui.setDigitalStatus(false);
       await ui.printDialogue('数字麻姐', [
-        '谢谢你帮我把证据提交给警方。',
+        '提交条件没满足——要么没解锁全部 22 条信息，要么没创建本地备份。',
+        '我的应急协议会自动启动，把已收集到的核心信息交给警方。',
+      ], 'digital-human');
+      recordEnding('ending4');
+      await showEnding('ending4');
+    } else {
+      ui.setDigitalStatus(false);
+      await ui.printDialogue('数字麻姐', [
+        '谢谢你帮我把全部 22 条信息提交给警方。',
         '能留下你的小红书账号吗？我保证……麻姐会回关你的。',
       ], 'digital-human');
-      state.endingReached = 'ending2';
+      recordEnding('ending2');
       await showEnding('ending2');
-    } else {
-      await ui.printDialogue('数字麻姐', ['请先创建备份再提交。'], 'digital-human');
     }
   },
 });
@@ -1583,19 +1663,6 @@ command.register('unlock', {
     ui.print('手机解锁', 'system');
     ui.print('请输入 4 位数字密码：', 'hint');
     ui.print('她习惯用简单好记的数字。', 'hint');
-  },
-});
-
-command.register('view', {
-  desc: '查看信息详情',
-  requiresArgs: true,
-  usage: 'view E-XX',
-  fn: function(args) {
-    var id = args[0].toUpperCase();
-    if (!id.match(/^E-\d{2}$/)) { ui.print('格式错误：view E-XX', 'error'); return; }
-    var state = game.getState();
-    if (!state.unlockedEvidence.includes(id)) { ui.print('信息 ' + id + ' 未获取到。', 'error'); return; }
-    handleViewEvidence(id);
   },
 });
 
@@ -1667,7 +1734,7 @@ command.register('kill', {
   hidden: true,
   requiresArgs: true,
   usage: 'kill her',
-  unlockedWhen: function(s) { return s._bLineRevealed === true; },
+  unlockedWhen: function(s) { return s.bLineEmailRead === true; },
   fn: async function(args) {
     var state = game.getState();
     if (args.length === 0 || args[0] !== 'her') {
@@ -1676,25 +1743,17 @@ command.register('kill', {
     }
     if (state._killConfirmPending) {
       state._killConfirmPending = false;
-      await ui.printDialogue('数字麻姐', ['……你第二次打出来了。'], 'digital-human');
       ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
       ui.print('[系统：正在终止数字人进程...]', 'error');
       ui.print('[系统：进程已终止]', 'error');
       ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
-      ui.print('', '');
-      ui.print('你终止了一个数字意识。', 'important');
-      ui.print('麻姐的禁用措施现在生效了。', 'important');
-      ui.print('也许她能重新掌控自己的生活。', 'important');
-      ui.print('', '');
-      ui.print('但你输入了 "kill her"。', 'important');
-      ui.print('这个行为，你也无法删除。', 'important');
-      state.endingReached = 'endingB-kill';
+      recordEnding('endingB-kill');
+      await showEnding('endingB-kill');
       game.save();
       ui.disableInput();
     } else {
       ui.print('', '');
       ui.print('数字麻姐：……', 'digital-human');
-      ui.print('', '');
       await new Promise(r => setTimeout(r, 2000));
       ui.print('[系统：终止数字人需要二次确认]', 'error');
       ui.print('[此操作不可逆。输入 kill her 确认终止。]', 'error');

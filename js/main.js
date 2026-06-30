@@ -12,9 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const value = input.value.trim();
       input.value = '';
       if (value) {
-        // 把用户输入回显到输出区
+        if (ui.resolveAwaitNextCommand && ui.resolveAwaitNextCommand(value)) return;
         ui.print(`> ${value}`, 'system');
-        // 执行命令
         try {
           command.dispatch(value);
         } catch (err) {
@@ -27,22 +26,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 启动游戏
   setTimeout(async () => {
-    // ===== 二周目检测 =====
-    // 读取 localStorage save 数据，检查是否 previous completion 存在
+    // ===== 多周目检测（≥3 个不同结局才能触发 D线）=====
     try {
       var saveRaw = localStorage.getItem('game16-save-v1');
       if (saveRaw) {
         var saveData = JSON.parse(saveRaw);
-        if (saveData.state && saveData.state.endingReached) {
-          // 有通关记录 → 触发 D线（隐藏结局）
-          ui.print('[检测到历史会话记录]', 'hint');
+        var achieved = (saveData.state && saveData.state.endingsAchieved) || [];
+        if (achieved.length >= 3) {
+          ui.print('[检测到历史会话记录：' + achieved.length + ' 个结局]', 'hint');
           runDLine();
           input.focus();
           return;
         }
       }
     } catch (e) {
-      console.warn('二周目检测失败:', e);
+      console.warn('多周目检测失败:', e);
     }
 
     let state = game.getState();

@@ -494,6 +494,32 @@ function clear() {
   /**
    * Cancel any active choice modal — remove its DOM container and re-enable input.
    */
+  var _pendingFreeTextResolver = null;
+
+  /**
+   * Pause until the player sends the next command-line input.
+   * The next user-entered text is returned (not dispatched as a command).
+   * @param {string} [promptText] - Optional prompt to display above the input.
+   * @returns {Promise<string>}
+   */
+  async function awaitNextCommand(promptText) {
+    if (promptText) ui.print(promptText, 'hint');
+    await _waitForDrain();
+    return new Promise(function(resolve) {
+      _pendingFreeTextResolver = resolve;
+    });
+  }
+
+  function resolveAwaitNextCommand(input) {
+    if (_pendingFreeTextResolver) {
+      var resolver = _pendingFreeTextResolver;
+      _pendingFreeTextResolver = null;
+      resolver(input);
+      return true;
+    }
+    return false;
+  }
+
   function cancelChoice() {
     var groups = document.querySelectorAll('.choice-group');
     for (var i = 0; i < groups.length; i++) {
@@ -602,6 +628,7 @@ function clear() {
     setDigitalStatus(false);
     var avatarEl = document.getElementById('digital-avatar');
     if (avatarEl) avatarEl.style.display = 'none';
+    document.body.classList.add('ending-active');
     if (_endingOverlayRAF) cancelAnimationFrame(_endingOverlayRAF);
     _endingOverlayRAF = requestAnimationFrame(function() {
       overlay.classList.add('visible');
@@ -610,6 +637,7 @@ function clear() {
   }
 
   function hideEndingOverlay() {
+    document.body.classList.remove('ending-active');
     var overlay = document.getElementById('ending-overlay');
     if (!overlay) return;
     overlay.classList.remove('visible');
@@ -676,6 +704,8 @@ function clear() {
     scrollOutputToBottom,
     showLoadingIndicator,
     hideLoadingIndicator,
+    awaitNextCommand,
+    resolveAwaitNextCommand,
     disableInput: function() {
       var inputEl = document.getElementById('command-input');
       if (inputEl) {

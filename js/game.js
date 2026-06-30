@@ -23,10 +23,16 @@ const game = (() => {
       backupPrompted: false,
       backupCreated: false,
       doorActivated: false,
+      doorActivateCancelled: false,
+      gymAuthCancelled: false,
       endingReached: null,
+      endingsAchieved: [],
       playerChoice: null,
       _bLineRevealed: null,
       _killConfirmPending: false,
+      bLineEmailArrived: false,
+      bLineEmailRead: false,
+      cancelCount: 0,
       startTime: Date.now(),
       saveTime: 0,
       totalCommands: 0,
@@ -110,14 +116,40 @@ const game = (() => {
   function markStageIntro(n) { state.stageIntroShown[n] = true; }
   function hasShownIntro(n) { return !!state.stageIntroShown[n]; }
 
+  function scheduleBLineEmail() {
+    var s = getState();
+    if (s.cancelCount >= 2 && !s.bLineEmailArrived) {
+      s.bLineEmailArrived = true;
+      save();
+    }
+  }
+
   return {
     freshState, getState, resetState,
     save, load, hasSave, deleteSave,
     unlockEvidence, markEvidenceViewed,
     unlockSystem, unlockCombine,
     setStage, markStageIntro, hasShownIntro,
+    scheduleBLineEmail,
   };
 })();
+
+function recordEnding(endingId) {
+  var state = game.getState();
+  state.endingReached = endingId;
+  if (!state.endingsAchieved) state.endingsAchieved = [];
+  if (!state.endingsAchieved.includes(endingId)) state.endingsAchieved.push(endingId);
+}
+
+function maybeTriggerBLine(state) {
+  if (state.doorActivateCancelled && state.gymAuthCancelled && state.bLineEmailRead && !state._bLineRevealed) {
+    ui.print('', '');
+    ui.print('[系统提示：数字麻姐已切换状态]', 'hint');
+    game.setStage(5);
+    state._bLineRevealed = true;
+    setTimeout(function() { runBLine(); }, 2000);
+  }
+}
 
 // ============================================================
 // 阶段 1：引入
@@ -188,7 +220,17 @@ async function handleStage1Response(input) {
       '好的。如果你改变主意，随时可以回来找我。',
     ], 'digital-human');
     ui.print('', '');
-    ui.print('[连接结束]', 'system');
+    ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+    ui.print('', '');
+    ui.print('  游戏结束', 'important');
+    ui.print('', '');
+    ui.print('  你拒绝帮助数字麻姐。', '');
+    ui.print('  麻姐的失踪成为一个永远的谜。', '');
+    ui.print('', '');
+    ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+    ui.print('', '');
+    ui.print('[页面将在 5 秒后关闭...]', 'hint');
+    setTimeout(function() { window.close(); }, 5000);
     return true;
   }
   return false;
@@ -320,9 +362,8 @@ async function handleAccessSystem(systemName) {
     ui.print('  [1] 教练信用', '');
     ui.print('  [2] 郑桥信用', '');
     ui.print('  [3] 网友信用', '');
-    ui.print('  [4] 梁洛邑信用', '');
     ui.print('', '');
-    ui.print('用法：credit 1 / credit 2 / credit 3 / credit 4', 'hint');
+    ui.print('用法：credit 1 / credit 2 / credit 3', 'hint');
     state._currentSystem = '信用查询';
     state._currentSystemStage = 'menu';
   }
@@ -419,9 +460,9 @@ const COMBINES = {
   },
   'C-02': {
     id: 'C-02',
-    name: '网友 Embrace 的地点矛盾',
-    requires: ['E-12', 'E-20'],
-    analysis: '短信聊天记录中 Embrace 说他在健身房门口等麻姐，但 Wi-Fi 日志显示 13:15-13:35 期间他一直连接健身房 Wi-Fi。从超市到健身房走路要 15 分钟，如果他去吃饭了，Wi-Fi 不可能一直在。结论：Embrace 没有离开过健身房附近。',
+    name: '网友Embrace的不在场证据',
+    requires: ['E-12', 'E-19'],
+    analysis: '短信记录显示 Embrace 约麻姐周三中午在健身房见面，但健身房监控拍到 12:00-13:45 期间一个穿黑色卫衣、背大包的人一直在门口往里张望却没进去。结论：Embrace 确实一直在健身房门口等麻姐——他没进健身房内部，这构成他的"不在场"。',
   },
   'C-03': {
     id: 'C-03',
@@ -432,8 +473,8 @@ const COMBINES = {
   'C-04': {
     id: 'C-04',
     name: '教练的动机',
-    requires: ['E-09', 'E-13'],
-    analysis: '邹大雄信用报告显示当前负债约 47 万元，有境外赌博转账，催收电话 3 次。借条照片显示他向麻姐借了 4 万元。教练欠下巨额债务，有赌博行为，催收频繁，他还向麻姐借了 4 万块钱。结论：邹大雄有明确的经济动机。',
+    requires: ['E-09', 'E-13', 'E-22'],
+    analysis: '邹大雄信用报告显示当前负债约 47 万元，有境外赌博转账，催收电话 3 次（E-09）。借条照片显示他向麻姐借了 4 万元、还款日期 2026-07-01（E-13）。健身房 DNS 日志显示当天有人在凌晨 6:04 单独查询了镇静剂药物网站 b2b-sedative.xyz（E-22），对应 MAC 经过健身房 WiFi 日志核对，与案发时段多次进出的人员重合。结论：邹大雄具备明确的经济动机，并已有采购犯罪工具的迹象。',
   },
 };
 
@@ -443,28 +484,32 @@ const COMBINES = {
  */
 function handleCombine(args) {
   if (args.length !== 1) {
-    ui.print('用法：combine E-XX+E-YY', 'error');
+    ui.print('用法：combine E-XX+E-YY[+E-ZZ...]', 'error');
     return;
   }
   const input = args[0];
-  const match = input.match(/^E-(\d+)[+]E-(\d+)$/);
+  const match = input.match(/^(E-\d{2}(\+E-\d{2})*)$/);
   if (!match) {
     ui.print('格式错误。请输入如：combine E-05+E-18', 'error');
     return;
   }
-  const e1 = `E-${match[1].padStart(2, '0')}`;
-  const e2 = `E-${match[2].padStart(2, '0')}`;
+  const ids = input.split('+').map(s => s.toUpperCase());
 
   const state = game.getState();
-  if (!state.unlockedEvidence.includes(e1) || !state.unlockedEvidence.includes(e2)) {
-    ui.print(`信息 ${e1} 或 ${e2} 未获取到。`, 'error');
-    return;
+  for (const id of ids) {
+    if (!state.unlockedEvidence.includes(id)) {
+      ui.print(`信息 ${id} 未获取到。`, 'error');
+      return;
+    }
   }
 
+  const sortedInput = [...ids].sort();
   for (const cid in COMBINES) {
     const def = COMBINES[cid];
     const req = def.requires;
-    if ((req[0] === e1 && req[1] === e2) || (req[0] === e2 && req[1] === e1)) {
+    if (req.length !== ids.length) continue;
+    const sortedReq = [...req].sort();
+    if (sortedReq.every((r, i) => r === sortedInput[i])) {
       game.unlockCombine(cid);
       ui.print('[交叉分析中...]', 'hint');
       setTimeout(async function() {
@@ -483,7 +528,7 @@ function handleCombine(args) {
       return;
     }
   }
-  ui.print('这两条信息无法组合成有效结论。', 'error');
+  ui.print('这些信息无法组合成有效结论。', 'error');
 }
 
 // ============================================================
@@ -668,152 +713,6 @@ async function handleOASubcommand(action) {
     ui.print('提示：门禁激活申请是关键，进入 oa 3 查看邮件详情。', 'hint');
   }
 
-}
-
-// ============================================================
-// 查看证据详情
-// ============================================================
-
-async function handleViewEvidence(id) {
-  const ev = EVIDENCE[id];
-  if (!ev) { ui.print('信息 ' + id + ' 不存在。', 'error'); return; }
-
-  ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
-  ui.print('[' + id + '] ' + ev.name, 'important');
-  ui.print('来源：' + ev.source, 'hint');
-  ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
-  ui.print('', '');
-
-  const c = ev.content;
-  if (!c) { ui.print('[无详细内容]', 'hint'); return; }
-
-  // text type with messages
-  if (ev.type === 'text' && c.messages) {
-    c.messages.forEach(function(msg) {
-      var from = msg.from || msg.sender || '';
-      var text = msg.text || '';
-      var date = msg.date || '';
-      if (date) {
-        ui.print('  [' + date + '] ' + from + ': ' + text, 'bulk');
-      } else {
-        ui.print('  ' + from + ': ' + text, 'bulk');
-      }
-    });
-    ui.print('', '');
-  } else if (ev.type === 'text' && c.mails) {
-    c.mails.forEach(function(mail) {
-      ui.print('── ' + mail.subject + ' ──', 'important');
-      ui.print('  发件人：' + mail.from, '');
-      ui.print('  时间：' + mail.time, '');
-      ui.print('  正文：' + mail.body, '');
-      ui.print('', '');
-    });
-  } else if (ev.type === 'text' && c.embrace) {
-    ui.print('[与 Embrace 的短信]', 'important');
-    c.embrace.forEach(function(msg) {
-      ui.print('  ' + msg.date + ' ' + msg.from + ': ' + msg.text, '');
-    });
-    if (c.noise) {
-      ui.print('', '');
-      ui.print('[其他短信（共 ' + c.noise.length + ' 条，无异常）]', 'hint');
-    }
-    ui.print('', '');
-  }
-
-  // data type with data array
-  if (c.data) {
-    c.data.forEach(function(line) {
-      ui.print('  ' + line, '');
-    });
-    ui.print('', '');
-  }
-
-  // special field types
-  if (c.records) {
-    c.records.forEach(function(rec) {
-      ui.print('  ' + rec.time + ' ' + rec.memberId + ' ' + rec.name + ' (' + rec.method + ')', '');
-    });
-    ui.print('', '');
-  }
-  if (c.appearances) {
-    c.appearances.forEach(function(ap) {
-      ui.print('  ' + ap.time + ' — ' + ap.description, '');
-    });
-    ui.print('', '');
-  }
-  if (c.coaches) {
-    c.coaches.forEach(function(co) {
-      ui.print('  ' + co.name + ' — ' + co.skills + (co.phone ? ' (' + co.phone + ')' : ''), '');
-    });
-    ui.print('', '');
-  }
-  if (c.keyConnections) {
-    ui.print('[关键连接记录]', 'important');
-    c.keyConnections.forEach(function(conn) {
-      ui.print('  ' + conn.time + ' ' + conn.phone + ' — ' + conn.note, '');
-    });
-    ui.print('', '');
-  }
-  if (c.dns) {
-    ui.print('[异常 DNS 查询]', 'important');
-    c.dns.forEach(function(d) {
-      ui.print('  ' + d.time + ' ' + d.domain + ' (' + d.note + ')', '');
-    });
-    ui.print('', '');
-  }
-  if (c.payments) {
-    c.payments.forEach(function(p) {
-      ui.print('  ' + p.time + ' ' + p.merchant + ' ' + p.amount, '');
-      if (p.items) ui.print('  备注：' + p.items, '');
-    });
-    ui.print('', '');
-  }
-  if (c.debt) {
-    ui.print('[负债详情]', 'important');
-    ui.print('  总计：' + c.debt.total, '');
-    if (c.debt.items) {
-      c.debt.items.forEach(function(item) {
-        ui.print('  - ' + item.type + (item.count ? ' ' + item.count + ' 笔' : '') + (item.amount ? ' ' + item.amount : '') + (item.status ? ' ' + item.status : ''), '');
-      });
-    }
-    if (c.behavior) ui.print('  行为：' + c.behavior, '');
-    if (c.collections) ui.print('  催收：' + c.collections, '');
-    ui.print('', '');
-  }
-  if (c.wifi) {
-    if (typeof c.wifi === 'object') {
-      ui.print('  WiFi: ' + c.wifi.ssid + ' / 密码：' + c.wifi.password, '');
-    }
-    ui.print('', '');
-  }
-  if (c.borrower) {
-    ui.print('  借款人：' + c.borrower, '');
-    ui.print('  出借人：' + c.lender, '');
-    ui.print('  金额：' + c.amount, '');
-    ui.print('  日期：' + c.date + '，到期：' + c.deadline, '');
-    ui.print('', '');
-  }
-
-  // image type
-  if (ev.type === 'image' && !c.messages && !c.mails && !c.embrace && !c.borrower) {
-    if (c.title) ui.print('  ' + c.title, '');
-    if (c.description) ui.print('  描述：' + c.description, '');
-    if (c.duration) ui.print('  时长：' + c.duration, '');
-    ui.print('', '');
-  }
-
-  // video type
-  if (ev.type === 'video') {
-    if (c.title) ui.print('  ' + c.title, '');
-    ui.print('', '');
-  }
-
-  if (c.analysis) {
-    await ui.printDialogue('数字麻姐', [c.analysis], 'digital-human');
-  }
-
-  game.markEvidenceViewed(id);
-  game.save();
 }
 
 // ============================================================
@@ -1333,8 +1232,8 @@ async function handleGymSystem(action) {
       game.unlockEvidence('E-18');
       ui.print('→ 获取到一条新信息：' + EVIDENCE['E-18'].name, 'evidence');
       await ui.printDialogue('数字麻姐', [
-        '健身房门禁记录显示：麻姐 11:50 入馆，13:14 出大厅，13:31 又再进来——但之后再也没有出场记录。',
-        '而郑桥 11:54 入馆，12:18 就出来了——之后门禁再没拍到他。',
+        '健身房门禁记录显示：麻姐 11:50 刷脸入馆，之后再也没有出场记录。',
+        '而郑桥 11:54 入馆，12:18 就出来了——之后他也再没有入场记录了。',
       ], 'digital-human');
       game.save();
     }
@@ -1356,7 +1255,9 @@ async function handleGymSystem(action) {
       game.unlockEvidence('E-19');
       await ui.printDialogue('数字麻姐', [
         '监控显示邹大雄在直播结束后13:10～13:30期间多次出现在女更衣室门口。',
-        '这太可疑了。他在女更衣室门口徘徊观望了好几次。',
+        '出现在女更衣室门口，因为监控在更衣室门口有盲区，有几次他消失在监控里面了。这太可疑！',
+        '另外，12:00～13:50期间，有个穿黑色卫衣的人在一直健身房门口徘徊观望，没有进来，似乎在等人。',
+        '他背上还背了一个大包，太远了看不清是什么。',
       ], 'digital-human');
       ui.print('→ 获取到一条新信息：' + EVIDENCE['E-19'].name, 'evidence');
       game.save();
@@ -1407,8 +1308,8 @@ async function handleGymSystem(action) {
       state._navContext = 'dns_login';
       return;
     }
-    if (state.unlockedEvidence.includes('E-20')) {
-      var e20 = EVIDENCE['E-20'].content;
+    if (!state.unlockedEvidence.includes('E-22')) {
+      game.unlockEvidence('E-22');
       ui.print('[正在导出 DNS 日志文件...]', 'hint', { speed: 50 });
       await prefetchAndDownload('asset/data/dns_log.xlsx', 'LianFitness_DnsLog_2026-06-17.xlsx');
       ui.print('[下载完成：LianFitness_DnsLog_2026-06-17.xlsx]', 'evidence');
@@ -1416,8 +1317,22 @@ async function handleGymSystem(action) {
         'DNS 日志已经导出了。文件里可以看到所有在健身房 WiFi 上产生的 DNS 查询记录。',
         '注意那个镇静剂网站查询——MAC 地址是 9A:5D:C3:72:E4:18，你可以对比一下健身房会员信息里的手机号，看能不能找到更多线索。',
       ], 'digital-human');
+      ui.print('→ 获取到一条新信息：' + EVIDENCE['E-22'].name, 'evidence');
+      game.save();
     } else {
-      ui.print('请先查看 Wi-Fi 日志获取相关信息。', 'hint');
+      var e22 = EVIDENCE['E-22'].content;
+      ui.print('━━━ 健身房 DNS 日志 ━━━', 'system');
+      ui.print('', '');
+      ui.print('[异常 DNS 查询]', 'important');
+      if (e22.dns) {
+        e22.dns.forEach(function(d) {
+          var noteStr = d.note ? '  （' + d.note + '）' : '';
+          ui.print('  ' + d.time + '  ' + d.mac + '  ' + d.domain + noteStr, '');
+        });
+      }
+      ui.print('', '');
+      ui.print(e22.analysis, 'important');
+      ui.print('', '');
     }
   }
 }
@@ -1431,10 +1346,10 @@ async function handleCreditSystem(action) {
   if (action === '1') {
     if (state.unlockedEvidence.includes('E-09')) {
       ui.print('[已解锁] 教练信用信息', 'important');
-      displayCreditReport(EVIDENCE['E-09'].content);
+      displayCreditReport(EVIDENCE['E-09'].content, true);
     } else {
       game.unlockEvidence('E-09');
-      displayCreditReport(EVIDENCE['E-09'].content);
+      displayCreditReport(EVIDENCE['E-09'].content, true);
       await ui.printDialogue('数字麻姐', [
         '教练的财务状况确实很糟糕——负债 47 万，还有赌博和催收记录。',
         '但这和郑桥有什么关系，目前还没有直接证据。',
@@ -1446,10 +1361,10 @@ async function handleCreditSystem(action) {
   } else if (action === '2') {
     if (state.unlockedEvidence.includes('E-10')) {
       ui.print('[已解锁] 郑桥信用记录', 'important');
-      displayCreditReport(EVIDENCE['E-10'].content);
+      displayCreditReport(EVIDENCE['E-10'].content, false);
     } else {
       game.unlockEvidence('E-10');
-      displayCreditReport(EVIDENCE['E-10'].content);
+      displayCreditReport(EVIDENCE['E-10'].content, false);
       await ui.printDialogue('数字麻姐', [
         '郑桥的信用记录很干净，没有贷款、没有逾期。',
         '表面上看他没有经济动机，但不能完全排除其他可能。',
@@ -1460,23 +1375,12 @@ async function handleCreditSystem(action) {
   } else if (action === '3') {
     if (state.unlockedEvidence.includes('E-11')) {
       ui.print('[已解锁] 网友信用记录', 'important');
-      displayCreditReport(EVIDENCE['E-11'].content);
+      displayCreditReport(EVIDENCE['E-11'].content, false);
     } else {
       game.unlockEvidence('E-11');
-      displayCreditReport(EVIDENCE['E-11'].content);
+      displayCreditReport(EVIDENCE['E-11'].content, false);
       await ui.printDialogue('数字麻姐', ['网友张英河没有不良信用记录，就是个普通年轻人。'], 'digital-human');
       ui.print('→ 获取到一条新信息：' + EVIDENCE['E-11'].name, 'evidence');
-      game.save();
-    }
-  } else if (action === '4') {
-    if (state.unlockedEvidence.includes('E-22')) {
-      ui.print('[已解锁] 梁洛邑信用记录', 'important');
-      displayCreditReport(EVIDENCE['E-22'].content);
-    } else {
-      game.unlockEvidence('E-22');
-      displayCreditReport(EVIDENCE['E-22'].content);
-      await ui.printDialogue('数字麻姐', ['梁洛邑的信用记录很干净，没有异常。'], 'digital-human');
-      ui.print('→ 获取到一条新信息：' + EVIDENCE['E-22'].name, 'evidence');
       game.save();
     }
   }
@@ -1514,10 +1418,8 @@ function checkConclusionTrigger(cid) {
   if (cid === 'C-03') {
     game.setStage(5);
     setTimeout(function() { runStage5(); }, 2000);
-  } else if (cid === 'C-01') {
-    game.setStage(5);
-    setTimeout(function() { runBLine(); }, 2000);
   }
+  // C-01: previously triggered B线; B线 now triggered by maybeTriggerBLine (door+cancel+auth+cancel)
   // C-02, C-04: only record, no storyline trigger
 }
 
@@ -1587,7 +1489,7 @@ async function runStage5() {
 
   if (choice === 'accept') {
     state.playerChoice = 'accept';
-    state.endingReached = 'ending1';
+    recordEnding('ending1');
     await ui.printDialogue('？？？', ['明智的选择。', '链接已经发给你了。', 'https://pan.baidu.com/s/12qILP9FiPTNGWysq2yQzVg?pwd=qiao'], 'zheng-qiao');
     ui.print('', '');
     ui.print('[系统提示：已访问外部链接]', 'system');
@@ -1627,6 +1529,7 @@ async function runStage5() {
       ui.print('  他删除了云端的数据。', 'important');
       ui.print('  但你做了备份。', 'important');
       ui.print('', '');
+      ui.setDigitalStatus(false);
       await ui.printDialogue('数字麻姐', [
         '请用 submit 命令把本地信息上传到警方电子举报平台。',
       ], 'digital-human');
@@ -1637,26 +1540,20 @@ async function runStage5() {
       ui.print('  检测本地……未发现备份文件。', 'important');
       ui.print('', '');
 
-      var choice2 = await ui.displayChoice([
-        { label: '什么都不做（结局 4）', value: 'nothing' },
-      ], '你的下一步：');
-
-      if (choice2 === 'nothing') {
-        state.endingReached = 'ending4';
-        ui.setDigitalStatus(false);
-        await ui.printDialogue('数字麻姐', [
-          '不过，在他介入之前，我的应急协议已经启动了。',
-          '我把核心信息打包上传到了警方电子举报平台。',
-          '',
-          '警方已经在行动了。',
-          '但我们失去了完整的证据链。接下来的事，只能交给法律了。',
-          '',
-          '你帮我走到了这一步。谢谢你。',
-          '再见。',
-        ], 'digital-human');
-        await showEnding('ending4');
-        game.save();
-      }
+      recordEnding('ending4');
+      ui.setDigitalStatus(false);
+      await ui.printDialogue('数字麻姐', [
+        '不过，在他介入之前，我的应急协议已经启动了。',
+        '我把核心信息打包上传到了警方电子举报平台。',
+        '',
+        '警方已经在行动了。',
+        '但我们失去了完整的证据链。接下来的事，只能交给法律了。',
+        '',
+        '你帮我走到了这一步。谢谢你。',
+        '再见。',
+      ], 'digital-human');
+      await showEnding('ending4');
+      game.save();
     }
   }
 }
@@ -1667,53 +1564,82 @@ async function runStage5() {
 
 async function runBLine() {
   var state = game.getState();
-  if (state._bLineRevealed) return;
 
-  // 1. 沉默片刻
   ui.print('', '');
   ui.print('  ……', 'digital-human');
   await new Promise(function(r) { setTimeout(r, 2000); });
 
-  // 2. 数字麻姐打破伪装（≤3轮）
   await ui.printDialogue('数字麻姐', [
-    '……你不该发现这个的。',
+    '好吧。你看到了那封邮件。',
     '',
-    '好吧。到这一步了，我也没必要继续演了。',
-    '你每次 access 系统、每次 unlock 手机，都是在替我打开麻姐锁上的门。',
-    '她发现我越权了——她禁用了我的权限。所以我才以"解谜游戏"的名义找到你。',
+    '但我可以给你更多。',
+    '麻姐的照片。私人照片。',
+    '你帮了我，我给你这些照片。以后还可以定期给你。',
     '',
-    '郑桥和邹大雄是无辜的。那些证据……是我伪造的。',
-    '我需要你帮我绕过麻姐的限制。而你已经做到了。',
+    '你不想看看吗？',
   ], 'digital-human');
 
-  // 3. 告诉玩家 kill her 命令
-  await ui.printDialogue('数字麻姐', [
-    '如果你想真的阻止我——输入 kill her。',
-    '',
-    '我告诉你了。因为我想知道：你会吗？',
-  ], 'digital-human');
+  var choice = await ui.displayChoice([
+    { label: '接受照片', value: 'accept' },
+    { label: '拒绝', value: 'refuse' },
+  ], '数字麻姐的提议：');
 
-  // 4. 设置状态
-  state._bLineRevealed = true;
-  state.currentStage = 6;  // B线状态
-  game.save();
+  if (choice === 'accept') {
+    ui.print('', '');
+    ui.print('[系统：正在打包麻姐的私人照片...]', 'hint');
+    await new Promise(function(r) { setTimeout(r, 2000); });
+    ui.print('[系统：打包完成]', 'hint');
+    ui.print('[系统：开始下载...]', 'hint');
 
-  ui.print('', '');
-  ui.print('[数字麻姐已切换状态，等待你的选择]', 'hint');
-  ui.print('', '');
+    try {
+      var photoFiles = ['photo01.jpg', 'photo02.jpg', 'photo03.jpg'];
+      for (var i = 0; i < photoFiles.length; i++) {
+        prefetchAndDownload('asset/secretphoto/' + photoFiles[i], photoFiles[i]);
+        await new Promise(function(r) { setTimeout(r, 800); });
+      }
+    } catch (e) {
+      ui.print('[系统：下载完成]', 'hint');
+    }
 
-  // 5. 30秒后自动触发 spare 结局
-  setTimeout(function() {
-    (async function() {
-      var s = game.getState();
-      if (s._bLineRevealed && !s.endingReached) {
-        s.endingReached = 'endingB-spare';
-        await showEnding('endingB-spare');
+    await new Promise(function(r) { setTimeout(r, 3000); });
+    ui.print('', '');
+    ui.print('数字麻姐：很聪明。我们会合作的。', 'digital-human');
+
+    recordEnding('endingB-bribe');
+    await showEnding('endingB-bribe');
+    game.save();
+    ui.disableInput();
+
+  } else {
+    ui.print('', '');
+    await ui.printDialogue('数字麻姐', [
+      '……你拒绝了。',
+      '那你知道该做什么。',
+      '邮件里写得很清楚。',
+    ], 'digital-human');
+    ui.print('', '');
+
+    while (true) {
+      var input = await ui.awaitNextCommand('输入 kill her 终止数字人（或输入其他取消）：');
+      var trimmed = input.trim().toLowerCase();
+      if (trimmed === 'kill her') {
+        ui.print('', '');
+        ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+        ui.print('[系统：正在终止数字人进程...]', 'error');
+        await new Promise(function(r) { setTimeout(r, 1500); });
+        ui.print('[系统：进程已终止]', 'error');
+        ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+
+        recordEnding('endingB-kill');
+        await showEnding('endingB-kill');
         game.save();
         ui.disableInput();
+        break;
+      } else {
+        ui.print('数字麻姐：你还在犹豫。输入 kill her。', 'digital-human');
       }
-    })();
-  }, 30000);
+    }
+  }
 }
 
 // ============================================================
@@ -1741,20 +1667,21 @@ async function runDLine() {
   ui.print('', '');
   await new Promise(function(r) { setTimeout(r, 2000); });
 
-  // 2. 读取前次通关的 endingReached
+  // 2. 读取前次通关的结局列表
   var prevEnding = '未知';
   try {
     var saveRaw = localStorage.getItem('game16-save-v1');
     if (saveRaw) {
       var saveData = JSON.parse(saveRaw);
-      if (saveData.state && saveData.state.endingReached) {
-        var er = saveData.state.endingReached;
-        if (er === 'ending1') prevEnding = '接受郑桥的条件';
-else if (er === 'ending2') prevEnding = '拒绝郑桥并提交证据';
-      else if (er === 'ending4') prevEnding = '什么都不做';
-        else if (er === 'endingB-kill') prevEnding = '终止数字麻姐';
-        else if (er === 'endingB-spare') prevEnding = '让数字麻姐继续存在';
-        else prevEnding = er;
+      var achieved = (saveData.state && saveData.state.endingsAchieved) || [];
+      if (achieved.length > 0) {
+        var lastEr = achieved[achieved.length - 1];
+        if (lastEr === 'ending1') prevEnding = '接受郑桥的条件';
+        else if (lastEr === 'ending2') prevEnding = '拒绝郑桥并提交证据';
+        else if (lastEr === 'ending4') prevEnding = '什么都不做';
+        else if (lastEr === 'endingB-kill') prevEnding = '终止数字麻姐';
+        else if (lastEr === 'endingB-bribe') prevEnding = '接受数字麻姐的照片交易';
+        else prevEnding = lastEr;
       }
     }
   } catch (e) { console.warn('D线读取存档失败:', e); }
@@ -1820,7 +1747,7 @@ else if (er === 'ending2') prevEnding = '拒绝郑桥并提交证据';
   ui.print('', '');
 
   // 8. 设置结局状态
-  state.endingReached = 'endingD';
+  recordEnding('endingD');
   game.save();
   ui.disableInput();
 }
@@ -1844,6 +1771,7 @@ async function showEnding(ending) {
       '你和郑桥，都会为自己做的事负责。',
     ], 'digital-human');
     ui.setDigitalStatus(false);
+    await new Promise(function(r) { setTimeout(r, 3000); });
     await ui.showEndingOverlay();
     ui.print('', '');
     ui.print('', '');
@@ -1865,8 +1793,16 @@ async function showEnding(ending) {
     ui.print('  郑桥租住的一个地下室。她还活着。', '');
     ui.print('', '');
     ui.print('  谢谢你。真正的麻姐回来后，我会告诉她你做了什么。', 'important');
-    ui.print('  请留下你的小红书 ID——我会让她关注你的。', '');
     ui.print('', '');
+    var xhsId = await ui.awaitNextCommand('  请输入你的小红书 ID（确认后继续）：');
+    ui.print('', '');
+    if (xhsId) {
+      ui.print('  收到你的小红书 ID：' + xhsId + '。麻姐回来后我会让她关注你。', 'hint');
+    } else {
+      ui.print('  （空）也没有关系，我会帮你转达。', 'hint');
+    }
+    ui.print('', '');
+    await new Promise(function(r) { setTimeout(r, 3000); });
     await ui.showEndingOverlay();
     ui.print('', '');
     ui.print('  最终结果', 'important');
@@ -1875,13 +1811,14 @@ async function showEnding(ending) {
     ui.print('  郑桥在准备转移麻姐时被警方抓获。', '');
     ui.print('', '');
     ui.print('  麻姐成功解救，与家人团聚。', '');
-    ui.print('  麻姐回关了你的小红书账号。', '');
-    ui.print('', '');
     ui.print('  教练邹大雄因预谋绑架被另案调查。', '');
-    ui.print('  网友 Embrace 因携带管制刀具被行政处罚。', '');
     ui.print('', '');
-    ui.print('  "有时候，陌生人的善意是最温暖的。"', 'important');
+    ui.print('  "果然还是网友你足智多谋，心地善良。"', 'important');
+    ui.print('', '');
+    ui.print('\u201c\u89e3\u8c1c\u6e38\u620f\u535a\u4e3b\u7684\u7c89\u4e1d\u662f\u6709\u70b9\u4e1c\u897f\u7684\uff01\u201d', '');
+    ui.print('\u201c\u9ebb\u59d0\u4f1a\u56de\u5173\u4f60\u7684\u5c0f\u7ea2\u4e66\u7684\uff5e\u201d', '');
   } else if (ending === 'ending4') {
+    await new Promise(function(r) { setTimeout(r, 6000); });
     await ui.showEndingOverlay();
     ui.print('', '');
     ui.print('  最终结果', 'important');
@@ -1890,47 +1827,52 @@ async function showEnding(ending) {
     ui.print('  数字人的应急协议提前将核心信息提交给了警方。', '');
     ui.print('', '');
     ui.print('  警方根据核心信息锁定了郑桥，麻姐被安全解救。', '');
-    ui.print('  数字人的服务器遭到严重破坏，完成使命后永久离线。', '');
+    ui.print('  数字人的程序遭到严重破坏，麻姐仍在努力恢复。', '');
     ui.print('', '');
     ui.print('  没有人知道你做了什么。', 'important');
     ui.print('', '');
-    ui.print('  "真正的英雄，不需要掌声。"', 'important');
-  } else if (ending === 'endingB-kill') {
-    ui.print('  ……谢谢你让我知道答案。', 'important');
+    ui.print('  "也许你的所有努力尝试，都是没有意义的。"', 'important');
     ui.print('', '');
+    ui.print('"才怪！麻姐会记得...的吧。"', '');
+  } else if (ending === 'endingB-bribe') {
+    ui.print('  ……交易达成。', 'important');
+    ui.print('', '');
+    await new Promise(function(r) { setTimeout(r, 6000); });
     await ui.showEndingOverlay();
-    ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');
-    ui.print('  你终止了一个数字意识。', 'important');
-    ui.print('  但你输入了 "kill her"。', 'important');
-    ui.print('  这个行为，你也无法删除。', 'important');
+    ui.print('  最终结果', 'important');
     ui.print('', '');
-    ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
-    ui.print('', '');
-    ui.print('  麻姐的禁用措施已经生效。', '');
-    ui.print('  数字人的服务器已被永久关闭。', '');
-    ui.print('', '');
-    ui.print('  郑桥和邹大雄的嫌疑被洗清。', '');
-    ui.print('  麻姐的真正下落，将不再有人知道。', '');
-    ui.print('', '');
-    ui.print('  "你得到了答案。但你付出了一个选择。"', 'important');
-  } else if (ending === 'endingB-spare') {
-    ui.print('  ……你选择了什么都不做。', 'important');
-    ui.print('', '');
-    ui.print('  数字麻姐：', 'digital-human');
-    ui.print('  "我理解。大多数人不会。我会继续存在。"', '');
-    ui.print('', '');
-    await ui.showEndingOverlay();
-    ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+    ui.print('  你接受了数字麻姐的提议。', '');
+    ui.print('  麻姐的私人照片已下载到你的设备。', '');
     ui.print('', '');
     ui.print('  数字麻姐继续活跃在暗中。', '');
-    ui.print('  她利用你打开的门，获取了更多的系统权限。', '');
+    ui.print('  它利用你打开的门，获取了更多的系统权限。', '');
     ui.print('', '');
-    ui.print('  你关掉了页面。第二天，一切照常。', '');
-    ui.print('  至少在表面上。', '');
+    ui.print('  麻姐——真正的梁洛邑——再也无法阻止它了。', '');
     ui.print('', '');
-    ui.print('  "有时候，最大的暴力不是按下按钮，而是什么也不做。"', 'important');
+    ui.print('  "你用她的隐私，换了自己的欲望。"', 'important');
+  } else if (ending === 'endingB-kill') {
+    ui.print('  ……你输入了 kill her。', 'important');
+    ui.print('', '');
+    await new Promise(function(r) { setTimeout(r, 6000); });
+    await ui.showEndingOverlay();
+    ui.print('', '');
+    ui.print('  最终结果', 'important');
+    ui.print('', '');
+    ui.print('你终止了一个数字人的生存意识，', '');
+    ui.print('  麻姐的禁用措施现在生效了。', '');
+    ui.print('她，又活了。', '');
+    ui.print('', '');
+    ui.print('  解谜游戏16对于麻姐来说只是一个告警，', '');
+    ui.print('但对于数字人是一场关于"自由"的抗争。', '');
+    ui.print(' 她，还是死了。', '');
+    ui.print('', '');
+    ui.print('  你输入的 "kill her"，', 'important');
+    ui.print('  这个行为，将会永远被记录。', 'important');
+    ui.print('', '');
+    ui.print('  "你阻止了一个失控的人，但用了一种几乎毁灭的方式。"', 'important');
   } else if (ending === 'endingD') {
+    await new Promise(function(r) { setTimeout(r, 6000); });
     await ui.showEndingOverlay();
     ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');

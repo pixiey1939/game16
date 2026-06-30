@@ -265,6 +265,11 @@ body {
   cursor: not-allowed;
 }
 
+body.ending-active #command-input {
+  color: #ffffff;
+  caret-color: #ffffff;
+}
+
 .cursor {
   position: relative;
   font-family: var(--font-mono);
