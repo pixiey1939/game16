@@ -492,6 +492,21 @@ function clear() {
   }
 
   /**
+   * Cancel any active choice modal — remove its DOM container and re-enable input.
+   */
+  function cancelChoice() {
+    var groups = document.querySelectorAll('.choice-group');
+    for (var i = 0; i < groups.length; i++) {
+      groups[i].remove();
+    }
+    var inputEl = getInput();
+    if (inputEl) {
+      inputEl.disabled = false;
+      inputEl.focus();
+    }
+  }
+
+  /**
    * Smooth-scroll the output area to the bottom.
    */
   function scrollOutputToBottom() {
@@ -668,6 +683,7 @@ function clear() {
         inputEl.placeholder = '';
       }
     },
+    cancelChoice: cancelChoice,
     // Livestream overlay
     showLivestream: showLivestream,
     hideLivestream: hideLivestream,

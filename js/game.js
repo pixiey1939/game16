@@ -127,6 +127,7 @@ async function runStage1() {
   if (game.hasShownIntro(1)) return;
   game.markStageIntro(1);
 
+  ui.disableInput();
   await ui.printDialogue('数字麻姐', [
     '你好，网友。我是麻姐的数字人，她亲手训练我用于辅助她的工作和生活。',
     '',
@@ -1571,7 +1572,8 @@ async function runStage5() {
 
   var cancelCountdown = ui.showCountdown(60, function() {
     ui.hideCountdown();
-    game.clearSave();
+    ui.cancelChoice();
+    clearSave();
   });
 
   var choice = await ui.displayChoice([
