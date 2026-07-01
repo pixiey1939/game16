@@ -31,26 +31,45 @@
   <div id="output"><div class="empty">加载中...</div></div>
 
   <script>
-    function refreshData() {
-      var raw = localStorage.getItem('game16-xhs-ids');
-      var list = raw ? JSON.parse(raw) : [];
-      var out = document.getElementById('output');
+    var SUPABASE_URL = 'https://yfjgbikqgeazdmcaztxd.supabase.co';
+    var SUPABASE_KEY = 'sb_publishable_ybPS4-Rcq5M_-X_EpRX-PA_FGCB3PNR';
 
-      if (list.length === 0) {
+    function refreshData() {
+      var out = document.getElementById('output');
+      out.innerHTML = '<div class="empty">加载中...</div>';
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', SUPABASE_URL + '/rest/v1/xhs_ids?select=*&order=created_at.desc', true);
+      xhr.setRequestHeader('apikey', SUPABASE_KEY);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY);
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          var list;
+          try { list = JSON.parse(xhr.responseText); } catch(e) { list = []; }
+          renderList(list);
+        } else {
+          out.innerHTML = '<div class="empty">加载失败 (HTTP ' + xhr.status + ')</div>';
+        }
+      };
+      xhr.onerror = function() {
+        out.innerHTML = '<div class="empty">网络错误，无法连接到服务器</div>';
+      };
+      xhr.send();
+    }
+
+    function renderList(list) {
+      var out = document.getElementById('output');
+      if (!list || list.length === 0) {
         out.innerHTML = '<div class="empty">暂无收集数据</div>';
         return;
       }
-
       var html = '<table><thead><tr><th>#</th><th>小红书 ID</th><th>提交时间</th></tr></thead><tbody>';
       for (var i = 0; i < list.length; i++) {
-        var date = new Date(list[i].time);
-        var timeStr = date.getFullYear() + '-' +
-          String(date.getMonth() + 1).padStart(2, '0') + '-' +
-          String(date.getDate()).padStart(2, '0') + ' ' +
-          String(date.getHours()).padStart(2, '0') + ':' +
-          String(date.getMinutes()).padStart(2, '0') + ':' +
-          String(date.getSeconds()).padStart(2, '0');
-        html += '<tr><td>' + (i + 1) + '</td><td>' + list[i].id + '</td><td>' + timeStr + '</td></tr>';
+        var d = new Date(list[i].created_at);
+        var pad = function(n) { return String(n).padStart(2, '0'); };
+        var timeStr = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+          ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+        html += '<tr><td>' + (i + 1) + '</td><td>' + list[i].xhs_id + '</td><td>' + timeStr + '</td></tr>';
       }
       html += '</tbody></table>';
       html += '<div class="count">共 ' + list.length + ' 条记录</div>';
@@ -58,19 +77,12 @@
     }
 
     function exportCSV() {
-      var raw = localStorage.getItem('game16-xhs-ids');
-      var list = raw ? JSON.parse(raw) : [];
-      if (list.length === 0) { alert('无数据可导出'); return; }
+      var rows = document.querySelectorAll('tbody tr');
+      if (!rows.length) { alert('无数据可导出'); return; }
       var csv = '序号,小红书ID,提交时间\n';
-      for (var i = 0; i < list.length; i++) {
-        var date = new Date(list[i].time);
-        var timeStr = date.getFullYear() + '-' +
-          String(date.getMonth() + 1).padStart(2, '0') + '-' +
-          String(date.getDate()).padStart(2, '0') + ' ' +
-          String(date.getHours()).padStart(2, '0') + ':' +
-          String(date.getMinutes()).padStart(2, '0') + ':' +
-          String(date.getSeconds()).padStart(2, '0');
-        csv += (i + 1) + ',' + list[i].id + ',' + timeStr + '\n';
+      for (var i = 0; i < rows.length; i++) {
+        var cells = rows[i].querySelectorAll('td');
+        csv += (i + 1) + ',' + cells[1].textContent + ',' + cells[2].textContent + '\n';
       }
       var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
       var a = document.createElement('a');
@@ -80,9 +92,9 @@
     }
 
     function clearData() {
-      if (!confirm('确认清空所有收集的小红书 ID？')) return;
-      localStorage.removeItem('game16-xhs-ids');
-      refreshData();
+      if (!confirm('确认清空所有收集的小红书 ID？（仅清空当前展示，数据库需在 Supabase 控制台删除）')) return;
+      // clearData 在静态前端页面上只能清空本地视图，数据库删除需在 Supabase 控制台操作
+      location.reload();
     }
 
     refreshData();
