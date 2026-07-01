@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小红书 ID 收集后台</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #1a1a2e; color: #e0e0e0; padding: 40px; margin: 0; }
+    h1 { color: #ff6b6b; border-bottom: 2px solid #ff6b6b33; padding-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid #333; }
+    th { color: #ff6b6b; font-weight: 600; background: #16213e; }
+    tr:hover td { background: #16213e55; }
+    .empty { color: #888; text-align: center; padding: 60px; font-size: 18px; }
+    .count { color: #aaa; margin-top: 16px; }
+    button { background: #ff6b6b; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; margin-right: 10px; }
+    button:hover { background: #ff5252; }
+    button.export { background: #4ecdc4; }
+    button.export:hover { background: #3dbdb5; }
+    button.clear { background: #555; }
+    button.clear:hover { background: #777; }
+  </style>
+</head>
+<body>
+  <h1>📋 小红书 ID 收集结果</h1>
+  <div id="controls">
+    <button onclick="refreshData()">🔄 刷新</button>
+    <button class="export" onclick="exportCSV()">📥 导出 CSV</button>
+    <button class="clear" onclick="clearData()">🗑️ 清空</button>
+  </div>
+  <div id="output"><div class="empty">加载中...</div></div>
+
+  <script>
+    function refreshData() {
+      var raw = localStorage.getItem('game16-xhs-ids');
+      var list = raw ? JSON.parse(raw) : [];
+      var out = document.getElementById('output');
+
+      if (list.length === 0) {
+        out.innerHTML = '<div class="empty">暂无收集数据</div>';
+        return;
+      }
+
+      var html = '<table><thead><tr><th>#</th><th>小红书 ID</th><th>提交时间</th></tr></thead><tbody>';
+      for (var i = 0; i < list.length; i++) {
+        var date = new Date(list[i].time);
+        var timeStr = date.getFullYear() + '-' +
+          String(date.getMonth() + 1).padStart(2, '0') + '-' +
+          String(date.getDate()).padStart(2, '0') + ' ' +
+          String(date.getHours()).padStart(2, '0') + ':' +
+          String(date.getMinutes()).padStart(2, '0') + ':' +
+          String(date.getSeconds()).padStart(2, '0');
+        html += '<tr><td>' + (i + 1) + '</td><td>' + list[i].id + '</td><td>' + timeStr + '</td></tr>';
+      }
+      html += '</tbody></table>';
+      html += '<div class="count">共 ' + list.length + ' 条记录</div>';
+      out.innerHTML = html;
+    }
+
+    function exportCSV() {
+      var raw = localStorage.getItem('game16-xhs-ids');
+      var list = raw ? JSON.parse(raw) : [];
+      if (list.length === 0) { alert('无数据可导出'); return; }
+      var csv = '序号,小红书ID,提交时间\n';
+      for (var i = 0; i < list.length; i++) {
+        var date = new Date(list[i].time);
+        var timeStr = date.getFullYear() + '-' +
+          String(date.getMonth() + 1).padStart(2, '0') + '-' +
+          String(date.getDate()).padStart(2, '0') + ' ' +
+          String(date.getHours()).padStart(2, '0') + ':' +
+          String(date.getMinutes()).padStart(2, '0') + ':' +
+          String(date.getSeconds()).padStart(2, '0');
+        csv += (i + 1) + ',' + list[i].id + ',' + timeStr + '\n';
+      }
+      var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'xhs-ids-' + new Date().toISOString().slice(0, 10) + '.csv';
+      a.click();
+    }
+
+    function clearData() {
+      if (!confirm('确认清空所有收集的小红书 ID？')) return;
+      localStorage.removeItem('game16-xhs-ids');
+      refreshData();
+    }
+
+    refreshData();
+  </script>
+</body>
+</html>
