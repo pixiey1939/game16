@@ -593,6 +593,22 @@ body.ending-active #command-input {
   font-weight: bold;
 }
 
+/* 结局5：电影谢幕风格 */
+#ending-overlay .ending-content.ending-kill {
+  font-size: 15px;
+  line-height: 2.2;
+  letter-spacing: 0.08em;
+  padding-bottom: 8vh;
+}
+#ending-overlay .ending-content.ending-kill .line:first-child {
+  font-size: 18px;
+  letter-spacing: 0.12em;
+  margin-bottom: 2vh;
+}
+#ending-overlay .ending-content.ending-kill .important {
+  font-size: 1.1em;
+}
+
 #countdown-overlay {
   position: fixed;
   top: 50%;
