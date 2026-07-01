@@ -71,7 +71,7 @@ var command = (function () {
       return [
         { num: 1, label: 'AP-2026-2045 门禁权限激活申请（已通过）', next: 'OA.workflow.1' },
         { num: 2, label: 'AP-2026-2015 会议室预约 B302（已通过）', next: 'OA.workflow.2' },
-        { num: 3, label: 'AP-2026-1988 端午假期值班排班（已通过）', next: 'OA.workflow.3' },
+        { num: 3, label: 'AP-2026-1988 年假审批通过', next: 'OA.workflow.3' },
         { num: 4, label: 'AP-2026-2019 办公电脑申请（已通过）', next: 'OA.workflow.4' },
         { num: 5, label: 'AP-2026-1820 出差申请-十堰（已通过）', next: 'OA.workflow.5' },
       ];
@@ -108,11 +108,11 @@ var command = (function () {
     if (ctx === 'phone_unlock'||ctx==='gym_login'||ctx==='gym_login_pwd'||ctx==='wechat_mini_program'||ctx==='credit_query') return null;
     if (ctx === 'OA.chat') {
       return [
-        { num: 1, label: '郑桥（高级研发工程师）', desc: '06-17 09:42', next: 'OA.chat.zhengqiao' },
-        { num: 2, label: '陈立（产品总监）', desc: '06-16 16:35', next: 'OA.chat.chenli' },
-        { num: 3, label: '钱敏（行政部）', desc: '06-16 16:30', next: 'OA.chat.qianmin' },
-        { num: 4, label: '赵磊（后端工程师）', desc: '06-10 14:15', next: 'OA.chat.zhaolei' },
-        { num: 5, label: '孙艺（UI 设计师）', desc: '06-07 10:40', next: 'OA.chat.sunyi' },
+        { num: 1, label: '郑桥（高级研发工程师）', desc: '07-01 09:42', next: 'OA.chat.zhengqiao' },
+        { num: 2, label: '陈立（产品总监）', desc: '06-30 16:35', next: 'OA.chat.chenli' },
+        { num: 3, label: '钱敏（行政部）', desc: '06-30 16:30', next: 'OA.chat.qianmin' },
+        { num: 4, label: '赵磊（后端工程师）', desc: '06-30 14:15', next: 'OA.chat.zhaolei' },
+        { num: 5, label: '孙艺（UI 设计师）', desc: '06-30 10:40', next: 'OA.chat.sunyi' },
       ];
     }
     if (ctx === 'OA.email') {
@@ -120,23 +120,25 @@ var command = (function () {
       var items = [];
       var count = 0;
       // M-2100 新邮件置顶
-      if (state.bLineEmailArrived) {
-        count++;
-        var prefix = state.bLineEmailRead ? '' : '🟢 ';
-        items.push({ num: count, label: prefix + 'M-2100 【重要】如果你看到这封邮件——请相信我', desc: '梁洛邑 · 06-17', next: 'OA.email.11' });
-      }
+  if (state.bLineEmailArrived) {
+    count++;
+    var prefix = state.bLineEmailRead ? '' : '🟢 ';
+    var bt = state.bLineEmailTime;
+    var emailDesc = bt ? ('梁洛邑 · ' + String(bt.getMonth()+1).padStart(2,'0') + '-' + String(bt.getDate()).padStart(2,'0')) : '梁洛邑 · 07-01';
+    items.push({ num: count, label: prefix + 'M-2100 【重要】如果你看到这封邮件——请相信我', desc: emailDesc, next: 'OA.email.11' });
+  }
       if (state.doorActivated) {
-        count++; items.push({ num: count, label: 'M-2098 门禁权限激活申请（已通过）', desc: '系统通知 · 06-17', next: 'OA.email.1' });
+        count++; items.push({ num: count, label: 'M-2098 门禁权限激活申请（已通过）', desc: '系统通知 · 07-01', next: 'OA.email.1' });
       }
-      count++; items.push({ num: count, label: 'M-2085 端午节假期安排', desc: '钱敏 · 06-16', next: 'OA.email.2' });
-      count++; items.push({ num: count, label: 'M-2072 第24周产品研发部工作汇总', desc: '陈立 · 06-16', next: 'OA.email.3' });
-      count++; items.push({ num: count, label: 'M-2055 工位区域门禁权限变更提醒', desc: '系统通知 · 06-14', next: 'OA.email.4' });
-      count++; items.push({ num: count, label: 'M-2068 6月17日项目评审', desc: '陈立 · 06-15', next: 'OA.email.5' });
-      count++; items.push({ num: count, label: 'M-2062 端午节礼品领取通知', desc: '钱敏 · 06-15', next: 'OA.email.6' });
-      count++; items.push({ num: count, label: 'M-2048 人脸采集最后通知', desc: '钱敏 · 06-16', next: 'OA.email.7' });
-      count++; items.push({ num: count, label: 'M-2042 会议室预约 B302', desc: '系统通知 · 06-13', next: 'OA.email.8' });
-      count++; items.push({ num: count, label: 'M-2033 5-28评审会议纪要', desc: '陈立 · 06-11', next: 'OA.email.9' });
-      count++; items.push({ num: count, label: 'M-2028 端午节值班表已发布', desc: '钱敏 · 06-16', next: 'OA.email.10' });
+      count++; items.push({ num: count, label: 'M-2072 第24周产品研发部工作汇总', desc: '陈立 · 06-30', next: 'OA.email.3' });
+      count++; items.push({ num: count, label: 'M-2028 十堰市AI服务平台项目出差申请', desc: '钱敏 · 06-30', next: 'OA.email.10' });
+      count++; items.push({ num: count, label: 'M-2048 人脸采集最后通知', desc: '钱敏 · 06-30', next: 'OA.email.7' });
+      count++; items.push({ num: count, label: 'M-2085 年假申请批复通知', desc: '钱敏 · 06-30', next: 'OA.email.2' });
+      count++; items.push({ num: count, label: 'M-2068 7月1日项目评审', desc: '陈立 · 06-29', next: 'OA.email.5' });
+      count++; items.push({ num: count, label: 'M-2062 项目冲刺慰问通知', desc: '钱敏 · 06-29', next: 'OA.email.6' });
+      count++; items.push({ num: count, label: 'M-2055 工位区域门禁权限变更提醒', desc: '系统通知 · 06-28', next: 'OA.email.4' });
+      count++; items.push({ num: count, label: 'M-2042 会议室预约 B302', desc: '系统通知 · 06-27', next: 'OA.email.8' });
+      count++; items.push({ num: count, label: 'M-2033 5-28评审会议纪要', desc: '陈立 · 06-25', next: 'OA.email.9' });
       return items;
     }
     if (ctx === '门禁') {
@@ -179,17 +181,17 @@ var command = (function () {
     }
     if (ctx === 'wechat.chat') {
       return [
-        { num: 1, label: '大怪兽', desc: '06-17 12:00', next: 'wechat.chat.dashou' },
-        { num: 2, label: '产品研发部工作群', desc: '06-16 16:35' },
-        { num: 3, label: '老公', desc: '06-07 22:32', next: 'wechat.chat.laogong' },
-        { num: 4, label: '姐妹群（4人）', desc: '06-13' },
-        { num: 5, label: '妈妈', desc: '06-10' },
-        { num: 6, label: '普拉提佩佩', desc: '06-17 10:20' },
-        { num: 7, label: '微信支付', desc: '06-17 11:43', next: 'wechat.pay' },
-        { num: 8, label: '文件传输助手', desc: '06-16 14:20' },
-        { num: 9, label: '老板', desc: '06-16 18:45' },
-        { num: 10, label: '57', desc: '06-13 22:15' },
-        { num: 11, label: '美团外卖', desc: '06-12 12:05' },
+        { num: 1, label: '大怪兽', desc: '07-01 12:00', next: 'wechat.chat.dashou' },
+        { num: 2, label: '产品研发部工作群', desc: '06-30 16:35' },
+        { num: 3, label: '老公', desc: '06-30 21:32', next: 'wechat.chat.laogong' },
+        { num: 4, label: '姐妹群（4人）', desc: '06-27' },
+        { num: 5, label: '妈妈', desc: '06-29' },
+        { num: 6, label: '普拉提佩佩', desc: '07-01 10:20' },
+        { num: 7, label: '微信支付', desc: '07-01 11:43', next: 'wechat.pay' },
+        { num: 8, label: '文件传输助手', desc: '06-30 14:20' },
+        { num: 9, label: '老板', desc: '06-30 18:45' },
+        { num: 10, label: '57', desc: '06-27 22:15' },
+        { num: 11, label: '美团外卖', desc: '06-26 12:05' },
       ];
     }
     if (ctx === 'wechat.mprog') {
@@ -324,7 +326,6 @@ var command = (function () {
     if (ctx === '信用查询') {
       ui.print('', '');
       ui.print('请输入"姓名+手机号"查询个人信用：', 'hint');
-      ui.print('  示例：邹大雄 138****7753', 'hint');
       game.getState()._creditQuery = true;
       return;
     }
@@ -453,9 +454,24 @@ var command = (function () {
       showOAWorkflow1();
       return true;
     }
-    if (next === 'OA.workflow.2'||next==='OA.workflow.3'||next==='OA.workflow.4'||next==='OA.workflow.5') {
+    if (next === 'OA.workflow.2') {
       state._navContext = next;
-      ui.print('该流程为日常审批，无异常。', 'hint');
+      showOAWorkflow2();
+      return true;
+    }
+    if (next === 'OA.workflow.3') {
+      state._navContext = next;
+      showOAWorkflow3();
+      return true;
+    }
+    if (next === 'OA.workflow.4') {
+      state._navContext = next;
+      showOAWorkflow4();
+      return true;
+    }
+    if (next === 'OA.workflow.5') {
+      state._navContext = next;
+      showOAWorkflow5();
       return true;
     }
     if (next === 'door.1') {
@@ -525,15 +541,15 @@ var command = (function () {
         state._navContext = 'wechat.chat.workgroup';
         ui.print('━━━ 产品研发部工作群（5人） ━━━', 'system');
         ui.print('', '');
-        ui.print('─── 06-16 ───', 'hint');
-        ui.print('  16:30 陈立: @所有人 周三下午3点B302评审，赵总主持，端午前上线方案V4.0', '');
+        ui.print('─── 06-25 ───', 'hint');
+        ui.print('  16:30 陈立: @所有人 周三下午3点B302评审，赵总主持，Q3产品迭代方案V2.0', '');
         ui.print('  16:32 赵磊: 后端接口文档下午发出来', '');
         ui.print('  16:33 郑桥: 技术方案已准备好', '');
         ui.print('  16:35 麻姐: PRD终版和原型图已更新，明早发邮箱', '');
         ui.print('  16:36 孙艺: UI设计稿周四下班前', '');
         ui.print('', '');
-        ui.print('─── 06-15 ───', 'hint');
-        ui.print('  14:05 陈立: 端午前上线方案评审安排已发邮件，请查收', '');
+        ui.print('─── 06-29 ───', 'hint');
+        ui.print('  14:05 陈立: Q3产品迭代方案评审安排已发邮件，请查收', '');
         ui.print('  14:08 麻姐: 收到', '');
         ui.print('  14:10 郑桥: 收到', '');
         ui.print('', '');
@@ -544,10 +560,10 @@ var command = (function () {
         state._navContext = 'wechat.chat.jiejie';
         ui.print('━━━ 姐妹群（4人） ━━━', 'system');
         ui.print('', '');
-        ui.print('─── 06-13 ───', 'hint');
+        ui.print('─── 06-27 ───', 'hint');
         ui.print('  12:30 小美: 周末去哪玩呀？', '');
-        ui.print('  12:32 麻姐: 端午再说吧，最近太忙了', '');
-        ui.print('  12:33 阿月: 那端午节一起吃饭！', '');
+        ui.print('  12:32 麻姐: 等我休完年假再说吧，最近太忙了', '');
+        ui.print('  12:33 阿月: 那等你休假前一起吃饭！', '');
         ui.print('', '');
         ui.print('姐妹群闲聊，无异常。', 'hint');
         return true;
@@ -555,10 +571,9 @@ var command = (function () {
       if (label.indexOf('妈妈') >= 0) {
         state._navContext = 'wechat.chat.mama';
         ui.print('━━━ 妈妈 ━━━', 'system');
-        ui.print('  ⚠️ 该对话最后消息 06-10，不在导出范围内', 'warning');
         ui.print('', '');
-        ui.print('  06-10 15:18 妈妈: 端午回来吗？', '');
-        ui.print('  06-10 15:20 麻姐: 这次假期短，下次吧妈', '');
+        ui.print('  06-29 15:18 妈妈: 年假准备去哪玩？', '');
+        ui.print('  06-29 15:20 麻姐: 打算和老公自驾甘南环线，超期待的！', '');
         ui.print('', '');
         ui.print('跟妈妈的聊天，无异常。', 'hint');
         return true;
@@ -567,13 +582,11 @@ var command = (function () {
         state._navContext = 'wechat.chat.peipei';
         ui.print('━━━ 普拉提佩佩 ━━━', 'system');
         ui.print('', '');
-        ui.print('─── 06-17 ───', 'hint');
+        ui.print('─── 07-01 ───', 'hint');
         ui.print('  10:15 佩佩: 麻姐！周六的普拉提课你来不来？', '');
-        ui.print('  10:17 麻姐: 来吧来吧，几点？', '');
-        ui.print('  10:18 佩佩: 下午两点，老地方', '');
-        ui.print('  10:19 麻姐: 好嘞！', '');
-        ui.print('  10:20 佩佩: 记得带瑜伽垫～上次那个蓝色的', '');
-        ui.print('  10:20 麻姐: 知道啦', '');
+        ui.print('  10:17 麻姐: 这周六去不了啦，我和老公年假去甘南旅游，周四就出发了', '');
+        ui.print('  10:18 佩佩: 哇甘南！那玩开心！下次再约', '');
+        ui.print('  10:19 麻姐: 哈哈谢谢，回来再约课～', '');
         ui.print('', '');
         ui.print('约课聊天，无异常。', 'hint');
         return true;
@@ -582,11 +595,11 @@ var command = (function () {
         state._navContext = 'wechat.chat.filehelper';
         ui.print('━━━ 文件传输助手 ━━━', 'system');
         ui.print('', '');
-        ui.print('  06-16 14:20  [文件] 端午上线方案_V3.0.pdf', '');
-        ui.print('  06-15 09:30  [文件] PRD_终版_v4.docx', '');
-        ui.print('  06-14 16:45  [文件] 评审会议纪要.xlsx', '');
-        ui.print('  06-13 11:20  [文件] 端午值班表.xlsx', '');
-        ui.print('  06-12 15:30  [文件] 产品路线图_Q3.png', '');
+        ui.print('  06-30 14:20  [文件] Q3产品迭代方案_V1.0.pdf', '');
+        ui.print('  06-29 09:30  [文件] PRD_终版_v4.docx', '');
+        ui.print('  06-28 16:45  [文件] 评审会议纪要.xlsx', '');
+        ui.print('  06-27 11:20  [文件] 年假工作交接表.xlsx', '');
+        ui.print('  06-26 15:30  [文件] 产品路线图_Q3.png', '');
         ui.print('', '');
         ui.print('工作文件传输，无异常。', 'hint');
         return true;
@@ -595,7 +608,7 @@ var command = (function () {
         state._navContext = 'wechat.chat.laoban';
         ui.print('━━━ 老板（赵总） ━━━', 'system');
         ui.print('', '');
-        ui.print('─── 06-16 ───', 'hint');
+        ui.print('─── 06-30 ───', 'hint');
         ui.print('  18:40 赵总: 洛邑，周三评审你有把握吗？', '');
         ui.print('  18:41 麻姐: 赵总好，没问题的，PRD和数据都准备好了', '');
         ui.print('  18:43 赵总: 好，辛苦了。赵磊那边接口对完了吧？', '');
@@ -608,7 +621,7 @@ var command = (function () {
         state._navContext = 'wechat.chat.57';
         ui.print('━━━ 57 ━━━', 'system');
         ui.print('', '');
-        ui.print('─── 06-13 ───', 'hint');
+        ui.print('─── 06-27 ───', 'hint');
         ui.print('  22:00 57: 你看了昨晚那个金属乐队的新MV吗？', '');
         ui.print('  22:03 麻姐: 看了看了！吉他riff太炸了', '');
         ui.print('  22:05 57: 对吧！我扒了一下午都没扒下来', '');
@@ -629,14 +642,41 @@ var command = (function () {
         state._navContext = 'wechat.chat.meituan';
         ui.print('━━━ 美团外卖 ━━━', 'system');
         ui.print('', '');
-        ui.print('─── 06-12 ───', 'hint');
-        ui.print('  12:00 [订单通知] 您的外卖已送达', '');
-        ui.print('  11:15 [优惠] 限时红包满30减8', '');
+        ui.print('─── 06-30 ───', 'hint');
+        ui.print('  11:20 [美团外卖] 订单已提交 轻食派（中南路店）', '');
+        ui.print('  11:21 [美团外卖] 商家已接单，预计12:00送达', '');
+        ui.print('  11:38 [美团外卖] 骑手已取餐', '');
+        ui.print('  11:59 [美团外卖] 订单已送达（已放入一楼外卖柜）', '');
+        ui.print('  11:59 [美团外卖] 取件码：8302，请及时取餐', '');
         ui.print('', '');
-        ui.print('─── 06-11 ───', 'hint');
-        ui.print('  12:15 [订单通知] 骑手已取餐', '');
+        ui.print('─── 06-29 ───', 'hint');
+        ui.print('  11:15 [美团外卖] 订单已提交 轻食派（中南路店）', '');
+        ui.print('  11:16 [美团外卖] 商家已接单，预计11:55送达', '');
+        ui.print('  11:32 [美团外卖] 骑手已取餐', '');
+        ui.print('  11:53 [美团外卖] 订单已送达（已放入一楼外卖柜）', '');
+        ui.print('  11:53 [美团外卖] 取件码：5197，请及时取餐', '');
         ui.print('', '');
-        ui.print('外卖通知，无异常。', 'hint');
+        ui.print('─── 06-28 ───', 'hint');
+        ui.print('  09:00 [美团外卖] 开工红包已到账！满25减3，今日可用', '');
+        ui.print('  10:15 [美团外卖] 周末限时秒杀：精选饮品买一送一', '');
+        ui.print('', '');
+        ui.print('─── 06-27 ───', 'hint');
+        ui.print('  09:05 [美团外卖] 周末专享券已发放：满30减8，限今天', '');
+        ui.print('  18:30 [美团外卖] 晚餐推荐：附近热销麻辣烫，配送费减免', '');
+        ui.print('', '');
+        ui.print('─── 06-26 ───', 'hint');
+        ui.print('  11:30 [美团外卖] 订单已提交 轻食派（中南路店）', '');
+        ui.print('  11:31 [美团外卖] 商家已接单，预计12:08送达', '');
+        ui.print('  11:48 [美团外卖] 骑手已取餐', '');
+        ui.print('  12:06 [美团外卖] 订单已送达（已放入一楼外卖柜）', '');
+        ui.print('  12:06 [美团外卖] 取件码：6852，请及时取餐', '');
+        ui.print('', '');
+        ui.print('─── 06-25 ───', 'hint');
+        ui.print('  11:35 [美团外卖] 订单已提交 轻食派（中南路店）', '');
+        ui.print('  11:36 [美团外卖] 商家已接单，预计12:10送达', '');
+        ui.print('  11:52 [美团外卖] 骑手已取餐', '');
+        ui.print('  12:08 [美团外卖] 订单已送达（已放入一楼外卖柜）', '');
+        ui.print('  12:08 [美团外卖] 取件码：4731，请及时取餐', '');
         return true;
       }
       return false;
@@ -701,7 +741,7 @@ ui.print("→ 获取到一条新信息：" + EVIDENCE['E-17'].name, 'evidence');
       ui.print('  课程名称：力量训练', '');
       ui.print('  课程编号：LS-2026-0617-1215', '');
       ui.print('  教练：邹大雄（大怪兽）', '');
-      ui.print('  时间：2026-06-17 12:15 - 13:30', '');
+      ui.print('  时间：2026-07-01 12:15 - 13:15', '');
       ui.print('  地点：广埠屯店', '');
       ui.print('', '');
       await ui.printDialogue('数字麻姐', ['今天中午麻姐约了大怪兽教练的直播课，12:15 开始。'], 'digital-human');
@@ -1134,29 +1174,29 @@ async function handleWechatMiniSearch(raw) {
 async function showOAChatChenli() {
   ui.print('━━━ OA 聊天记录 — 陈立 ━━━', 'system');
   ui.print('【梁洛邑 ↔ 陈立（产品研发部·产品总监）】', 'important');
-  ui.print('共 8 条消息  ｜  2026-06-08 至 2026-06-16', '');
+  ui.print('共 8 条消息  ｜  2026-06-22 至 2026-06-30', '');
   ui.print('', '');
-  ui.print('─── 06-16 ───', 'hint');
+  ui.print('─── 06-30 ───', 'hint');
   ui.print('  16:30 陈立: @梁洛邑 周三评审的材料你这边准备得怎么样了？', '');
   ui.print('  16:35 梁洛邑: 差不多了，PRD 终版和原型图都更新过了，明早发你邮箱。', '');
   ui.print('  16:36 陈立: 好，赵总那边会重点看支付流程，你多准备一下。', '');
   ui.print('  16:40 梁洛邑: 收到。支付流程那一块我加了流程图和异常情况说明，应该够用。', '');
   ui.print('', '');
-  ui.print('─── 06-15 ───', 'hint');
-  ui.print('  14:00 陈立: 【群发】周三下午 3 点 B302 会议室，赵总主持端午前上线方案评审。', '');
+  ui.print('─── 06-29 ───', 'hint');
+  ui.print('  14:00 陈立: 【群发】周三下午 3 点 B302 会议室，赵总主持Q3产品迭代方案评审。', '');
   ui.print('  14:05 梁洛邑: 收到，按时到。', '');
   ui.print('', '');
-  ui.print('─── 06-13 ───', 'hint');
+  ui.print('─── 06-27 ───', 'hint');
   ui.print('  17:40 陈立: 本周周报你先发我看看，下周一要报给赵总。', '');
   ui.print('  17:45 梁洛邑: 已经写好了，附件发你。', '');
   ui.print('  17:46 陈立: 收到，我看一眼。', '');
   ui.print('', '');
-  ui.print('─── 06-10 ───', 'hint');
+  ui.print('─── 06-24 ───', 'hint');
   ui.print('  10:30 陈立: 今天下午的需求评审会议你来主持，我陪赵总开会。', '');
   ui.print('  10:32 梁洛邑: 没问题，我把会议纪要整理好同步给你。', '');
   ui.print('', '');
-  ui.print('─── 06-08 ───', 'hint');
-  ui.print('  14:15 陈立: 端午上线方案改了几版了？', '');
+  ui.print('─── 06-22 ───', 'hint');
+  ui.print('  14:15 陈立: Q3产品迭代方案改了几版了？', '');
   ui.print('  14:20 梁洛邑: 三版了。技术那边反馈的几个点我都已经调整。', '');
   ui.print('  14:22 陈立: 好的，辛苦。', '');
   ui.print('', '');
@@ -1167,43 +1207,43 @@ async function showOAChatChenli() {
 async function showOAChatQianmin() {
   ui.print('━━━ OA 聊天记录 — 钱敏 ━━━', 'system');
   ui.print('【梁洛邑 ↔ 钱敏（行政部）】', 'important');
-  ui.print('共 5 条消息  ｜  2026-06-07 至 2026-06-16', '');
+  ui.print('共 5 条消息  ｜  2026-06-21 至 2026-06-30', '');
   ui.print('', '');
-  ui.print('─── 06-16 ───', 'hint');
-  ui.print('  16:25 钱敏: 端午节值班表已经发到 OA 流程里了，麻烦你看一下。', '');
-  ui.print('  16:30 钱敏: 另外 6 月 19 日到 21 日公司放假，17 日正常上班。', '');
+  ui.print('─── 06-30 ───', 'hint');
+  ui.print('  16:25 钱敏: 年假工作交接表已经发到 OA 流程里了，麻烦你看一下。', '');
+  ui.print('  16:30 钱敏: 你的年假申请已经批了，7 月 2 日到 7 日休假，1 日正常上班。', '');
   ui.print('  16:32 梁洛邑: 收到，已经看过了。', '');
   ui.print('', '');
-  ui.print('─── 06-15 ───', 'hint');
-  ui.print('  16:45 钱敏: 梁洛邑你好，你的门禁卡申请已经转到行政部了，预计 6 月 17 日之前会审批完成。', '');
+  ui.print('─── 06-29 ───', 'hint');
+  ui.print('  16:45 钱敏: 梁洛邑你好，你的门禁卡申请已经转到行政部了，预计 7 月 1 日之前会审批完成。', '');
   ui.print('  16:50 梁洛邑: 好的，谢谢！', '');
   ui.print('', '');
-  ui.print('─── 06-14 ───', 'hint');
-  ui.print('  09:00 钱敏: 提醒一下，6 月 17 日开始工位区域门禁升级为刷卡+人脸识别，6 月 16 日下班前请所有员工完成人脸采集。', '');
+  ui.print('─── 06-28 ───', 'hint');
+  ui.print('  09:00 钱敏: 提醒一下，7 月 1 日开始工位区域门禁升级为刷卡+人脸识别，6 月 30 日下班前请所有员工完成人脸采集。', '');
   ui.print('  09:05 梁洛邑: 好的，今天下班前完成采集。', '');
   ui.print('', '');
-  ui.print('─── 06-07 ───', 'hint');
-  ui.print('  14:30 钱敏: 端午节公司福利品已到，麻烦你下班前到前台领取。', '');
+  ui.print('─── 06-21 ───', 'hint');
+  ui.print('  14:30 钱敏: Q3项目冲刺慰问品已到，麻烦你下班前到前台领取。', '');
   ui.print('  14:35 梁洛邑: 收到，谢谢！', '');
   ui.print('', '');
-  await ui.printDialogue('数字麻姐', ['钱敏是行政部专员。聊天都是关于门禁卡、端午节值班、福利发放等行政事务。完全是正常的工作沟通。'], 'digital-human');
+  await ui.printDialogue('数字麻姐', ['钱敏是行政部专员。聊天都是关于门禁卡、年假申请、项目慰问等行政事务。完全是正常的工作沟通。'], 'digital-human');
   ui.print('输入 back 返回。', 'hint');
 }
 
 async function showOAChatZhaolei() {
   ui.print('━━━ OA 聊天记录 — 赵磊 ━━━', 'system');
   ui.print('【梁洛邑 ↔ 赵磊（技术部·后端工程师）】', 'important');
-  ui.print('共 3 条消息  ｜  2026-06-02 至 2026-06-10', '');
+  ui.print('共 3 条消息  ｜  2026-06-25 至 2026-06-30', '');
   ui.print('', '');
-  ui.print('─── 06-10 ───', 'hint');
+  ui.print('─── 06-30 ───', 'hint');
   ui.print('  14:10 赵磊: 订单模块的接口文档我更新了，麻烦你确认一下。', '');
   ui.print('  14:15 梁洛邑: 收到，我看一下，有问题再找你。', '');
   ui.print('', '');
-  ui.print('─── 06-04 ───', 'hint');
-  ui.print('  11:30 赵磊: 端午节上线的优惠券逻辑我提了一个 PR，你看下是否符合预期。', '');
+  ui.print('─── 06-27 ───', 'hint');
+  ui.print('  11:30 赵磊: Q3版本上线的优惠券逻辑我提了一个 PR，你看下是否符合预期。', '');
   ui.print('  11:35 梁洛邑: 好的，下午 review 完反馈给你。', '');
   ui.print('', '');
-  ui.print('─── 06-02 ───', 'hint');
+  ui.print('─── 06-25 ───', 'hint');
   ui.print('  16:00 赵磊: 下次需求评审能不能提前一天发我 PRD？我好做技术预研。', '');
   ui.print('  16:05 梁洛邑: 可以，下次我提前两天发。', '');
   ui.print('', '');
@@ -1214,13 +1254,13 @@ async function showOAChatZhaolei() {
 async function showOAChatSunyi() {
   ui.print('━━━ OA 聊天记录 — 孙艺 ━━━', 'system');
   ui.print('【梁洛邑 ↔ 孙艺（产品设计部·UI 设计师）】', 'important');
-  ui.print('共 2 条消息  ｜  2026-06-05 至 2026-06-07', '');
+  ui.print('共 2 条消息  ｜  2026-06-28 至 2026-06-30', '');
   ui.print('', '');
-  ui.print('─── 06-07 ───', 'hint');
-  ui.print('  10:35 梁洛邑: 端午节活动页的设计稿能周三前给到吗？评审需要。', '');
+  ui.print('─── 06-30 ───', 'hint');
+  ui.print('  10:35 梁洛邑: Q3活动页的设计稿能周三前给到吗？评审需要。', '');
   ui.print('  10:40 孙艺: 可以，周四下班前发你。', '');
   ui.print('', '');
-  ui.print('─── 06-05 ───', 'hint');
+  ui.print('─── 06-28 ───', 'hint');
   ui.print('  15:20 孙艺: 上次讨论的会员中心改版方案，第三版我做好了，链接发你。', '');
   ui.print('  15:25 梁洛邑: 收到，我看一眼。', '');
   ui.print('', '');
@@ -1288,9 +1328,9 @@ async function showOAWorkflow1() {
   ui.print('  流程编号：AP-2026-2045', '');
   ui.print('  申请人：梁洛邑（CM-2021-0047）', '');
   ui.print('  申请类型：门禁权限激活', '');
-  ui.print('  申请时间：2026-06-15 09:15', '');
+  ui.print('  申请时间：2026-06-29 09:15', '');
   ui.print('  审批状态：已通过（行政部·钱敏）', '');
-  ui.print('  审批时间：2026-06-17 08:00', '');
+  ui.print('  审批时间：2026-07-01 08:00', '');
   ui.print('', '');
   ui.print('  申请说明：刷卡时提示"权限验证失败"，无法进入工位区域。', '');
   ui.print('', '');
@@ -1343,6 +1383,97 @@ async function showOAWorkflow1() {
   }
 }
 
+function showOAWorkflow2() {
+  ui.print('━━━ OA - 流程详情 ━━━', 'system');
+  ui.print('  流程编号：AP-2026-2015', '');
+  ui.print('  申请人：梁洛邑（CM-2021-0047）', '');
+  ui.print('  申请类型：会议室预约', '');
+  ui.print('  申请时间：2026-06-27 08:45', '');
+  ui.print('  审批状态：已通过（系统自动审批）', '');
+  ui.print('  审批时间：2026-06-27 09:20', '');
+  ui.print('', '');
+  ui.print('  预约详情：', 'important');
+  ui.print('  会议室：B302', '');
+  ui.print('  日期：2026-06-29（周一）', '');
+  ui.print('  时间：15:00 - 16:30', '');
+  ui.print('  参会人：郑桥、陈立、赵磊', '');
+  ui.print('  会议主题：Q3产品迭代方案V1.0细节讨论', '');
+  ui.print('', '');
+  ui.print('  预约说明：与郑桥、陈立、赵磊讨论Q3产品迭代方案技术细节及接口规范。', '');
+  ui.print('', '');
+  ui.print('  [取消预约]   [修改时间]', 'hint');
+}
+
+function showOAWorkflow3() {
+  ui.print('━━━ OA - 流程详情 ━━━', 'system');
+  ui.print('  流程编号：AP-2026-1988', '');
+  ui.print('  申请人：梁洛邑（CM-2021-0047）', '');
+  ui.print('  申请类型：年假审批通过', '');
+  ui.print('  申请时间：2026-06-30 09:30', '');
+  ui.print('  审批状态：已通过（行政部·钱敏）', '');
+  ui.print('  审批时间：2026-06-30 16:30', '');
+  ui.print('', '');
+  ui.print('  关联流程：AP-2026-2085 年假申请批复通知', '');
+  ui.print('  年假时间：2026年7月2日（周四）～ 7月7日（周二），共6天', '');
+  ui.print('', '');
+  ui.print('  交接安排：', 'important');
+  ui.print('  7月2日（周四） 对接人：赵磊（后端工程师）', '');
+  ui.print('  7月3日（周五） 对接人：孙艺（UI设计师）', '');
+  ui.print('  7月4日（周六） 对接人：郑桥（高级研发工程师）', '');
+  ui.print('  7月5日（周日） 对接人：陈立（产品总监）', '');
+  ui.print('  7月6日（周一） 对接人：赵磊（后端工程师）', '');
+  ui.print('  7月7日（周二） 对接人：郑桥（高级研发工程师）', '');
+  ui.print('', '');
+  ui.print('  紧急联系人：陈立（产品总监）', '');
+  ui.print('  备注：已同步供应商对接人信息至交接文档。', '');
+}
+
+function showOAWorkflow4() {
+  ui.print('━━━ OA - 流程详情 ━━━', 'system');
+  ui.print('  流程编号：AP-2026-2019', '');
+  ui.print('  申请人：梁洛邑（CM-2021-0047）', '');
+  ui.print('  申请类型：办公用品申请', '');
+  ui.print('  申请时间：2026-06-25 14:20', '');
+  ui.print('  审批状态：已通过（IT部）', '');
+  ui.print('  审批时间：2026-06-26 10:30', '');
+  ui.print('', '');
+  ui.print('  申请说明：', 'important');
+  ui.print('  因Q3项目评审需要展示PRD文档及原型图，现有笔记本屏幕尺寸不够，申请配置一台外接显示器用于办公。', '');
+  ui.print('', '');
+  ui.print('  申请物品清单：', '');
+  ui.print('  Dell U2724D 27英寸显示器 × 1', '');
+  ui.print('  USB-C 扩展坞 × 1', '');
+  ui.print('', '');
+  ui.print('  预计使用时间：长期使用', '');
+  ui.print('  资产编号：待分配', '');
+  ui.print('', '');
+  ui.print('  审批意见 - IT部王工（06-26）：已核实库存，同意发放。请到IT部101工位领取。', '');
+}
+
+function showOAWorkflow5() {
+  ui.print('━━━ OA - 流程详情 ━━━', 'system');
+  ui.print('  流程编号：AP-2026-1820', '');
+  ui.print('  申请人：梁洛邑（CM-2021-0047）', '');
+  ui.print('  申请类型：出差申请', '');
+  ui.print('  申请时间：2026-06-24 16:00', '');
+  ui.print('  审批状态：已通过（部门主管·陈立 → 行政部·钱敏）', '');
+  ui.print('  审批时间：2026-06-30 15:30', '');
+  ui.print('', '');
+  ui.print('  出差详情：', 'important');
+  ui.print('  出差地点：湖北省十堰市', '');
+  ui.print('  出差时间：2026年7月8日（周三）～ 7月10日（周五），共3天', '');
+  ui.print('  出差事由：十堰市AI服务平台项目现场对接及需求确认', '');
+  ui.print('  预算编号：TC-2026-0042', '');
+  ui.print('  同行人员：无（单人出差）', '');
+  ui.print('  预计费用：交通 ￥1,200 + 住宿 ￥1,800 + 差补 ￥600', '');
+  ui.print('', '');
+  ui.print('  审批意见：', 'important');
+  ui.print('  陈立（06-26）：同意，十堰项目需要现场跟进。', '');
+  ui.print('  钱敏（06-30）：预算已核对，同意出差。', '');
+  ui.print('', '');
+  ui.print('  [查看预算明细]   [查看行程安排]', 'hint');
+}
+
 async function showOAEmailByIndex(index) {
   var state = game.getState();
   var e03 = EVIDENCE['E-03'].content;
@@ -1351,6 +1482,14 @@ async function showOAEmailByIndex(index) {
     return;
   }
   var m = e03.mails[index];
+  // index 10 是麻姐的定时邮件，提前用动态时间覆盖
+  if (index === 10 && state.bLineEmailTime) {
+    m.time = String(state.bLineEmailTime.getFullYear()) + '.' +
+             String(state.bLineEmailTime.getMonth()+1).padStart(2,'0') + '.' +
+             String(state.bLineEmailTime.getDate()).padStart(2,'0') + ' ' +
+             String(state.bLineEmailTime.getHours()).padStart(2,'0') + ':' +
+             String(state.bLineEmailTime.getMinutes()).padStart(2,'0');
+  }
   ui.print('━━━ 邮件详情 ━━━', 'system');
   ui.print('  [' + m.id + '] ' + m.subject, 'important');
   ui.print('  发件：' + m.from, '');
@@ -1366,6 +1505,8 @@ async function showOAEmailByIndex(index) {
   if (index === 10) {
     state.bLineEmailRead = true;
     game.save();
+    // 停留几秒让玩家阅读和思考
+    await new Promise(function(r) { setTimeout(r, 4000); });
     maybeTriggerBLine(state);
   }
   ui.print('输入 list 查看完整信息。', 'hint');
@@ -1379,7 +1520,7 @@ async function handleCreditQuery(raw) {
       var e09 = EVIDENCE['E-09'].content;
       var reportId = 'CREDIT-20260617-88' + (42 + Math.floor(Math.random() * 10));
       ui.print('━━━ 个人信用报告 ━━━', 'system');
-      ui.print('报告编号：' + reportId + '    查询时间：2026-06-17 15:30:' + String(Math.floor(Math.random() * 60)).padStart(2, '0'), '');
+      ui.print('报告编号：' + reportId + '    查询时间：' + getExportTimeStr(), '');
       ui.print('', '');
       ui.print('[个人信息]', 'important');
       ui.print('  姓名：' + e09.name + '    性别：' + (e09.gender || '男') + '    年龄：' + e09.age, '');
@@ -1457,15 +1598,27 @@ async function handleCreditQuery(raw) {
     game.save();
     return true;
   }
+  if (raw.indexOf('梁洛邑') >= 0 || raw.indexOf('138****8812') >= 0) {
+    displayCreditReport({
+      name: '梁洛邑', age: 31, gender: '女', marriage: '已婚', education: '本科',
+      idNumber: '4201**********8812', occupation: '湖北省楚门科技有限公司·产品经理',
+      creditStatus: '信用卡正常还款，名下有一笔房贷，无逾期记录',
+      accounts: { creditCards: 2, loans: 1 },
+      publicData: '未发现赌博、大额借贷、诉讼等异常经济行为', noCrimeRecord: true,
+    }, false);
+    await ui.printDialogue('数字麻姐', ['麻姐自己的信用记录很正常，名下有一笔房贷，没有其他负债。'], 'digital-human');
+    state._navContext = null;
+    game.save();
+    return true;
+  }
   ui.print("未找到该人员。请输入\"姓名+手机号\"格式。", "error");
-  ui.print("  示例：邹大雄 138****7753", "hint");
   return true;
 }
 
 function displayCreditReport(person, showQueryMeta) {
   if (showQueryMeta === undefined) showQueryMeta = true;
   var reportId = 'CREDIT-20260617-88' + (42 + Math.floor(Math.random() * 10));
-  var timeStr = '2026-06-17 15:30:' + String(Math.floor(Math.random() * 60)).padStart(2, '0');
+  var timeStr = getExportTimeStr();
   ui.print('━━━ 个人信用报告 ━━━', 'system');
   ui.print('报告编号：' + reportId + '    查询时间：' + timeStr, '');
   if (showQueryMeta) {
@@ -1517,7 +1670,7 @@ function displayCreditReport(person, showQueryMeta) {
   ui.print('', '');
   if (showQueryMeta) {
     ui.print('[查询记录]', 'important');
-    ui.print('  2026-06-17  数字人麻姐  本人查询', '');
+    ui.print('  2026-07-01  数字人麻姐  本人查询', '');
     ui.print('', '');
   }
   ui.print('━━━ 报告结束 ━━━', 'system');

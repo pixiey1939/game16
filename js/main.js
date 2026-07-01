@@ -28,16 +28,27 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(async () => {
     // ===== 多周目检测（≥3 个不同结局才能触发 D线）=====
     try {
+      var achieved = [];
       var saveRaw = localStorage.getItem('game16-save-v1');
       if (saveRaw) {
         var saveData = JSON.parse(saveRaw);
-        var achieved = (saveData.state && saveData.state.endingsAchieved) || [];
-        if (achieved.length >= 3) {
-          ui.print('[检测到历史会话记录：' + achieved.length + ' 个结局]', 'hint');
-          runDLine();
-          input.focus();
-          return;
+        achieved = (saveData.state && saveData.state.endingsAchieved) || [];
+      }
+      // 同时检查跨存档持久化的结局列表（clear confirm 后不丢失）
+      try {
+        var preservedRaw = localStorage.getItem('game16-endings-v1');
+        if (preservedRaw) {
+          var preserved = JSON.parse(preservedRaw);
+          for (var pi = 0; pi < preserved.length; pi++) {
+            if (achieved.indexOf(preserved[pi]) === -1) achieved.push(preserved[pi]);
+          }
         }
+      } catch (e) {}
+      if (achieved.length >= 3 && achieved.indexOf('endingD') === -1) {
+        ui.print('[检测到历史会话记录：' + achieved.length + ' 个结局]', 'hint');
+        runDLine();
+        input.focus();
+        return;
       }
     } catch (e) {
       console.warn('多周目检测失败:', e);

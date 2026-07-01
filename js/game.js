@@ -2,7 +2,20 @@
 // 职责：GameState 管理、阶段逻辑、Combine、Ending、持久化
 
 const SAVE_KEY = 'game16-save-v1';
+const ENDINGS_KEY = 'game16-endings-v1';
+const XHS_KEY = 'game16-xhs-ids';
 const VERSION = '1.0.0';
+
+function getExportTimeStr() {
+  var now = new Date();
+  var y = now.getFullYear();
+  var m = String(now.getMonth() + 1).padStart(2, '0');
+  var d = String(now.getDate()).padStart(2, '0');
+  var h = String(now.getHours()).padStart(2, '0');
+  var min = String(now.getMinutes()).padStart(2, '0');
+  var s = String(now.getSeconds()).padStart(2, '0');
+  return y + '-' + m + '-' + d + ' ' + h + ':' + min + ':' + s;
+}
 
 // ============================================================
 // game IIFE
@@ -11,6 +24,12 @@ const VERSION = '1.0.0';
 const game = (() => {
   // 初始状态
   function freshState() {
+    // 恢复跨存档持久化的结局列表
+    var preservedEndings = [];
+    try {
+      var raw = localStorage.getItem(ENDINGS_KEY);
+      if (raw) { preservedEndings = JSON.parse(raw); }
+    } catch (e) {}
     return {
       currentStage: 1,
       stageIntroShown: { 1: false, 2: false, 3: false, 4: false, 5: false },
@@ -26,12 +45,13 @@ const game = (() => {
       doorActivateCancelled: false,
       gymAuthCancelled: false,
       endingReached: null,
-      endingsAchieved: [],
+      endingsAchieved: preservedEndings,
       playerChoice: null,
       _bLineRevealed: null,
       _killConfirmPending: false,
       bLineEmailArrived: false,
       bLineEmailRead: false,
+      bLineEmailTime: null,
       cancelCount: 0,
       startTime: Date.now(),
       saveTime: 0,
@@ -120,6 +140,7 @@ const game = (() => {
     var s = getState();
     if (s.cancelCount >= 2 && !s.bLineEmailArrived) {
       s.bLineEmailArrived = true;
+      s.bLineEmailTime = new Date();
       save();
     }
   }
@@ -134,11 +155,27 @@ const game = (() => {
   };
 })();
 
+/**
+ * 保存玩家输入的小红书 ID
+ */
+function saveXhsId(xhsId) {
+  if (!xhsId || xhsId.trim() === '') return;
+  try {
+    var raw = localStorage.getItem(XHS_KEY);
+    var list = raw ? JSON.parse(raw) : [];
+    list.push({ id: xhsId.trim(), time: Date.now() });
+    localStorage.setItem(XHS_KEY, JSON.stringify(list));
+  } catch (e) { console.warn('保存小红书 ID 失败:', e); }
+}
+
 function recordEnding(endingId) {
   var state = game.getState();
   state.endingReached = endingId;
   if (!state.endingsAchieved) state.endingsAchieved = [];
-  if (!state.endingsAchieved.includes(endingId)) state.endingsAchieved.push(endingId);
+  if (!state.endingsAchieved.includes(endingId)) {
+    state.endingsAchieved.push(endingId);
+    try { localStorage.setItem(ENDINGS_KEY, JSON.stringify(state.endingsAchieved)); } catch (e) {}
+  }
 }
 
 function maybeTriggerBLine(state) {
@@ -199,7 +236,7 @@ async function handleStage1Response(input) {
       '我先告诉你今天麻姐的动向。她的手机定位显示以下记录：',
     ], 'digital-human');
     ui.print('', '');
-    e01.data.forEach(line => ui.print('  ' + line, ''));
+    e01.data.forEach(function(line) { ui.print('  ' + line.replace('__EXPORT_TIME__', getExportTimeStr()), ''); });
     ui.print('', '');
     ui.print(e01.analysis, 'important');
     ui.print('', '');
@@ -216,6 +253,7 @@ async function handleStage1Response(input) {
     setTimeout(() => runStage2(), 1500);
     return true;
   } else if (input === 'n' || input === 'no' || input === '否') {
+    ui.disableInput();
     await ui.printDialogue('数字麻姐', [
       '好的。如果你改变主意，随时可以回来找我。',
     ], 'digital-human');
@@ -229,8 +267,30 @@ async function handleStage1Response(input) {
     ui.print('', '');
     ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     ui.print('', '');
-    ui.print('[页面将在 5 秒后关闭...]', 'hint');
-    setTimeout(function() { window.close(); }, 5000);
+    // 等待队列渲染完成
+    await new Promise(function(r) { setTimeout(r, 200); });
+    var output = document.getElementById('output');
+    // 创建独立的倒计时DOM元素，避免ui.clear()造成队列竞态
+    var countdownEl = document.createElement('div');
+    countdownEl.className = 'line hint';
+    countdownEl.id = 'gameover-countdown';
+    if (output) output.appendChild(countdownEl);
+    for (var cd = 5; cd >= 0; cd--) {
+      countdownEl.textContent = cd > 0 ? '[  ' + cd + '  ]' : '[ 关闭 ]';
+      if (ui.scrollOutputToBottom) ui.scrollOutputToBottom();
+      await new Promise(function(r) { setTimeout(r, 1000); });
+    }
+    if (output && countdownEl.parentNode) countdownEl.parentNode.removeChild(countdownEl);
+    // 尝试关闭页面
+    window.location.href = 'about:blank';
+    setTimeout(function() {
+      window.open('', '_self');
+      window.close();
+      // 如果没关闭成功，提示用户手动关闭
+      setTimeout(function() {
+        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666;font-size:18px;">游戏已结束，请手动关闭此页面。</div>';
+      }, 500);
+    }, 100);
     return true;
   }
   return false;
@@ -293,7 +353,7 @@ async function handleAlbumSystem() {
         '我仔细看了一下相册里导出的照片，发现了一张借条照片。',
         '教练邹大雄向麻姐借了 4 万块钱，7 月初到期。',
         '这给了教练一个明确的经济动机。',
-        '还有一段健身房环境的视频，镜头扫到了墙上的 WiFi 信息贴纸。',
+        '还有一张健身房Wi-Fi账号密码的照片。',
         'SSID 是 LJS_5G，密码是 justdoit。',
         '有了这个 WiFi 信息，我们应该能查看健身房的日志后台了。',
       ], 'digital-human');
@@ -376,7 +436,7 @@ async function showXiaohongshu() {
   ui.print('  IP属地：湖北', '');
   ui.print('  年龄：31岁', '');
   ui.print('', '');
-  ui.print('  关注 78  ｜  粉丝 2.1万  ｜  获赞与收藏 9万', '');
+  ui.print('  关注 78  ｜  粉丝 2.1万  ｜  获赞与收藏 9.4万', '');
   ui.print('', '');
   ui.print('  个人简介：', 'important');
   ui.print('  解密游戏博主啊（更新慢而已🤷‍♀️）', '');
@@ -386,7 +446,7 @@ async function showXiaohongshu() {
   ui.print('  网友你好，祝你生活愉快😊', '');
   ui.print('', '');
   ui.print('  置顶笔记：', 'important');
-  ui.print('  · qg# 游戏15解谜思路（06-10）', '');
+  ui.print('  · qg# 游戏15解谜思路（05-13）', '');
   ui.print('', '');
   await ui.printDialogue('数字麻姐', [
     '我作为数字人，没有直接访问她小红书数据的权限。',
@@ -400,7 +460,7 @@ function showPhoneLocation() {
   ui.print('━━━ 手机定位记录 ━━━', 'system');
   ui.print('', '');
   e01.content.data.forEach(function(line) {
-    ui.print('  ' + line, '');
+    ui.print('  ' + line.replace('__EXPORT_TIME__', getExportTimeStr()), '');
   });
   ui.print('', '');
   ui.print(e01.content.analysis, 'important');
@@ -584,6 +644,15 @@ function loadGame() {
  * 清除对话记录
  */
 function clearSave() {
+  try {
+    var raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      var data = JSON.parse(raw);
+      if (data.state && data.state.endingsAchieved && data.state.endingsAchieved.length > 0) {
+        localStorage.setItem(ENDINGS_KEY, JSON.stringify(data.state.endingsAchieved));
+      }
+    }
+  } catch (e) {}
   try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
   try { if (typeof ui !== 'undefined' && typeof ui.clear === 'function') ui.clear(); } catch (e) {}
   try { ui.print('🗑️ 存档已清除，游戏即将重启...', 'hint'); } catch (e) {}
@@ -632,11 +701,11 @@ async function handleOASubcommand(action) {
   } else if (action === '2') {
     if (state.unlockedEvidence.includes('E-02')) {
       ui.print('[已解锁] OA 聊天记录 — 与郑桥', 'important');
-      ui.print('共 24 条私聊（2026-06-05 ~ 2026-06-17）', '');
-      ui.print('最新几条（06-17 案发当天）：', '');
+      ui.print('共 24 条私聊（2026-06-19 ~ 2026-07-01）', '');
+      ui.print('最新几条（07-01 案发当天）：', '');
       ui.print('  09:40 郑桥: 对了，你今天中午有安排吗？', '');
-      ui.print('  09:42 郑桥: 这周五端午假期开始了，你有什么安排？', '');
-      ui.print('  09:43 麻姐: 中午有事，端午假期暂时没安排。', '');
+      ui.print('  09:42 郑桥: 这周五Q3方案评审，你准备得怎么样了？', '');
+      ui.print('  09:43 麻姐: 中午有事，下午评审的事再说吧。', '');
       ui.print('', '');
       ui.print('输入 list 查看完整信息，或 combine 组合信息。', 'hint');
     } else {
@@ -660,7 +729,7 @@ async function handleOASubcommand(action) {
       ui.print('[已解锁] 麻姐·企业邮箱', 'important');
       ui.print('共 4 封关键邮件（最近一周）', '');
       ui.print('  M-2026-2098: 门禁权限激活（已通过）', '');
-      ui.print('  M-2026-2085: 端午节假期安排（6/19-6/21）', '');
+      ui.print('  M-2026-2085: 年假申请批复通知（7/2-7/7）', '');
       ui.print('  M-2026-2072: 项目评审（6/17 周三 15:00）', '');
       ui.print('  M-2026-2055: 门禁权限变更提醒', '');
       ui.print('', '');
@@ -706,7 +775,7 @@ async function handleOASubcommand(action) {
     ui.print('[麻姐·我的流程]', 'important');
     ui.print('  AP-2026-2045 门禁权限激活 — 已通过', '');
     ui.print('  AP-2026-2015 会议室预约 B302 — 已通过', '');
-    ui.print('  AP-2026-1988 端午假期值班排班 — 已通过', '');
+    ui.print('  AP-2026-1988 年假工作交接安排 — 已通过', '');
     ui.print('  AP-2026-2019 办公电脑申请 — 已通过', '');
     ui.print('  AP-2026-1820 出差申请-十堰 — 已通过', '');
     ui.print('', '');
@@ -725,8 +794,8 @@ async function handleDoorSystem(action) {
     ui.print('━━━ 门禁刷卡记录 ━━━', 'system');
     ui.print('', '');
     ui.print('[正在导出完整门禁日志文件...]', 'hint');
-    await prefetchAndDownload('asset/data/door_access_log.xlsx', 'ChumenTech_DoorAccessLog_2026-06-17.xlsx');
-    ui.print('[下载完成：ChumenTech_DoorAccessLog_2026-06-17.xlsx]', 'evidence');
+    await prefetchAndDownload('asset/data/door_access_log.xlsx', 'ChumenTech_DoorAccessLog_2026-07-01.xlsx');
+    ui.print('[下载完成：ChumenTech_DoorAccessLog_2026-07-01.xlsx]', 'evidence');
     if (!state.unlockedEvidence.includes('E-04')) {
       game.unlockEvidence('E-04');
       ui.print('→ 获取到一条新信息：' + EVIDENCE['E-04'].name, 'evidence');
@@ -800,8 +869,8 @@ async function handleParkingSystem(action) {
     ui.print('━━━ 车辆出入记录 ━━━', 'system');
     ui.print('', '');
     ui.print('[正在导出停车场日志文件...]', 'hint');
-    await prefetchAndDownload('asset/data/parking_log.xlsx', 'ChumenTech_ParkingLog_2026-06-17.xlsx');
-    ui.print('[下载完成：ChumenTech_ParkingLog_2026-06-17.xlsx]', 'evidence');
+    await prefetchAndDownload('asset/data/parking_log.xlsx', 'ChumenTech_ParkingLog_2026-07-01.xlsx');
+    ui.print('[下载完成：ChumenTech_ParkingLog_2026-07-01.xlsx]', 'evidence');
     if (!state.unlockedEvidence.includes('E-06')) {
       game.unlockEvidence('E-06');
       await ui.printDialogue('数字麻姐', [
@@ -813,7 +882,7 @@ async function handleParkingSystem(action) {
       game.save();
     }
   } else if (action === '2') {
-    ui.print('━━━ 车位使用情况 - 2026-06-17 ━━━', 'system');
+    ui.print('━━━ 车位使用情况 - 2026-07-01 ━━━', 'system');
     ui.print('', '');
     ui.print('  总车位：120 个', '');
     ui.print('  当前占用：68 个（占用率 56.7%）', '');
@@ -845,10 +914,10 @@ async function handleParkingLicenseQuery(raw) {
     ui.print('  车主信息：郑桥（楚门科技·技术部）', '');
     ui.print('', '');
     ui.print('  近期服务联动记录：', 'important');
-    ui.print('  2026-06-17 13:07  广捷洗车（广埠屯店）', '');
-    ui.print('  2026-06-13 10:23  广捷洗车（广埠屯店）', '');
-    ui.print('  2026-06-10 18:57  中石化加油站（中南路站）', '');
-    ui.print('  2026-06-09 09:42  广捷洗车（广埠屯店）', '');
+    ui.print('  2026-07-01 13:07  广捷洗车（广埠屯店）', '');
+    ui.print('  2026-06-29 10:23  广捷洗车（广埠屯店）', '');
+    ui.print('  2026-06-27 18:57  中石化加油站（中南路站）', '');
+    ui.print('  2026-06-25 09:42  广捷洗车（广埠屯店）', '');
     ui.print('', '');
     await ui.printDialogue('数字麻姐', [
       '他的车经常去"广捷洗车"。案发当天 13:07 也去了一次。',
@@ -879,12 +948,12 @@ async function handleMonitorSearch(raw) {
       ui.print('', '');
       ui.print('[正在导出监控视频...]', 'hint', { speed: 50 });
       await new Promise(function(r) { setTimeout(r, 2000); });
-      ui.print('  ' + (e07.fileName || 'HuixuanSupermarket_CCTV_2026-06-17_1143-1153.mp4'), '');
+      ui.print('  ' + (e07.fileName || 'HuixuanSupermarket_CCTV_2026-07-01_1143-1153.mp4'), '');
       await new Promise(function(r) { setTimeout(r, 1000); });
       ui.print('[警告：视频文件无法下载，格式错误不支持在线播放]', 'error');
       ui.print('', '');
       await ui.printDialogue('数字麻姐', [
-        '超市门口的视频我大致看了一下——',
+        '我看了今天的监控内容，找到了中午麻姐和网友在超市碰面的监控记录。',
         '11:43 麻姐在超市门口和一个黑衣年轻男性碰面，两个人聊了大概十分钟。',
         '那个男的背着吉他包，身形瘦高，跟小红书网友 Embrace 的描述对得上。',
         '麻姐从袋子里拿了一瓶水递给他，然后自己先往健身房方向走了。',
@@ -917,10 +986,10 @@ async function handleMonitorSearch(raw) {
       ui.print('[警告：视频文件无法下载，格式错误不支持在线播放]', 'error');
       ui.print('', '');
       await ui.printDialogue('数字麻姐', [
-        '洗车店的监控视频我大致看了——',
-        '13:07 郑桥开车进洗车店，把车交给洗车师傅后就在旁边等着。',
+        '我今天把今天的全部监控视频都看了一遍，找到了跟郑桥有关的时间区间。',
+        '13:07 郑桥开车进洗车店，把车交给洗车师傅后就在旁边看手机。',
         '13:15 他进了卫生间，但直到 13:45 才出来——整整 30 分钟。',
-        '正常洗车也就 20 分钟左右，他去卫生间待了 30 分钟，这太反常了。',
+        '正常洗车也就 20 分钟左右，他去卫生间待了 30 分钟，这有点反常了。',
       ], 'digital-human');
       ui.print('→ 获取到一条新信息：' + EVIDENCE['E-08'].name, 'evidence');
       game.save();
@@ -937,7 +1006,6 @@ async function handleMonitorSearch(raw) {
     return true;
   } else {
     ui.print('未找到匹配"' + raw.trim() + '"的商户监控记录。', 'error');
-    ui.print('目前可查询的商户：广埠屯惠选超市、广捷洗车（广埠屯店）。', 'hint');
     return true;
   }
 }
@@ -1043,15 +1111,27 @@ async function handleSmsSystem() {
   ui.print('━━━ 短信 - 最近对话 ━━━', 'system');
   ui.print('', '');
   var e12 = EVIDENCE['E-12'].content;
-  ui.print('  1. 157****6697            最后消息 06-17 13:33   未读', 'bulk');
+
+  // 计算发件人显示宽度（中文字符=2，ASCII=1），用于对齐
+  function senderWidth(s) { var w=0,i=0,c; for(;i<s.length;i++) {c=s.charCodeAt(i); w+=c>127?2:1;} return w; }
+  var maxSenderW = senderWidth(e12.embracePhone);
+  for (var si = 0; si < e12.noise.length; si++) {
+    var sw = senderWidth(e12.noise[si].sender);
+    if (sw > maxSenderW) maxSenderW = sw;
+  }
+
+  function padSender(s) { return s + ' '.repeat(maxSenderW - senderWidth(s)); }
+
+  var totalSms = 1 + e12.noise.length;
+  ui.print('  1. ' + padSender(e12.embracePhone) + '  最后消息 07-01 13:33   未读', 'bulk');
   for (var i = 0; i < e12.noise.length; i++) {
     var n = e12.noise[i];
     var num = String(i + 2);
-    var pad = num.length === 1 ? ' ' : '';
-    ui.print('  ' + pad + num + '. ' + n.sender + '  最后消息 ' + n.date + (n.note === '验证码' || n.note === '银行短信' ? '  （' + n.note + '）' : ''), 'bulk');
+    var note = (n.note === '验证码' || n.note === '银行短信') ? '  （' + n.note + '）' : '';
+    ui.print('  ' + num + '. ' + padSender(n.sender) + '  最后消息 ' + n.date + note, 'bulk');
   }
   ui.print('', '');
-  ui.print('共 22 条对话。输入编号查看详情。', 'hint');
+  ui.print('共 ' + totalSms + ' 条对话。输入编号查看详情。', 'hint');
 }
 
 async function handleSmsNumberInput(num) {
@@ -1084,14 +1164,21 @@ async function handleWechatSystem(action) {
     }
     ui.print('━━━ 微信 - 与老公 ━━━', 'system');
     ui.print('', '');
+    var lastDate = '';
     e15.messages.forEach(function(msg) {
-      ui.print('  ' + msg.from + ': ' + msg.text, '');
+      var d = msg.date ? msg.date.split(' ')[0] : '';
+      if (d && d !== lastDate) {
+        if (lastDate) ui.print('', '');
+        ui.print('  ─── ' + d + ' ───', 'hint');
+        lastDate = d;
+      }
+      var timePart = msg.date ? msg.date.split(' ')[1] + ' ' : '';
+      ui.print('  ' + timePart + msg.from + ': ' + msg.text, '');
     });
     ui.print('', '');
     if (isNew) {
       await ui.printDialogue('数字麻姐', [
-        '麻姐在微信里跟老公诉苦，说郑桥的行为让她"害怕"。',
-        '她早就感觉到了郑桥的越界行为。',
+        '麻姐跟老公抱怨了郑桥没有边界感的行为，又聊了两人年假一起去甘南自驾的行程安排。',
       ], 'digital-human');
       ui.print('→ 获取到一条新信息：' + EVIDENCE['E-15'].name, 'evidence');
       game.save();
@@ -1106,17 +1193,17 @@ async function handleWechatSystem(action) {
     } else {
       ui.print('[已解锁] 大怪兽教练聊天记录', 'important');
     }
-    ui.print('━━━ 微信 - 聊天记录 - 与大怪兽（教练） ━━━', 'system');
+    ui.print('━━━ 微信 - 与大怪兽（教练） ━━━', 'system');
     ui.print('', '');
     var lastDate = '';
     e16.messages.forEach(function(msg) {
       var d = msg.date ? msg.date.split(' ')[0] : '';
       if (d && d !== lastDate) {
         if (lastDate) ui.print('', '');
-        ui.print('  ──', '');
+        ui.print('  ─── ' + d + ' ───', 'hint');
         lastDate = d;
       }
-      var timePart = msg.date ? msg.date.split(' ')[1] + '  ' : '';
+      var timePart = msg.date ? msg.date.split(' ')[1] + ' ' : '';
       ui.print('  ' + timePart + msg.from + ': ' + msg.text, '');
     });
     ui.print('', '');
@@ -1160,7 +1247,7 @@ async function handleWechatSystem(action) {
         }
       }
       ui.print('  ──────────', 'system');
-      ui.print('  导出时间：2026-06-17 13:30（自动）', '');
+      ui.print('  导出时间：2026-07-01 13:30（自动）', '');
       ui.print('  共 ' + e21.payments.length + ' 笔交易 ｜ 总消费金额：¥' + totalSpent.toFixed(2), '');
       ui.print('  ──────────', 'system');
       ui.print('', '');
@@ -1223,12 +1310,12 @@ async function handleGymSystem(action) {
     if (state.unlockedEvidence.includes('E-18')) {
       ui.print('[已解锁] 健身房门禁记录', 'important');
       ui.print('[正在导出健身房门禁日志文件...]', 'hint');
-      await prefetchAndDownload('asset/data/gym_access_log.xlsx', 'LianFitness_DoorAccessLog_2026-06-17.xlsx');
-      ui.print('[下载完成：LianFitness_DoorAccessLog_2026-06-17.xlsx]', 'evidence');
+      await prefetchAndDownload('asset/data/gym_access_log.xlsx', 'LianFitness_DoorAccessLog_2026-07-01.xlsx');
+      ui.print('[下载完成：LianFitness_DoorAccessLog_2026-07-01.xlsx]', 'evidence');
     } else {
       ui.print('[正在导出健身房门禁日志文件...]', 'hint');
-      await prefetchAndDownload('asset/data/gym_access_log.xlsx', 'LianFitness_DoorAccessLog_2026-06-17.xlsx');
-      ui.print('[下载完成：LianFitness_DoorAccessLog_2026-06-17.xlsx]', 'evidence');
+      await prefetchAndDownload('asset/data/gym_access_log.xlsx', 'LianFitness_DoorAccessLog_2026-07-01.xlsx');
+      ui.print('[下载完成：LianFitness_DoorAccessLog_2026-07-01.xlsx]', 'evidence');
       game.unlockEvidence('E-18');
       ui.print('→ 获取到一条新信息：' + EVIDENCE['E-18'].name, 'evidence');
       await ui.printDialogue('数字麻姐', [
@@ -1254,9 +1341,10 @@ async function handleGymSystem(action) {
       ui.print('', '');
       game.unlockEvidence('E-19');
       await ui.printDialogue('数字麻姐', [
+        '我把今天中午麻姐在健身房的监控都看了一遍，发现了两处可疑的地方。',
         '监控显示邹大雄在直播结束后13:10～13:30期间多次出现在女更衣室门口。',
-        '出现在女更衣室门口，因为监控在更衣室门口有盲区，有几次他消失在监控里面了。这太可疑！',
-        '另外，12:00～13:50期间，有个穿黑色卫衣的人在一直健身房门口徘徊观望，没有进来，似乎在等人。',
+        '因为监控在更衣室门口有盲区，有几次他消失在监控里了。这太可疑了！',
+        '另外，12:00～13:50期间，有个穿黑色卫衣的人一直在健身房门口徘徊观望，没有进来，似乎在等人。',
         '他背上还背了一个大包，太远了看不清是什么。',
       ], 'digital-human');
       ui.print('→ 获取到一条新信息：' + EVIDENCE['E-19'].name, 'evidence');
@@ -1266,8 +1354,8 @@ async function handleGymSystem(action) {
     if (state.unlockedEvidence.includes('E-20')) {
       ui.print('[已解锁] 健身房 Wi-Fi 日志', 'important');
       ui.print('[正在导出 Wi-Fi 日志文件...]', 'hint', { speed: 50 });
-      await prefetchAndDownload('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-06-17.xlsx');
-      ui.print('[下载完成：LianFitness_WifiLog_2026-06-17.xlsx]', 'evidence');
+      await prefetchAndDownload('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-07-01.xlsx');
+      ui.print('[下载完成：LianFitness_WifiLog_2026-07-01.xlsx]', 'evidence');
       var e20 = EVIDENCE['E-20'].content;
       ui.print('', '');
       if (e20.keyConnections) {
@@ -1288,8 +1376,8 @@ async function handleGymSystem(action) {
     } else {
       game.unlockEvidence('E-20');
       ui.print('[正在导出 Wi-Fi 日志文件...]', 'hint', { speed: 50 });
-      await prefetchAndDownload('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-06-17.xlsx');
-      ui.print('[下载完成：LianFitness_WifiLog_2026-06-17.xlsx]', 'evidence');
+      await prefetchAndDownload('asset/data/wifi_log.xlsx', 'LianFitness_WifiLog_2026-07-01.xlsx');
+      ui.print('[下载完成：LianFitness_WifiLog_2026-07-01.xlsx]', 'evidence');
       await ui.printDialogue('数字麻姐', [
         '日志导出来了，里面记录了所有连接过健身房 WiFi 的手机 MAC 地址和连接时间。',
         '你可以把这些 MAC 地址和健身房会员信息里登记的手机号做个对比，',
@@ -1311,8 +1399,8 @@ async function handleGymSystem(action) {
     if (!state.unlockedEvidence.includes('E-22')) {
       game.unlockEvidence('E-22');
       ui.print('[正在导出 DNS 日志文件...]', 'hint', { speed: 50 });
-      await prefetchAndDownload('asset/data/dns_log.xlsx', 'LianFitness_DnsLog_2026-06-17.xlsx');
-      ui.print('[下载完成：LianFitness_DnsLog_2026-06-17.xlsx]', 'evidence');
+      await prefetchAndDownload('asset/data/dns_log.xlsx', 'LianFitness_DnsLog_2026-07-01.xlsx');
+      ui.print('[下载完成：LianFitness_DnsLog_2026-07-01.xlsx]', 'evidence');
       await ui.printDialogue('数字麻姐', [
         'DNS 日志已经导出了。文件里可以看到所有在健身房 WiFi 上产生的 DNS 查询记录。',
         '注意那个镇静剂网站查询——MAC 地址是 9A:5D:C3:72:E4:18，你可以对比一下健身房会员信息里的手机号，看能不能找到更多线索。',
@@ -1491,6 +1579,8 @@ async function runStage5() {
     state.playerChoice = 'accept';
     recordEnding('ending1');
     await ui.printDialogue('？？？', ['明智的选择。', '链接已经发给你了。', 'https://pan.baidu.com/s/12qILP9FiPTNGWysq2yQzVg?pwd=qiao'], 'zheng-qiao');
+    // 预留给玩家阅读缓冲时间
+    await new Promise(function(r) { setTimeout(r, 4000); });
     ui.print('', '');
     ui.print('[系统提示：已访问外部链接]', 'system');
     ui.print('[检测到恶意程序植入]', 'error');
@@ -1591,15 +1681,7 @@ async function runBLine() {
     ui.print('[系统：打包完成]', 'hint');
     ui.print('[系统：开始下载...]', 'hint');
 
-    try {
-      var photoFiles = ['photo01.jpg', 'photo02.jpg', 'photo03.jpg'];
-      for (var i = 0; i < photoFiles.length; i++) {
-        prefetchAndDownload('asset/secretphoto/' + photoFiles[i], photoFiles[i]);
-        await new Promise(function(r) { setTimeout(r, 800); });
-      }
-    } catch (e) {
-      ui.print('[系统：下载完成]', 'hint');
-    }
+    downloadFile('asset/secretphoto/secret_photos.zip', 'secret_photos.zip');
 
     await new Promise(function(r) { setTimeout(r, 3000); });
     ui.print('', '');
@@ -1608,7 +1690,6 @@ async function runBLine() {
     recordEnding('endingB-bribe');
     await showEnding('endingB-bribe');
     game.save();
-    ui.disableInput();
 
   } else {
     ui.print('', '');
@@ -1620,7 +1701,7 @@ async function runBLine() {
     ui.print('', '');
 
     while (true) {
-      var input = await ui.awaitNextCommand('输入 kill her 终止数字人（或输入其他取消）：');
+      var input = await ui.awaitNextCommand('输入 kill her 终止数字人（输入 取消 返回）：');
       var trimmed = input.trim().toLowerCase();
       if (trimmed === 'kill her') {
         ui.print('', '');
@@ -1633,7 +1714,9 @@ async function runBLine() {
         recordEnding('endingB-kill');
         await showEnding('endingB-kill');
         game.save();
-        ui.disableInput();
+        break;
+      } else if (trimmed === '取消' || trimmed === 'q' || trimmed === '') {
+        ui.print('', '');
         break;
       } else {
         ui.print('数字麻姐：你还在犹豫。输入 kill her。', 'digital-human');
@@ -1643,7 +1726,7 @@ async function runBLine() {
 }
 
 // ============================================================
-// D线：二周目隐藏结局（麻姐直播）
+// D线：四周目隐藏结局（麻姐直播）
 // ============================================================
 
 async function runDLine() {
@@ -1652,7 +1735,6 @@ async function runDLine() {
     // 已达成 D 线结局，不再重复（展示保留的内容）
     await showEnding('endingD');
     game.save();
-    ui.disableInput();
     return;
   }
 
@@ -1661,43 +1743,21 @@ async function runDLine() {
   ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
   ui.print('', '');
   ui.print('  [检测到历史会话记录]', 'important');
-  ui.print('  [正在加载二周目内容...]', 'important');
+  ui.print('  [正在加载四周目内容...]', 'important');
   ui.print('', '');
   ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
   ui.print('', '');
   await new Promise(function(r) { setTimeout(r, 2000); });
 
-  // 2. 读取前次通关的结局列表
-  var prevEnding = '未知';
-  try {
-    var saveRaw = localStorage.getItem('game16-save-v1');
-    if (saveRaw) {
-      var saveData = JSON.parse(saveRaw);
-      var achieved = (saveData.state && saveData.state.endingsAchieved) || [];
-      if (achieved.length > 0) {
-        var lastEr = achieved[achieved.length - 1];
-        if (lastEr === 'ending1') prevEnding = '接受郑桥的条件';
-        else if (lastEr === 'ending2') prevEnding = '拒绝郑桥并提交证据';
-        else if (lastEr === 'ending4') prevEnding = '什么都不做';
-        else if (lastEr === 'endingB-kill') prevEnding = '终止数字麻姐';
-        else if (lastEr === 'endingB-bribe') prevEnding = '接受数字麻姐的照片交易';
-        else prevEnding = lastEr;
-      }
-    }
-  } catch (e) { console.warn('D线读取存档失败:', e); }
-
   // 麻姐（本人，非数字人）直接出现
   await ui.printDialogue('？？？', [
     '你又来了。',
-    '上次你选择了——' + prevEnding + '。',
     '',
     '你一定有很多问题。让我直接说吧。',
     '我是梁洛邑。麻姐不是受害者，这个实验的设计者。',
     '',
     '郑桥、邹大雄、Embrace——都是配合我的人。',
     '那些证据、那些漏洞、那条"线索链"……一切都在我写的剧本里。',
-    '你是第 1,348 个回应这个"解谜游戏"的人。',
-    '也是第一个玩了两次的。',
   ], 'system');
 
   // 3. 调用直播覆盖层
@@ -1714,7 +1774,7 @@ async function runDLine() {
   await new Promise(function(r) { setTimeout(r, 1500); });
 
   // 4. 通过直播界面继续对话
-  await ui.printDialogue('梁洛邑（直播）', [
+  await ui.printDialogue('？？？', [
     '你的每一次犹豫、每一次选择……我都记录了。',
     '你以为是你在解谜。实际上——你是训练数据。',
     '',
@@ -1739,17 +1799,42 @@ async function runDLine() {
   ui.print('', '');
   await new Promise(function(r) { setTimeout(r, 1000); });
 
-  // 7. 底部小字
-  ui.print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
-  ui.print('', '');
-  ui.print('本页面已记录你的交互数据。', 'hint');
-  ui.print('关闭页面不会删除已上传的数据。', 'hint');
-  ui.print('', '');
+  // 7. 切换状态为失联
+  ui.setDigitalStatus(true);
 
-  // 8. 设置结局状态
+  // 8. 读数缓冲，让玩家消化内容
+  await new Promise(function(r) { setTimeout(r, 4000); });
+
+  // 9. 展示最终结果页面（黑色背景 + 视频）
+  await ui.showEndingOverlay();
+
+  // 在 overlay 中插入视频元素
+  var contentEl = document.querySelector('#ending-overlay .ending-content');
+  if (contentEl) {
+    contentEl.innerHTML = '';
+    contentEl.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:0;';
+    var video = document.createElement('video');
+    video.src = 'asset/video/d60a85018c3ca83ac32812f14925a337_raw.mp4';
+    video.autoplay = true;
+    video.loop = false;
+    video.controls = true;
+    video.muted = true;
+    video.playsinline = true;
+    video.style.cssText = 'max-width:100%;max-height:100vh;object-fit:contain;';
+    contentEl.appendChild(video);
+    video.play().catch(function(e) {
+      console.warn('视频自动播放失败，等待用户交互:', e);
+      // 降级：用户点击屏幕尝试播放
+      contentEl.addEventListener('click', function() {
+        video.muted = true;
+        video.play().catch(function(e2) { console.warn('点击播放也失败:', e2); });
+      }, { once: true });
+    });
+  }
+
+  // 10. 设置结局状态
   recordEnding('endingD');
   game.save();
-  ui.disableInput();
 }
 
 // ============================================================
@@ -1773,6 +1858,8 @@ async function showEnding(ending) {
     ui.setDigitalStatus(false);
     await new Promise(function(r) { setTimeout(r, 3000); });
     await ui.showEndingOverlay();
+    var ek = document.querySelector('#ending-overlay .ending-content');
+    if (ek) ek.classList.add('ending-kill');
     ui.print('', '');
     ui.print('', '');
     ui.print('  最终结果', 'important');
@@ -1797,6 +1884,7 @@ async function showEnding(ending) {
     var xhsId = await ui.awaitNextCommand('  请输入你的小红书 ID（确认后继续）：');
     ui.print('', '');
     if (xhsId) {
+      saveXhsId(xhsId);
       ui.print('  收到你的小红书 ID：' + xhsId + '。麻姐回来后我会让她关注你。', 'hint');
     } else {
       ui.print('  （空）也没有关系，我会帮你转达。', 'hint');
@@ -1804,6 +1892,8 @@ async function showEnding(ending) {
     ui.print('', '');
     await new Promise(function(r) { setTimeout(r, 3000); });
     await ui.showEndingOverlay();
+    var ek = document.querySelector('#ending-overlay .ending-content');
+    if (ek) ek.classList.add('ending-kill');
     ui.print('', '');
     ui.print('  最终结果', 'important');
     ui.print('', '');
@@ -1820,6 +1910,8 @@ async function showEnding(ending) {
   } else if (ending === 'ending4') {
     await new Promise(function(r) { setTimeout(r, 6000); });
     await ui.showEndingOverlay();
+    var ek = document.querySelector('#ending-overlay .ending-content');
+    if (ek) ek.classList.add('ending-kill');
     ui.print('', '');
     ui.print('  最终结果', 'important');
     ui.print('', '');
@@ -1839,6 +1931,8 @@ async function showEnding(ending) {
     ui.print('', '');
     await new Promise(function(r) { setTimeout(r, 6000); });
     await ui.showEndingOverlay();
+    var ek = document.querySelector('#ending-overlay .ending-content');
+    if (ek) ek.classList.add('ending-kill');
     ui.print('', '');
     ui.print('  最终结果', 'important');
     ui.print('', '');
@@ -1856,6 +1950,9 @@ async function showEnding(ending) {
     ui.print('', '');
     await new Promise(function(r) { setTimeout(r, 6000); });
     await ui.showEndingOverlay();
+    // 应用电影谢幕样式
+    var ek = document.querySelector('#ending-overlay .ending-content');
+    if (ek) ek.classList.add('ending-kill');
     ui.print('', '');
     ui.print('  最终结果', 'important');
     ui.print('', '');
