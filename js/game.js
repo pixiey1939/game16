@@ -160,12 +160,24 @@ const game = (() => {
  */
 function saveXhsId(xhsId) {
   if (!xhsId || xhsId.trim() === '') return;
+  var val = xhsId.trim();
+  // 本地保存（降级）
   try {
     var raw = localStorage.getItem(XHS_KEY);
     var list = raw ? JSON.parse(raw) : [];
-    list.push({ id: xhsId.trim(), time: Date.now() });
+    list.push({ id: val, time: Date.now() });
     localStorage.setItem(XHS_KEY, JSON.stringify(list));
   } catch (e) { console.warn('保存小红书 ID 失败:', e); }
+  // 云端收集（Supabase）
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://yfjgbikqgeazdmcaztxd.supabase.co/rest/v1/xhs_ids', true);
+    xhr.setRequestHeader('apikey', 'sb_publishable_ybPS4-Rcq5M_-X_EpRX-PA_FGCB3PNR');
+    xhr.setRequestHeader('Authorization', 'Bearer sb_publishable_ybPS4-Rcq5M_-X_EpRX-PA_FGCB3PNR');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('Prefer', 'return=minimal');
+    xhr.send(JSON.stringify({ xhs_id: val }));
+  } catch (e) { console.warn('云端收集小红书 ID 失败:', e); }
 }
 
 function recordEnding(endingId) {
